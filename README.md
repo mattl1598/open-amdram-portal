@@ -1,2 +1,2 @@
-# open-theatre-portal
+# open-amdram-portal
 open-amdram-portal
