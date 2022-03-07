@@ -1,15 +1,9 @@
 from flask import Flask
 import os
+from sass import compile
 
 app = Flask(__name__)
 
-nav = [
-	("Home", "/",),
-	("Blog", "/blog",),
-	("Past Shows", "/past-shows",),
-	("Auditions", "/auditions",),
-	("About Us", "/about-us",),
-	("Members", "/members",),
-]
+compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
 
 from webapp import routes
