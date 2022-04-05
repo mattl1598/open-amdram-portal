@@ -1,0 +1,13 @@
+@import "variables";
+
+.portal-nav {
+	display: flex !important;
+	flex-direction: column;
+	width: fit-content;
+	background: $bg1;
+}
+
+.sidebar {
+	display: none !important;
+}
+

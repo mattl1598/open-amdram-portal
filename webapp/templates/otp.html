@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Members</h2>
+	<form action="/members/otp" method="post">
+		<div>
+			<input id="otp" name="otp" type="text" required>
+			<label for="otp">2FA Code</label>
+		</div>
+
+		<input type="submit" value="Authenticate">
+	</form>
+{% endblock %}

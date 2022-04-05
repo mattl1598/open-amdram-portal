@@ -1,0 +1,73 @@
+@import "partials/layout";
+
+form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.5ch;
+
+	//width: 100%;
+	margin: 1ch;
+
+	> div {
+
+		position: relative;
+		width: 90%;
+	}
+
+	input {
+		margin: 0.01ch;
+		width: 100%;
+		border: 2px solid grey;
+		background: none;
+		position: relative;
+		top: 0;
+		left: 0;
+		z-index: 1;
+		padding: 12px 12px 12px 12px;
+		outline: 0;
+		box-sizing: border-box;
+		border-radius: 7px;
+
+		&[type=submit] {
+			width: 50%;
+			cursor: pointer;
+		}
+
+		&:focus,&:valid {
+			background: white;
+			border-color: $accent2;
+		}
+
+		&:focus + label, &:valid + label {
+			color: white;
+			font-size: 70%;
+			padding-left: 1.2ch;
+			padding-top: 0;
+			z-index: 2;
+			text-transform: uppercase;
+			bottom: 100%;
+			margin-top: -2ch;
+		}
+	}
+
+	label {
+		transition: // not padding
+				background 0.2s,
+				color 0.2s,
+				top 0.2s,
+				bottom 0.2s,
+				right 0.2s,
+				left 0.2s,
+				padding 0.2s;
+		position: absolute;
+		color: #999;
+		padding-left: 1.5ch;
+		padding-top: 1.4ch;
+		top: 0;
+		//bottom: 0;
+		text-align: center;
+		margin: auto;
+	}
+}
+

@@ -8,21 +8,47 @@
 <body>
 
 <div class="title-bar">
-	<div class="title"><h1>Silchester Players</h1></div>
+	<div class="title"><a href="/"><h1>Silchester Players</h1></a></div>
 	<div class="nav">
 		{% for item in nav %}
-			<a href="{{ item["link"] }}" class="{{ item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
+			<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
 		{% endfor %}
 	</div>
 </div>
 
-<div class="main-section">
-	<div class="content">
-		{% block content %}
-		{% endblock %}
+<div class="main-outer">
+	<div class="portal-nav">
+		<a href="/members/dashboard">Dashboard</a>
 	</div>
-	<div class="sidebar">
+	<div class="main-section">
+		<div class="content">
+			{% block content %}
+			{% endblock %}
+		</div>
 
+		<div class="sidebar">
+			{# tickets #}
+			{% if True %}
+				<div class="tickets">
+					<h2>Tickets Available:</h2>
+					<a href="/tickets" target="_blank">Purchase Tickets</a>
+				</div>
+			{% endif %}
+
+			{# socials #}
+			{% if True %}
+				<div class="socials">
+					<h2>Socials:</h2>
+					{% for link in socials %}
+						<a class="{{ link["type"] }}" href="{{ link["url"] }}" target="_blank">
+							<span class="icon"><svg viewbox="0 0 50 50">{{ link["icon"] | safe }}</svg></span>
+							<span class="text">{{ link["text"] }}</span>
+						</a>
+					{% endfor %}
+				</div>
+			{% endif %}
+
+		</div>
 	</div>
 </div>
 
