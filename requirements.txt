@@ -11,7 +11,7 @@ Jinja2==3.0.3
 libsass==0.21.0
 lorem-text==2.1
 MarkupSafe==2.1.0
-psycopg2==2.9.3
+psycopg2-binary==2.9.3
 six==1.16.0
 SQLAlchemy==1.4.32
 Werkzeug==2.0.3
