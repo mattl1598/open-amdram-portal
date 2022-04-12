@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>{{ show.title }}</h2>
+
+	<h3>Cast:</h3>
+	<table>
+		{% for k,v in cast.items() %}
+			<tr>
+				<td>{{ k }}</td>
+				<td>
+					{% for i in v %}
+						{{ show_members[i] }}
+					{% endfor %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+
+	<h3>Crew:</h3>
+	<table>
+		{% for k,v in crew.items() %}
+			<tr>
+				<td>{{ k }}</td>
+				<td>
+					{% for i in v %}
+						{{ show_members[i] }}
+					{% endfor %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endblock %}

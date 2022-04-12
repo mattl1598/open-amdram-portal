@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+	<div class="flex-container">
+		<h1>Thespian Life in Lockdown</h1>
+		<div class="all-posts">
+			<hr/>
+			{% for post in posts %}
+				<div class="link" onclick="location.href='/blog/{{ post.id }}';">
+					<b>{{ post.title }}</b>
+					-
+					{{ post.date.strftime("%b %Y") }}
+					-
+					by {{ post.user.firstname }} {{ post.user.lastname }}
+				</div>
+				<hr/>
+			{% endfor %}
+		</div>
+	</div>
+{% endblock %}

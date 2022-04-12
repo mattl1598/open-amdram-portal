@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>{{ title }} - Silchester Players</title>
+	<title>{{ title }} - {{ web_config["site-name"] }}</title>
 	<link href="/css/{{ css }}" rel="stylesheet" type="text/css">
+
+	{% if js is defined %}
+		<script type="text/javascript" src="/js/{{ js }}"></script>
+	{% endif %}
 </head>
 <body>
 
 <div class="title-bar">
-	<div class="title"><a href="/"><h1>Silchester Players</h1></a></div>
+	<div class="title"><a href="/"><h1>{{ web_config["site-name"] }}</h1></a></div>
 	<div class="nav">
 		{% for item in nav %}
 			<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
@@ -40,7 +44,7 @@
 				<div class="socials">
 					<h2>Socials:</h2>
 					{% for link in socials %}
-						<a class="{{ link["type"] }}" href="{{ link["url"] }}" target="_blank">
+						<a class="{{ link["type"] }}" href="https://{{ link["link"] }}" target="_blank" rel="noopener noreferrer">
 							<span class="icon"><svg viewbox="0 0 50 50">{{ link["icon"] | safe }}</svg></span>
 							<span class="text">{{ link["text"] }}</span>
 						</a>
@@ -48,6 +52,17 @@
 				</div>
 			{% endif %}
 
+			{# latest blog #}
+			{% if web_config.get("latest_blog") is not none %}
+				<div class="latest-blog">
+					<h2>Latest Blog: {{ web_config.get("latest_blog")[0] }}</h2>
+{#					<a href="/blog/latest"><h3></h3></a>#}
+					<a class="blog" href="/blog/latest">
+						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>
+						<span class="text">{{ web_config.get("latest_blog")[1] }}</span>
+					</a>
+				</div>
+			{% endif %}
 		</div>
 	</div>
 </div>

@@ -5,6 +5,24 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
 
+class KeyValue(db.Model):
+	key = db.Column(db.String(32), primary_key=True)
+	value = db.Column(db.Text)
+
+	def __repr__(self):
+		return f"KeyValue('{self.key}','{self.value}')"
+
+
+class Post(db.Model):
+	id = db.Column(db.String(16), primary_key=True)
+	type = db.Column(db.String(16))
+	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
+	author = db.Column(db.String(16), db.ForeignKey('user.id'))
+	title = db.Column(db.String(40))
+	content = db.Column(db.Text)
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+
+
 class User(UserMixin, db.Model):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
@@ -98,7 +116,7 @@ def load_user(user_id):
 
 class Show(db.Model):
 	id = db.Column(db.String(16), primary_key=True)
-	year = db.Column(db.Integer)
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	season = db.Column(db.String(8))
 	show_type = db.Column(db.Text)
 	title = db.Column(db.Text)

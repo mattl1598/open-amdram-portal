@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Past Shows</h2>
+	<table id="past_shows">
+		<tr>
+			<th>dateIndex</th>
+			<th onclick="sortTable('past_shows', 0)">Season</th>
+			<th onclick="sortTable('past_shows', 2)">Show</th>
+			<th onclick="sortTable('past_shows', 3)">Genre</th>
+		</tr>
+
+		{% for show in shows %}
+			<tr class="link" onclick="location.href='/past-shows/{{ show.id }}'">
+				<td>{{ loop.index0 }}</td>
+				<td>{{ show.season }} {{ show.date.year }}</td>
+				<td>{{ show.title }}</td>
+				<td>{{ show.genre }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+
+{% endblock %}

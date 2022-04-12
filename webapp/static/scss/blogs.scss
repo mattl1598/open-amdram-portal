@@ -1,0 +1,36 @@
+@import "partials/layout";
+
+hr {
+	margin: 1px 0;
+}
+
+div.link {
+	cursor: pointer;
+	padding: 1ch;
+
+	&:hover {
+		box-shadow: inset 0 0 0 100ch #3b3b3b60;
+	}
+}
+
+
+
+/* Landscape ish */
+@media (min-aspect-ratio: 3/2) {
+	.all-posts {
+		/*width: 100%;*/
+		min-width: 60%;
+		max-width: 100%;
+		text-align: center;
+	}
+}
+
+/* Portrait ish */
+@media (max-aspect-ratio: 3/2) {
+	.all-posts {
+		width: 99%;
+		/*min-width: 60%;*/
+		/*max-width: 100%;*/
+		text-align: center;
+	}
+}

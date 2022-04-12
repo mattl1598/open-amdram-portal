@@ -1,0 +1,7 @@
+@import "partials/variables";
+@import "partials/layout";
+
+table tr th:nth-child(1),
+table tr td:nth-child(1) {
+	display: none;
+}

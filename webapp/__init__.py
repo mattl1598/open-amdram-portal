@@ -1,3 +1,4 @@
+import markdown as markdown
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -21,7 +22,11 @@ db = SQLAlchemy(app)
 
 compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
 
+app.jinja_env.globals.update(
+	md=markdown.markdown
+)
+
 from webapp import routes, members_routes
-#
+
 # from webapp import models
 # db.create_all()
