@@ -10,6 +10,7 @@ itsdangerous==2.1.1
 Jinja2==3.0.3
 libsass==0.21.0
 lorem-text==2.1
+Markdown==3.3.6
 MarkupSafe==2.1.0
 psycopg2-binary==2.9.3
 six==1.16.0
