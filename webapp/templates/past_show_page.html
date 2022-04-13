@@ -3,11 +3,11 @@
 	<h2>{{ show.title }}</h2>
 
 	<h3>Cast:</h3>
-	<table>
+	<table class="roles_table">
 		{% for k,v in cast.items() %}
 			<tr>
-				<td>{{ k }}</td>
-				<td>
+				<td class="role">{{ k }}</td>
+				<td class="members">
 					{% for i in v %}
 						{{ show_members[i] }}
 					{% endfor %}
@@ -17,13 +17,16 @@
 	</table>
 
 	<h3>Crew:</h3>
-	<table>
+	<table class="roles_table">
 		{% for k,v in crew.items() %}
 			<tr>
-				<td>{{ k }}</td>
-				<td>
+				<td class="role">{{ k }}</td>
+				<td class="members">
 					{% for i in v %}
 						{{ show_members[i] }}
+						{% if not loop.last %}
+							<br/>
+						{% endif %}
 					{% endfor %}
 				</td>
 			</tr>

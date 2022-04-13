@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+	<form action="/members/add-show-member" method="POST">
+		<label for="firstname">Firstname</label><input type="text" name="firstname" id="firstname">
+		<label for="lastname">Lastname</label><input type="text" name="lastname" id="lastname">
+		<button type="submit">Submit</button>
+	</form>
+
+{% endblock %}
