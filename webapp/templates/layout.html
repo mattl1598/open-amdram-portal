@@ -70,12 +70,14 @@
 	<div>Opensource</div>
 </div>
 </body>
-	{% if modules["vue"] %}
-		<script src="https://unpkg.com/vue@latest"></script>
-	{% endif %}
-	{% if modules["tom-select"] %}
-		<link href="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/css/tom-select.css" rel="stylesheet">
-		<script src="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/js/tom-select.complete.min.js"></script>
+	{% if modules is defined %}
+		{% if modules["vue"] %}
+			<script src="https://unpkg.com/vue@latest"></script>
+		{% endif %}
+		{% if modules["tom-select"] %}
+			<link href="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/css/tom-select.css" rel="stylesheet">
+			<script src="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/js/tom-select.complete.min.js"></script>
+		{% endif %}
 	{% endif %}
 
 	{% if js is defined %}
