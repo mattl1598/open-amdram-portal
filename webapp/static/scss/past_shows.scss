@@ -1,7 +1,151 @@
 @import "partials/variables";
 @import "partials/layout";
+@import "partials/slider";
 
-table tr th:nth-child(1),
-table tr td:nth-child(1) {
-	display: none;
+.past_shows_title {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	margin: 1.5ch 0;
+
+	h2 {
+		margin: 0;
+	}
+
+	.cards_switch {
+		display: flex;
+		gap: 1ch;
+
+		padding: 0.3ch;
+
+		.switch {
+			font-size: 150%;
+		}
+	}
 }
+
+
+
+table {
+	width:100%;
+
+	h3 {
+		margin: 0;
+	}
+
+	tr th:nth-child(1),
+	tr td:nth-child(1) {
+		display: none;
+	}
+	border-collapse: collapse;
+
+	tr {
+		cursor: pointer;
+		transition: box-shadow 150ms ease-in-out;
+		&:hover {
+			box-shadow: inset 0 0 0 1000ch #3CB5B960;
+		}
+		padding-bottom: 0.5ch;
+	}
+}
+
+table.table_mode {
+	img.programme {
+		height: 9ch;
+		width: 9ch;
+		object-fit: cover;
+		vertical-align: middle;
+	}
+
+	tr:nth-child(2n) {
+		background: $bg3;
+	}
+	tr:nth-child(2n+1) {
+		background: $bg4;
+	}
+
+	span.card-subtitle {
+		display: none;
+	}
+}
+
+table.cards_mode{
+	tr:nth-child(1) {
+		display: none;
+	}
+
+	tbody {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: space-evenly;
+		gap: 2ch;
+		vertical-align: baseline;
+	}
+
+	tr {
+		border-radius: 3ch;
+		border-spacing: 0;
+
+		&:nth-child(2n) {
+			border: 3px solid $accent1;
+			background: $bg3;
+			&:hover {
+				box-shadow: inset 0 0 0 1000ch rgba($accent1, .37);
+			}
+		}
+		&:nth-child(2n+1) {
+			border: 3px solid $accent2;
+			background: $bg2;
+			&:hover {
+				box-shadow: inset 0 0 0 1000ch rgba($accent2, .37);
+			}
+		}
+
+		display: flex;
+		flex-direction: column;
+
+		width: 20ch;
+		word-wrap: normal;
+		overflow: hidden;
+
+		td {
+			text-align: center;
+
+			&.title {
+				flex-grow: 4;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+		}
+
+		img.programme {
+			max-width: 100%;
+			object-fit: scale-down;
+		}
+
+		span.card-subtitle {
+			//overflow: hidden;
+			//text-align: center;
+			//white-space: nowrap;
+			font-weight: bold;
+			padding: 0 0.8ch;
+
+			display: flex;
+			flex-direction: row;
+			justify-content: space-evenly;
+			gap: 1ch;
+
+			hr {
+				flex-grow: 1;
+				display: inline-block;
+				vertical-align: bottom;
+			}
+			&:not(:first-child) {
+				display: none;
+			}
+		}
+	}
+}
+

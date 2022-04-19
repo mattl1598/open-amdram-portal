@@ -1,8 +1,14 @@
 {% extends "layout.html" %}
 {% block content %}
+	<div class="existing_members">
+		{% for member in members %}
+			<div class="member_name">{{ member.firstname }} {{ member.lastname }}</div>
+		{% endfor %}
+	</div>
+	<hr>
 	<form action="/members/add-show-member" method="POST">
-		<label for="firstname">Firstname</label><input type="text" name="firstname" id="firstname">
-		<label for="lastname">Lastname</label><input type="text" name="lastname" id="lastname">
+		<label for="firstname">Firstname</label><input type="text" name="firstname" id="firstname"><br>
+		<label for="lastname">Lastname</label><input type="text" name="lastname" id="lastname"><br>
 		<button type="submit">Submit</button>
 	</form>
 

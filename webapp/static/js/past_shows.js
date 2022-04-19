@@ -1,3 +1,8 @@
+function cssToggle(event, targetID, onClass, offClass) {
+	document.getElementById(targetID).classList.toggle(offClass)
+	document.getElementById(targetID).classList.toggle(onClass)
+}
+
 function sortTable(id, n) {
 	var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
 	table = document.getElementById(id);

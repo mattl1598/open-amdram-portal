@@ -4,10 +4,6 @@
 	<meta charset="UTF-8">
 	<title>{{ title }} - {{ web_config["site-name"] }}</title>
 	<link href="/css/{{ css }}" rel="stylesheet" type="text/css">
-
-	{% if js is defined %}
-		<script type="text/javascript" src="/js/{{ js }}"></script>
-	{% endif %}
 </head>
 <body>
 
@@ -74,4 +70,15 @@
 	<div>Opensource</div>
 </div>
 </body>
+	{% if modules["vue"] %}
+		<script src="https://unpkg.com/vue@latest"></script>
+	{% endif %}
+	{% if modules["tom-select"] %}
+		<link href="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/css/tom-select.css" rel="stylesheet">
+		<script src="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/js/tom-select.complete.min.js"></script>
+	{% endif %}
+
+	{% if js is defined %}
+		<script type="text/javascript" src="/js/{{ js }}"></script>
+	{% endif %}
 </html>

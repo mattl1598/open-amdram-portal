@@ -1,0 +1,20 @@
+@import "partials/m_layout";
+@import "partials/layout";
+@import "partials/variables";
+
+.existing_members {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1ch;
+
+	div.member_name {
+		border-radius: 0.5ch;
+		padding: 0.5ch 0.5ch;
+		text-align: center;
+		text-decoration: none;
+		color: white;
+		background-color: $accent1;
+		border: 3px solid darken($accent1, 20%);
+	}
+}

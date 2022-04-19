@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<script src="https://unpkg.com/vue@3"></script>
+{% raw %}
+<div id="app">{{ message }}</div>
+{% endraw %}
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        message: 'Hello Vue!'
+      }
+    }
+  }).mount('#app')
+</script>
+
+{% endblock %}

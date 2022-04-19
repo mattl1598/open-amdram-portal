@@ -9,7 +9,14 @@
 				<td class="role">{{ k }}</td>
 				<td class="members">
 					{% for i in v %}
-						{{ show_members[i] }}
+						<a href="{{ i.get_link() }}">
+							{% if i.has_diff %}
+								{{ i.firstname }} {{ i.lastname }} (as {{ i.as_firstname }} {{ i.as_lastname }})
+							{% else %}
+								{{ i.firstname }} {{ i.lastname }}
+							{% endif %}
+							<br>
+						</a>
 					{% endfor %}
 				</td>
 			</tr>
@@ -21,12 +28,16 @@
 		{% for k,v in crew.items() %}
 			<tr>
 				<td class="role">{{ k }}</td>
-				<td class="members">
+				<td class="members" >
 					{% for i in v %}
-						{{ show_members[i] }}
-						{% if not loop.last %}
-							<br/>
-						{% endif %}
+						<a href="{{ i.get_link() }}">
+							{% if i.has_diff %}
+								{{ i.firstname }} {{ i.lastname }} (as {{ i.as_firstname }} {{ i.as_lastname }})
+							{% else %}
+								{{ i.firstname }} {{ i.lastname }}
+							{% endif %}
+							<br>
+						</a>
 					{% endfor %}
 				</td>
 			</tr>

@@ -48,6 +48,7 @@ div.main-section {
 		padding: 1ch 2ch;
 		border-radius: 7px;
 	}
+
 	div.sidebar {
 		max-width: 25%;
 		gap: 1ch;
@@ -79,10 +80,10 @@ div.main-section {
 				border: 3px solid darken($accent1, 20%);
 				text-decoration: none;
 				color: white;
-				transition: box-shadow 250ms ease-in-out;
+				transition: box-shadow 150ms ease-in-out;
 			}
 			a:hover {
-				box-shadow: inset 0 0 0 100ch #3b3b3b60;
+				box-shadow: inset 0 0 0 1000ch #3b3b3b60;
 			}
 		}
 
@@ -118,11 +119,11 @@ div.main-section {
 					flex-grow: 2;
 				}
 
-				transition: box-shadow 250ms ease-in-out;
+				transition: box-shadow 150ms ease-in-out;
 			}
 
 			a:hover {
-				box-shadow: inset 0 0 0 100ch #3b3b3b60;
+				box-shadow: inset 0 0 0 1000ch #3b3b3b60;
 			}
 
 			a.facebook {
@@ -183,7 +184,7 @@ div.main-section {
 					flex-grow: 2;
 				}
 
-				transition: box-shadow 250ms ease-in-out;
+				transition: box-shadow 150ms ease-in-out;
 			}
 
 			a.blog {
@@ -197,7 +198,7 @@ div.main-section {
 			}
 
 			a:hover {
-				box-shadow: inset 0 0 0 100ch #3b3b3b60;
+				box-shadow: inset 0 0 0 1000ch #3b3b3b60;
 			}
 		}
 	}

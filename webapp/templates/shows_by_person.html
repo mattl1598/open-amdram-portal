@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+{% block content %}
+	{% set show_cast = False %}
+	{% set show_crew = False %}
+	<div class="past_shows_title">
+		<h2>{{ user.firstname }} {{ user.lastname }}</h2>
+
+		<label class="cards_switch">
+			Table
+			<div class="switch">
+				<input type="checkbox" onchange="cssToggle(event,'past_shows','cards_mode','table_mode')">
+				<span class="slider round"></span>
+			</div>
+			Cards
+		</label>
+	</div>
+
+
+	<table id="past_shows" class="table_mode">
+		<tr>
+			<th>dateIndex</th>
+			<th></th>
+			<th onclick="sortTable('past_shows', 1)">Show</th>
+			<th onclick="sortTable('past_shows', 0)">Season</th>
+			<th onclick="sortTable('past_shows', 3)">Cast Roles</th>
+			<th onclick="sortTable('past_shows', 3)">Crew Roles</th>
+		</tr>
+
+		{% for k,v in shows.items() %}
+			<tr class="link" onclick="location.href='/past-shows/{{ k }}';">
+				<td>{{ loop.index0 }}</td>
+				<td><img class="programme" src="{{ show_details[k].programme }}" alt="{{ show_details[k].title }} programme cover"></td>
+				<td class="title"><h3>{{ show_details[k].title }}</h3></td>
+				<td>{{ show_details[k].season }} {{ show_details[k].date.year }}</td>
+				<td>
+					{% for role in v %}
+						{% if role.role_type == "cast" %}
+							{% if not show_cast %}
+								<span class="card-subtitle">
+									<hr>Cast<hr>
+								</span>
+								{% set show_cast = true %}
+							{% endif %}
+							{% if role.has_diff %}
+								{{ role.role }} (as {{ role.as_firstname }} {{ role.as_lastname }})<br>
+							{% else %}
+								{{ role.role }}<br>
+							{% endif %}
+						{% endif %}
+					{% endfor %}
+				</td>
+				<td>
+					{% for role in v %}
+						{% if role.role_type == "crew" %}
+							<span class="card-subtitle">
+								<hr>Crew<hr>
+							</span>
+							{% if role.has_diff %}
+								{{ role.role }} (as {{ role.as_firstname }} {{ role.as_lastname }})<br>
+							{% else %}
+								{{ role.role }}<br>
+							{% endif %}
+						{% endif %}
+					{% endfor %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endblock %}

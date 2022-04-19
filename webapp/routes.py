@@ -19,6 +19,36 @@ class NavItem():
 		link = l
 
 
+class MemberRenderer:
+	has_user = False
+	has_diff = False
+
+	def __init__(self, member, user=None):
+		self.role_type = member.cast_or_crew
+		if user is None:
+			self.id = member.id
+			self.role = member.role_name
+			self.firstname = member.firstname
+			self.lastname = member.lastname
+		else:
+			self.id = user.id
+			self.role = member.role_name
+			self.firstname = user.firstname
+			self.lastname = user.lastname
+			self.has_user = True
+
+			if (member.firstname != user.firstname) or (member.lastname != user.lastname):
+				self.as_firstname = member.firstname
+				self.as_lastname = member.lastname
+				self.has_diff = True
+
+	def get_link(self):
+		if self.has_user:
+			return "/past-shows/u/" + self.id
+		else:
+			return "/past-shows/m/" + self.id
+
+
 @app.context_processor
 def inject_nav():
 	icons = {
@@ -29,7 +59,7 @@ def inject_nav():
 		"blog_icon": blog_icon
 	}
 
-	route_split = ["/"+i for i in request.url_rule.rule[1:].split("/")]
+	route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
 	nav = [
 		{"title": "Home", "link": "/"},
 		{"title": "Lorem", "link": "/lorem"},
@@ -129,42 +159,138 @@ def past_show_redirect(show_id):
 @app.route("/past-shows/<show_id>/<test>")
 def past_show_page(show_id, test):
 	show = Show.query.filter_by(id=show_id).first_or_404()
+
 	raw_cast = MSL.query \
-		.filter_by(show_id=show_id, cast_or_crew="cast")\
-		.with_entities(MSL.role_name, MSL.member_id)\
+		.filter_by(show_id=show_id, cast_or_crew="cast") \
+		.join(Member, MSL.member_id == Member.id) \
+		.with_entities(
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
 		.all()
-
 	cast = {}
-	for i in raw_cast:
-		cast.setdefault(i[0], []).append(i[1])
+	for member in raw_cast:
+		user = User.query.filter_by(id=member.associated_user).first()
+		cast.setdefault(member.role_name, []).append(MemberRenderer(member, user))
 
-	raw_crew = MSL.query\
-		.filter_by(show_id=show_id, cast_or_crew="crew")\
-		.with_entities(MSL.role_name, MSL.member_id)\
+	raw_crew = MSL.query \
+		.filter_by(show_id=show_id, cast_or_crew="crew") \
+		.join(Member, MSL.member_id == Member.id) \
+		.with_entities(
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
 		.all()
-
 	crew = {}
-	for i in raw_crew:
-		crew.setdefault(i[0], []).append(i[1])
-
-	smr = MSL.query\
-		.filter_by(show_id=show_id)\
-		.join(Member)\
-		.with_entities(Member.id, Member.firstname, Member.lastname) \
-		.distinct()\
-		.all()
-
-	show_members = {i.id: " ".join([i.firstname, i.lastname]) for i in smr}
-
-	print(show_members)
+	for member in raw_crew:
+		user = User.query.filter_by(id=member.associated_user).first()
+		crew.setdefault(member.role_name, []).append(MemberRenderer(member, user))
 
 	return render_template(
 		"past_show_page.html",
 		show=show,
 		cast=cast,
 		crew=crew,
-		show_members=show_members,
 		css="past_show_page.css"
+	)
+
+
+@app.route("/past-shows/u/<user_id>")
+def u_redirect(user_id):
+	user = User.query.filter_by(id=user_id).first_or_404()
+	page_title = "-".join([user.firstname, user.lastname])
+	return redirect("/".join([user_id, page_title]))
+
+
+@app.route("/past-shows/u/<user_id>/<test>")
+def u(user_id, test):
+	user_members = [
+		i[0] for i in
+		Member.query\
+		.filter(Member.associated_user == user_id)\
+		.with_entities(Member.id)\
+		.all()
+	]
+
+	msls = MSL.query \
+		.filter(MSL.member_id.in_(user_members)) \
+		.join(Member, MSL.member_id == Member.id) \
+		.with_entities(
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
+		.all()
+
+	user = User.query.filter_by(id=user_id).first()
+	shows = {}
+	for link in msls:
+		shows.setdefault(link.show_id, []).append(MemberRenderer(link, user))
+
+	show_details = {i.id: i for i in Show.query.filter(Show.id.in_(shows.keys())).all()}
+
+	return render_template(
+		"shows_by_person.html",
+		shows=shows,
+		show_details=show_details,
+		user=user,
+		js="past_shows.js",
+		css="past_shows.css"
+	)
+
+
+@app.route("/past-shows/m/<member_id>")
+def m_redirect(member_id):
+	member = Member.query.filter_by(id=member_id).first_or_404()
+	page_title = "-".join([member.firstname, member.lastname])
+	return redirect("/".join([member_id, page_title]))
+
+
+@app.route("/past-shows/m/<member_id>/<test>")
+def m(member_id, test):
+	member = Member.query.filter_by(id=member_id).first_or_404()
+	msls = MSL.query \
+		.filter(MSL.member_id == member_id) \
+		.join(Member, MSL.member_id == Member.id) \
+		.with_entities(
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
+		.all()
+
+	# user = User.query.filter_by(id=user_id).first()
+	shows = {}
+	for link in msls:
+		shows.setdefault(link.show_id, []).append(MemberRenderer(link))
+
+	show_details = {i.id: i for i in Show.query.filter(Show.id.in_(shows.keys())).all()}
+
+	return render_template(
+		"shows_by_person.html",
+		shows=shows,
+		show_details=show_details,
+		user=member,
+		js="past_shows.js",
+		css="past_shows.css"
 	)
 
 
@@ -242,4 +368,3 @@ def emergency_user():
 	db.session.commit()
 
 	return redirect(url_for("frontpage"))
-

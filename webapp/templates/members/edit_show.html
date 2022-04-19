@@ -1,0 +1,84 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h2>Edit Show</h2>
+	<form action="">
+		<div class="form_section show_details">
+			<div class="fancy-input">
+				<input type="text" name="show-title" id="show-title" placeholder=" ">
+				<label for="show-title">Title</label>
+			</div>
+			<div class="fancy-input">
+				<input type="text" name="show-subtitle" id="show-subtitle" placeholder=" ">
+				<label for="show-subtitle">Subtitle</label>
+			</div>
+			<div class="fancy-input">
+				<input type="date" name="last-perf" id="last-perf" required>
+				<label for="last-perf">Last Performance Date</label>
+			</div>
+			<div class="fancy-input">
+				<select name="season" id="season" required>
+					<option value=""></option>
+					<option value="New Year">New Year</option>
+					<option value="Spring">Spring</option>
+					<option value="Autumn">Autumn</option>
+				</select>
+{#				<input type="dropdown" name="season" id="season" required>#}
+				<label for="season">Season</label>
+			</div>
+			<div class="fancy-input">
+				<select name="show-type" id="show-type" required>
+					<option value=""></option>
+					<option value="New Year">Stage</option>
+					<option value="Spring">Radio</option>
+				</select>
+{#				<input type="dropdown" name="show-type" id="show-type" required>#}
+				<label for="show-type">Show Type</label>
+			</div>
+			<div class="fancy-input">
+				<input type="text" name="genre" id="genre" placeholder=" ">
+				<label for="genre">Genre</label>
+			</div>
+			<div class="fancy-input">
+				<input type="text" name="show-author" id="show-author" placeholder=" ">
+				<label for="show-author">Author</label>
+			</div>
+			<div class="fancy-input">
+				<input type="text" name="programme-img" id="programme-img" placeholder=" ">
+				<label for="programme-img">Programme Image URL</label>
+			</div>
+			<div class="fancy-input">
+				<input type="text" name="gallery-link" id="gallery-link" placeholder=" ">
+				<label for="gallery-link">Gallery Link</label>
+			</div>
+
+			<input type="submit" value="Save Show">
+		</div>
+		<div class="form_section cast_and_crew">
+			<h3>Cast</h3>
+				<div id="cast-entries">
+
+				</div>
+				<button>Add Cast Entry</button>
+			<h3>Crew</h3>
+				<div id="crew-entries">
+					<span>
+						<input type="text" id="crew_roles1">
+						<select id="crew1">
+							{% for i in members %}
+								<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
+							{% endfor %}
+						</select>
+					</span>
+				</div>
+				<button>Add Crew Entry</button>
+		</div>
+
+		<script>
+			const crew_roles = [
+				{% for i in crew_roles %}
+					{value:"{{ i.role_name }}"}
+				{% endfor %}
+			]
+		</script>
+	</form>
+{% endblock %}
