@@ -1,11 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html id="html" class="{{ session.get("theme", "auto") }}" lang="en">
 <head>
 	<meta charset="UTF-8">
 	<title>{{ title }} - {{ web_config["site-name"] }}</title>
 	<link href="/css/{{ css }}" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="/js/nav.js"></script>
+
+	{% with messages = get_flashed_messages() %}
+	   {% if messages %}
+	      {% for message in messages %}
+		      <script>alert("{{ message }}")</script>
+	      {% endfor %}
+	   {% endif %}
+	{% endwith %}
 </head>
-<body>
+
+<body id="body" class="{{ session.get("fontsize", "font_single") }}">
+{% if frontpage is defined %}
+	<div class="carousel" id="slider-container-outer">
+		<div id="slider-container" class="slider-container-transition">
+			{% for photo in photos %}
+				<div class="slider-item" data-position="{{ loop.index }}"
+				     style="background-image: url('/photo/{{ photo.photo_url }}');">
+{#					<div>#}
+{#						<h2>Our Last Show: <br>#}
+{#							{{ latest_show.title }}</h2>#}
+{#					</div>#}
+					<img id="photo{{ loop.index }}"
+					     src="/photo/{{ photo.photo_url }}"
+					     alt="Photo"
+					>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+{% endif %}
 
 <div class="title-bar">
 	<div class="title"><a href="/"><h1>{{ web_config["site-name"] }}</h1></a></div>
@@ -13,13 +42,48 @@
 		{% for item in nav %}
 			<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
 		{% endfor %}
+		<a href="/search" class="search"><svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg></a>
+		<a onclick="expand()" class="hamburger">
+			<svg class="expand-icon collapsed search" id="menu-icon" viewBox="0 0 70 70"
+			     preserveAspectRatio="xMidYMin">
+				<path class="line one" d="m 15 19 l 45 0"></path>
+				<path class="line two" d="m 15 35 l 45 0"></path>
+				<path class="line three" d="m 15 51 l 45 0"></path>
+			</svg>
+		</a>
 	</div>
 </div>
 
+<div class="collapsed" id="mobile-nav">
+	{% for item in nav %}
+		<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
+	{% endfor %}
+</div>
+
+
 <div class="main-outer">
-	<div class="portal-nav">
-		<a href="/members/dashboard">Dashboard</a>
-	</div>
+	{% if current_user.is_authenticated %}
+        <div class="portal-nav">
+			<a href="/members/dashboard"><h3>Dashboard</h3></a>
+            <h3>Shows</h3>
+            <ul class="dashboard-shows">
+	            {% for m_show in m_shows %}
+	                <li><a href="/members/show/{{ m_show.id }}">{{ m_show.title }}</a></li>
+	            {% endfor %}
+            </ul>
+            {% if current_user.role == "admin" %}
+	            <h3>Admin Tools</h3>
+	            <ul>
+		            <li><a href="/members/manage-shows">Manage Shows</a></li>
+		            <li><a href="/members/set_show_photos/oauth">Update Photos</a></li>
+		            <li><a href="/members/add-show-member">Add New Members</a></li>
+		            <li><a href="/members/admin_settings">Admin Settings</a></li>
+	            </ul>
+            {% endif %}
+			<a href="/members/logout"><h3>Logout</h3></a>
+		</div>
+	{% endif %}
+
 	<div class="main-section">
 		<div class="content">
 			{% block content %}
@@ -28,7 +92,7 @@
 
 		<div class="sidebar">
 			{# tickets #}
-			{% if True %}
+			{% if web_config.get("tickets-active") == "1" %}
 				<div class="tickets">
 					<h2>Tickets Available:</h2>
 					<a href="/tickets" target="_blank">Purchase Tickets</a>
@@ -64,22 +128,40 @@
 </div>
 
 <div class="footer">
-	<div>Terms and Conditions</div>
-	<div>Privacy Policy</div>
-	<div>Copyright</div>
-	<div>Opensource</div>
+	<div>
+		<div>Terms and Conditions</div>
+		<div>Privacy Policy</div>
+		<div>Copyright</div>
+		<div>Opensource</div>
+	</div>
+	<div class="accessibility">
+		<strong>Accessibility</strong>
+		<span>
+			<select name="theme" id="theme" onchange="window.location.assign('/accessibility?theme='+this.value)" selected="font_single">
+				<option value="auto" {{ "selected" if session.get("theme", "auto") == "auto" }}>Theme: Auto</option>
+				<option value="light" {{ "selected" if session.get("theme", "auto") == "light" }}>Theme: Light</option>
+				<option value="dark" {{ "selected" if session.get("theme", "auto") == "dark" }}>Theme: Dark</option>
+			</select>*
+		</span>
+		<span>
+			<label for="">Font Size</label>
+			<button id="font_single" type=button onclick="window.location.assign('/accessibility?fontsize=font_single')">1x</button>
+			<button id="font_double" type=button onclick="window.location.assign('/accessibility?fontsize=font_double')">1.5x</button>
+			<button id="font_triple" type=button onclick="window.location.assign('/accessibility?fontsize=font_triple')">2x</button>
+		</span>
+	</div>
 </div>
 </body>
 	{% if modules is defined %}
-		{% if modules["vue"] %}
-			<script src="https://unpkg.com/vue@latest"></script>
+		{% if modules["wysiwyg"] %}
+			<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+			<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 		{% endif %}
 		{% if modules["tom-select"] %}
 			<link href="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/css/tom-select.css" rel="stylesheet">
 			<script src="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/js/tom-select.complete.min.js"></script>
 		{% endif %}
 	{% endif %}
-
 	{% if js is defined %}
 		<script type="text/javascript" src="/js/{{ js }}"></script>
 	{% endif %}

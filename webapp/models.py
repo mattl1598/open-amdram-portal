@@ -13,6 +13,13 @@ class KeyValue(db.Model):
 		return f"KeyValue('{self.key}','{self.value}')"
 
 
+class Files(db.Model):
+	id = db.Column(db.String(16), primary_key=True)
+	show_id = db.Column(db.String(16))
+	name = db.Column(db.String(40))
+	content = db.Column(db.LargeBinary)
+
+
 class Post(db.Model):
 	id = db.Column(db.String(16), primary_key=True)
 	type = db.Column(db.String(16))
@@ -31,6 +38,7 @@ class User(UserMixin, db.Model):
 	otp_secret = db.Column(db.String(32))
 	password_hash = db.Column(db.String(128))
 	password = db.Column(db.String(60))
+	role = db.Column(db.String(30))
 	post = db.relationship('BlogPost', backref='user', lazy=True)
 	member = db.relationship('Member', backref='user', lazy=True)
 
@@ -129,6 +137,7 @@ class Show(db.Model):
 
 	member_show_link = db.relationship('MemberShowLink', backref='show', lazy=True)
 	show_photos = db.relationship('ShowPhotos', backref='show', lazy=True)
+	# files = db.relationship('Files', backref='show', lazy=True)
 
 
 class ShowPhotos(db.Model):

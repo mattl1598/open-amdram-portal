@@ -36,11 +36,11 @@ form {
 
 		&:focus,&:valid {
 			background: white;
-			border-color: $accent2;
+			@include theme(border-color, accent2);
 		}
 
 		&:focus + label, &:valid + label {
-			color: white;
+			@include theme(color, text);
 			font-size: 70%;
 			padding-left: 1.2ch;
 			padding-top: 0;

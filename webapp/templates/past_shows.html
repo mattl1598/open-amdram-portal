@@ -3,6 +3,7 @@
 	<div class="past_shows_title">
 		{% if manage_shows is defined %}
 			<h2>Edit Past Shows</h2>
+			<button type="button" onclick="window.location.href='/members/edit-show/new'">Add New Show</button>
 		{% else %}
 			<h2>Past Shows</h2>
 		{% endif %}
@@ -23,7 +24,7 @@
 			<th></th>
 			<th onclick="sortTable('past_shows', 2)">Show</th>
 			<th onclick="sortTable('past_shows', 0)">Season</th>
-			<th onclick="sortTable('past_shows', 3)">Genre</th>
+			<th onclick="sortTable('past_shows', 4)">Genre</th>
 		</tr>
 
 		{% for show in shows %}

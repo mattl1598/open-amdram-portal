@@ -3,53 +3,88 @@
 @import "partials/variables";
 @import "partials/form_element";
 
+div.quick-row h2 {
+	margin: auto;
+	vertical-align: bottom;
+}
+
 form {
 	display: flex;
 	flex-direction: row;
 	justify-content: stretch;
 	width: 100%;
+	flex-wrap: wrap;
 }
 
 .form_section {
-	flex-grow: 1;
+	flex: 1 0 35%;
 
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 1.5ch;
 
-	min-width: 40%;
+	//min-width: 40%;
 	//width: 100%;
 	margin: 1ch;
+
+	&.show_details {
+		min-width: 30ch;
+	}
 }
 
 input[type=submit] {
 	padding: 1ch;
-	border: 2px solid $accent1;
+	border: 2px solid;
+	@include theme(border-color, accent1);
 	border-radius: 1ch;
 	font-weight: bold;
 	font-size: 150%;
 
-	background: $bg3;
-	color: white;
+	@include theme(background-color, bg3);
+	@include theme(color, text);
 
 	&:hover {
 		cursor: pointer;
-		box-shadow: inset 0 0 0 1000ch rgba($accent1, .37);
+		@include theme-adjust(box-shadow, accent1, rgba, .37, inset 0 0 0 1000ch);
 	}
 }
 
 button {
-	padding: 2ch;
-	border: 2px solid $accent2;
-	border-radius: 2ch;
+	padding: 1ch;
+	border: 2px solid;
+	@include theme(border-color, accent2);
+	border-radius: 1ch;
 	font-weight: bold;
 
-	background: $bg3;
-	color: white;
+	@include theme(background-color, bg3);
+	@include theme(color, text);
 
 	&:hover {
 		cursor: pointer;
-		box-shadow: inset 0 0 0 1000ch rgba($accent2, .37);
+		@include theme-adjust(box-shadow, accent2, rgba, .37, inset 0 0 0 1000ch);
+	}
+}
+
+.entries-container {
+	display: flex;
+	flex-direction: column;
+	gap: 2ch;
+	align-content: stretch;
+}
+
+.entry {
+	display: flex;
+	flex-direction: row;
+	gap: 1ch;
+	width: 100%;
+
+	> span.r {
+		width: 49%;
+		max-width: 20ch;
+	}
+	> span.m {
+		width: 49%;
+		max-width: 35ch;
 	}
 }

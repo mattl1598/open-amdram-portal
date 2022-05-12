@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Database Stats</h2>
+	{% for key, value in stats.items() %}
+		<strong>{{ key }}</strong> - {{ value }}<br>
+	{% endfor %}
+{% endblock %}

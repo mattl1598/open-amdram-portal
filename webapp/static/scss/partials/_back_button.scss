@@ -43,9 +43,9 @@ div.svg-button {
 		stroke-linejoin: round;
 		stroke-width: 12.5%;
 		overflow: visible;
-		padding: 0% 2%;
-		stroke: $accent1;
-		fill: $accent1;
+		padding: 0 2%;
+		@include theme(stroke, accent1);
+		@include theme(fill, accent1);
 		font-size: 100%;
 
 		text {

@@ -13,8 +13,9 @@
 		padding: 0.5ch 0.5ch;
 		text-align: center;
 		text-decoration: none;
-		color: white;
-		background-color: $accent1;
-		border: 3px solid darken($accent1, 20%);
+		@include theme(background-color, accent1);
+		@include theme(color, text);
+		border: 3px solid;
+		@include theme-adjust(border-color, accent1, darken, 20%);
 	}
 }

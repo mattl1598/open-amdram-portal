@@ -4,7 +4,7 @@ div.fancy-input {
 	position: relative;
 	width: 90%;
 
-	select, input {
+	select, input, textarea {
 		margin: 0.01ch;
 		width: 100%;
 		border: 2px solid grey;
@@ -45,13 +45,13 @@ div.fancy-input {
 		&:not([type=text]):valid,
 		&[type=text]:not(:placeholder-shown) {
 			background: white;
-			border-color: $accent2;
+			@include theme(border-color, accent2);
 		}
 
 		&:focus + label,
 		&:not([type=text]):valid + label,
 		&[type=text]:not(:placeholder-shown) + label {
-			color: white;
+			@include theme(color, text);
 			font-size: 70%;
 			padding-left: 1.2ch;
 			padding-top: 0;
@@ -78,5 +78,16 @@ div.fancy-input {
 		top: 0;
 		text-align: center;
 		margin: auto;
+
+		&.showme {
+			@include theme(color, text);
+			font-size: 70%;
+			padding-left: 1.2ch;
+			padding-top: 0;
+			z-index: 2;
+			text-transform: uppercase;
+			bottom: 100%;
+			margin-top: -2ch;
+		}
 	}
 }

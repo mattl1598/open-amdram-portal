@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+	{% if post != None %}
+		<div class="next_show">
+			<h2>Our Next Show</h2>
+			<h1>{{ post.show_title }}</h1>
+			<h3>{{ post.show_subtitle }}</h3>
+		</div>
+		<hr>
+		<h2>{{ post.title }}</h2>
+		{{ post.date }}<br>
+		<div class="post_content">{{ post.content }}</div>
+	{% else %}
+		<h1>Auditions</h1>
+		<h2>There are no upcoming auditions event scheduled.</h2>
+		<h3>Check back here or follow us on our socials to find out when the next auditions are happening.</h3>
+	{% endif %}
+{% endblock %}

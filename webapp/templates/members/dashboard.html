@@ -1,4 +1,16 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
-<p>test</p>
+	<h1>Dashboard</h1>
+
+	{% for post in posts %}
+		<a class="post" href="/members/post/{{post.id}}">
+			<h3>{{ post.show_title }}</h3>
+			<h2>{{ post.title }}</h2>
+			{{ post.date.strftime("%d %b %Y") }}
+			<p>{{ post.content }}</p>
+		</a>
+		{% if not loop.last %}
+			<hr>
+		{% endif %}
+	{% endfor %}
 {% endblock %}

@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
-{#<p>Hello World!</p>#}
-	{% if current_user.is_authenticated %}
-        Hi {{ current_user.firstname }}!
-	{% endif %}
+	<div class="next_show">
+		<h2>Our Next Show</h2>
+		<h1>{{ post.show_title }}</h1>
+		<h3>{{ post.show_subtitle }}</h3>
+	</div>
+	<hr>
+	<h2>{{ post.title }}</h2>
+	<div class="post_content">{{ post.content }}</div>
 {% endblock %}

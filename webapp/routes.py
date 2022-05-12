@@ -1,4 +1,5 @@
 import string
+from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlparse
@@ -6,9 +7,12 @@ import corha
 import pyotp
 from flask import abort, make_response, redirect, render_template, send_file, url_for, request, session
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import or_
+from werkzeug.exceptions import HTTPException
+
 from webapp import app, db
-from webapp.models import BlogImage, BlogPost, KeyValue, Member, Show, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, fb_icon, ig_icon, other_icon, tw_icon
+from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
+from webapp.svgs import blog_icon, fb_icon, ig_icon, other_icon, magnify, tw_icon
 import json
 from lorem_text import lorem as lorem_func
 
@@ -56,22 +60,23 @@ def inject_nav():
 		"tw_icon": tw_icon,
 		"ig_icon": ig_icon,
 		"other_icon": other_icon,
-		"blog_icon": blog_icon
+		"blog_icon": blog_icon,
+		"search": magnify
 	}
 
-	route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
 	nav = [
 		{"title": "Home", "link": "/"},
-		{"title": "Lorem", "link": "/lorem"},
+		# {"title": "Lorem", "link": "/lorem"},
 		{"title": "Blog", "link": "/blog"},
 		{"title": "Past Shows", "link": "/past-shows"},
 		{"title": "Auditions", "link": "/auditions"},
 		{"title": "About Us", "link": "/about-us"},
 		{"title": "Members", "link": "/members"}
 	]
-
-	for i in range(0, len(nav)):
-		nav[i]["is_active"] = (route_split[0] == nav[i]["link"])
+	if request.url_rule is not None:
+		route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
+		for i in range(0, len(nav)):
+			nav[i]["is_active"] = (route_split[0] == nav[i]["link"])
 
 	raw_socials = KeyValue.query.filter_by(key="socials").first().value.translate(
 		str.maketrans('', '', string.whitespace)).replace("https://", "").replace("http://", "").split(",")
@@ -89,18 +94,142 @@ def inject_nav():
 			socials.append({"type": "other", "link": i, "text": urlparse(i).netloc, "icon": other_icon})
 
 	web_config = {
-		"site-name": KeyValue.query.filter_by(key="site-name").first().value
+		"site-name": KeyValue.query.filter_by(key="site-name").first().value,
+		"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
+		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value
 	}
 
 	if (latest_blog := BlogPost.query.order_by(BlogPost.date.desc()).first()) is not None:
 		web_config["latest_blog"] = (latest_blog.date.strftime("%b %Y"), latest_blog.title,)
 
-	return dict(nav=nav, socials=socials, web_config=web_config, icons=icons)
+	m_shows = Show.query\
+		.order_by(Show.date.desc())\
+		.limit(4)\
+		.all()
+
+	session.permanent = True
+
+	return dict(nav=nav, socials=socials, web_config=web_config, icons=icons, m_shows=m_shows)
 
 
 @app.route("/", methods=["GET"])
 def frontpage():
-	return render_template("frontpage.html", css="frontpage.css")
+	latest_show = Show.query\
+		.filter(Show.date < datetime.now())\
+		.order_by(Show.date.desc())\
+		.first()
+
+	all_photos = ShowPhotos.query\
+		.filter_by(show_id=latest_show.id)\
+		.all()
+
+	photos = []
+	for i in all_photos:
+		size = i.photo_desc.split(",")
+		if size[0] > size[1]:
+			photos.append(i)
+
+		if len(photos) == 5:
+			break
+
+	post = Post.query\
+		.filter(or_(Post.type == "public", Post.type == "auditions"))\
+		.join(Show, Post.show_id == Show.id)\
+		.filter(Show.date > datetime.now())\
+		.order_by(Show.date.asc())\
+		.order_by(Post.date.desc())\
+		.with_entities(
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		)\
+		.first()
+
+	if post is None:
+		post = Show.query \
+			.filter(Show.date > datetime.now()) \
+			.order_by(Show.date.asc()) \
+			.with_entities(
+				Show.title.label("show_title"),
+				Show.subtitle.label("show_subtitle")
+			)\
+			.first()
+
+	return render_template(
+		"frontpage.html",
+		latest_show=latest_show,
+		post=post,
+		photos=photos,
+		frontpage=True,
+		css="frontpage.css",
+		js="carousel.js"
+	)
+
+
+@app.route("/auditions", methods=["GET"])
+def auditions():
+	post = Post.query\
+		.filter_by(type="auditions")\
+		.join(Show, Post.show_id == Show.id)\
+		.filter(Show.date > datetime.now())\
+		.order_by(Show.date.asc())\
+		.order_by(Post.date.desc())\
+		.with_entities(
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		)\
+		.first()
+
+	print(post)
+
+	return render_template(
+		"auditions.html",
+		post=post,
+		css="frontpage.css"
+	)
+
+
+@app.route("/search", methods=["GET"])
+def search():
+	results = {}
+
+	if (arg := request.args.get("search")) is not None:
+		ilike_arg = "%" + arg + "%"
+		results["Shows"] = Show.query.filter(
+			or_(
+				Show.title.ilike(ilike_arg),
+				Show.subtitle.ilike(ilike_arg),
+				Show.season.ilike(ilike_arg),
+				Show.show_type.ilike(ilike_arg),
+				Show.genre.ilike(ilike_arg),
+				Show.author.ilike(ilike_arg)
+			)
+		).all()
+		results["Blogposts"] = BlogPost.query.filter(
+			or_(
+				BlogPost.title.ilike(ilike_arg),
+				BlogPost.content.ilike(ilike_arg)
+			)
+		).all()
+		# results["Members"] = BlogPost.query.filter(
+		# 	or_(
+		# 		BlogPost.title.ilike(ilike_arg),
+		# 		BlogPost.content.ilike(ilike_arg)
+		# 	)
+		# ).all()
+	else:
+		arg = ""
+	return render_template(
+		"search.html",
+		arg=arg,
+		results=results,
+		css="search.css"
+	)
 
 
 @app.route("/blog", methods=["GET"])
@@ -140,7 +269,10 @@ def blog_img(blog_id, image_no):
 
 @app.route("/past-shows")
 def past_shows():
-	shows = Show.query.order_by(Show.date.desc()).all()
+	shows = Show.query \
+		.filter(Show.date < datetime.now()) \
+		.order_by(Show.date.desc()) \
+		.all()
 	return render_template(
 		"past_shows.html",
 		shows=shows,
@@ -196,12 +328,18 @@ def past_show_page(show_id, test):
 		user = User.query.filter_by(id=member.associated_user).first()
 		crew.setdefault(member.role_name, []).append(MemberRenderer(member, user))
 
+	photos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="photo").all()
+	videos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="video").all()
+
 	return render_template(
 		"past_show_page.html",
 		show=show,
 		cast=cast,
 		crew=crew,
-		css="past_show_page.css"
+		photos=photos,
+		videos=videos,
+		css="past_show_page.css",
+		js="past_show_page.js"
 	)
 
 
@@ -300,13 +438,41 @@ def lorem():
 	return render_template("lorem.html", lorem=lorem_func.paragraphs(50), css="frontpage.css")
 
 
+@app.route("/database", methods=["GET"])
+def database():
+	stats = {
+		"Shows": Show.query.count(),
+		"Members": Member.query.count(),
+		"Cast/Crew Roles": MSL.query.count(),
+		"Blogposts": BlogPost.query.count(),
+		"Photos": ShowPhotos.query.count()
+	}
+	return render_template("database.html", stats=stats, css="frontpage.css")
+
+
+@app.route("/about-us")
+def about():
+	return render_template(
+		"about-us.html",
+		about=KeyValue.query.filter_by(key="about").first_or_404(),
+		css="frontpage.css"
+	)
+
+
+@app.route("/tickets")
+def tickets():
+	return render_template(
+		"tickets.html",
+		css="frontpage.css"
+	)
+
+
 @app.route("/members", methods=["GET", "POST"])
 def members():
 	if current_user.is_authenticated:
 		return redirect(url_for("dashboard"))
 	else:
 		if request.method == "POST":
-			print(request.form)
 			user = User.query.filter_by(email=request.form['email']).first()
 			if user is not None and user.verify_password(request.form['password']):
 				if user.otp_secret != "":
@@ -314,7 +480,7 @@ def members():
 					return redirect(url_for("otp"))
 				else:
 					login_user(user)
-					return redirect(url_for('frontpage'))
+					return redirect(url_for('dashboard'))
 			else:
 				return redirect(url_for("members"))
 		else:
@@ -368,3 +534,23 @@ def emergency_user():
 	db.session.commit()
 
 	return redirect(url_for("frontpage"))
+
+
+@app.errorhandler(HTTPException)
+def page_not_found(e):
+	print(int(str(e)[:3]))
+	return render_template('error.html', error=e, css="frontpage.css"), int(str(e)[:3])
+
+
+@app.route("/accessibility")
+def accessibility():
+	if request.args.get('theme') is not None:
+		print(request.args.get('theme'))
+		session["theme"] = request.args.get('theme')
+	if request.args.get('fontsize') is not None:
+		print(request.args.get('fontsize'))
+		session["fontsize"] = request.args.get('fontsize')
+
+	session.modified = True
+
+	return redirect(request.referrer)

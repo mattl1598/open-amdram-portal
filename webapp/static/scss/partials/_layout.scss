@@ -1,14 +1,86 @@
 @import "variables";
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-@font-face {
-  font-family: Roboto;
-  src: url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+body {
+	&.font_single {
+		font-size: 100%;
+
+		button#font_single {
+			@include theme(background-color, accent1);
+		}
+	}
+
+	&.font_double {
+		font-size: 150%;
+
+		button#font_double {
+			@include theme(background-color, accent1);
+		}
+	}
+
+	&.font_triple {
+		font-size: 200%;
+
+		button#font_triple {
+			@include theme(background-color, accent1);
+		}
+	}
+}
+
+div.accessibility {
+	display: flex;
+	flex-direction: column;
+}
+
+html,body
+{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+@media (any-hover: hover) {
+
+}
+@media (any-hover: none) {
+	html {
+		font-size: 200%;
+	}
+}
+
+
+button.quick-button {
+	padding: 1ch;
+	border: 2px solid;
+	@include theme(border-color, accent2);
+	border-radius: 1ch;
+	font-weight: bold;
+
+	//vertical-align: bottom;
+
+	@include theme(background-color, bg3);
+	@include theme(color, text);
+
+	&:hover {
+		cursor: pointer;
+		@include theme-adjust(box-shadow, accent2, rgba, .37, inset 0 0 0 1000ch);
+	}
+}
+
+div.quick-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	gap:1ch;
+	align-content: stretch;
 }
 
 body {
 	margin: 0;
-	background-color: $bg2;
-	color: white;
+	@include theme(background-color, bg2);
+	@include theme(color, text);
 	font-family: Roboto, sans-serif;
 	min-height: 100vh;
 	overflow-x: hidden;
@@ -34,30 +106,63 @@ div.main-section {
 	flex-grow: 1;
 
 	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	column-gap: 3ch;
-	align-items: flex-start;
-	padding: 3ch 0;
+	gap: 3ch;
+
+	@media (any-hover: hover) {
+		padding: 3ch 3ch;
+		flex-direction: row;
+		justify-content: center;
+		align-items: flex-start;
+	}
+	@media (any-hover: none) {
+		padding: 1ch 1ch;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+	}
 
 	div.content {
-		min-width: 40%;
-		max-width: 60%;
+
+		@media (any-hover: hover) {
+			min-width: 40%;
+			max-width: 60%;
+		}
+		@media (any-hover: none) {
+			width: 100%;
+		}
+
+
 		min-height: 20%;
-		background-color: $bg1;
+		@include theme(background-color, bg1);
 		padding: 1ch 2ch;
 		border-radius: 7px;
 	}
 
 	div.sidebar {
-		max-width: 25%;
+
 		gap: 1ch;
 		display: flex;
-		flex-direction: column;
+
+		@media (any-hover: hover) {
+			flex-direction: column;
+			max-width: 25%;
+		}
+		@media (any-hover: none) {
+			flex-direction: row;
+			justify-content: space-between;
+			align-content: stretch;
+			flex-wrap: wrap;
+			width: 100%;
+
+			div {
+				flex-grow: 1;
+				max-width: 46%;
+			}
+		}
 
 		div {
-			background-color: $bg1;
-			padding: 2ch 3ch;
+			@include theme(background-color, bg1);
+			padding: 1.5ch 2ch;
 			border-radius: 5px;
 
 			gap: 0.5ch;
@@ -72,14 +177,15 @@ div.main-section {
 		div.tickets {
 			gap: 0.5ch;
 			a {
-				background-color: $accent1;
+				@include theme(background-color, accent1);
 				padding: 0.5ch 2ch;
 				text-align: center;
 				font-size: 1.5em;
 				border-radius: 7px;
-				border: 3px solid darken($accent1, 20%);
+				border: 3px solid;
+				@include theme-adjust(border-color, accent1, darken, 20%);
 				text-decoration: none;
-				color: white;
+				@include theme(color, inv_text);
 				transition: box-shadow 150ms ease-in-out;
 			}
 			a:hover {
@@ -95,7 +201,7 @@ div.main-section {
 				font-size: 1.5em;
 				border-radius: 7px;
 				text-decoration: none;
-				color: white;
+				@include theme(color, text);
 
 				display: flex;
 				flex-direction: row;
@@ -113,10 +219,12 @@ div.main-section {
 						width: auto;
 						height: 1.5rem;
 						fill: white;
+						@include theme(color, text);// maybe
 					}
 				}
 				span.text {
 					flex-grow: 2;
+					padding: 0 1ch;
 				}
 
 				transition: box-shadow 150ms ease-in-out;
@@ -129,26 +237,31 @@ div.main-section {
 			a.facebook {
 				background-color: #1877f2;
 				border: 3px solid darken(#1877f2, 20%);
+				color: #040404;
 			}
 
 			a.instagram {
 				background-color: #e1306c;
 				border: 3px solid darken(#e1306c, 20%);
+				color: #040404;
 			}
 
 			a.twitter {
 				background-color: #1da1f2;
 				border: 3px solid darken(#1da1f2, 20%);
+				color: #040404;
 			}
 
 			a.other {
-				background-color: $accent2;
-				border: 3px solid darken($accent2, 20%);
+				@include theme(background-color, accent2);
+				border: 3px solid;
+				@include theme-adjust(border-color, accent2, darken, 20%);
 			}
 
 			a.other:nth-child(2n) {
-				background-color: $accent1;
-				border: 3px solid darken($accent1, 20%);
+				@include theme(background-color, accent1);
+				border: 3px solid;
+				@include theme-adjust(border-color, accent1, darken, 20%);
 			}
 		}
 
@@ -159,7 +272,7 @@ div.main-section {
 				font-size: 1.5em;
 				border-radius: 7px;
 				text-decoration: none;
-				color: white;
+				color: #373737;
 
 				display: flex;
 				flex-direction: row;
@@ -176,7 +289,7 @@ div.main-section {
 						font-size: inherit;
 						width: auto;
 						height: 1.5rem;
-						fill: white;
+						fill: white; //maybe
 					}
 				}
 
@@ -188,13 +301,15 @@ div.main-section {
 			}
 
 			a.blog {
-				background-color: $accent2;
-				border: 3px solid darken($accent2, 20%);
+				@include theme(background-color, accent2);
+				border: 3px solid;
+				@include theme-adjust(border-color, accent2, darken, 20%);
 			}
 
 			a.blog:nth-child(2n+1) {
-				background-color: $accent1;
-				border: 3px solid darken($accent1, 20%);
+				@include theme(background-color, accent1);
+				border: 3px solid;
+				@include theme-adjust(border-color, accent1, darken, 20%);
 			}
 
 			a:hover {
@@ -206,21 +321,23 @@ div.main-section {
 
 
 div.title-bar {
-	position: relative;
+	position: sticky;
+	top: 0;
 	z-index: 9999;
 	display: flex;
 	flex-direction: row;
-	align-items: center;
+	align-items: stretch;
 	justify-content: space-between;
 	border-bottom: 1px solid dimgrey;
 	border-left: 0;
 	border-right: 0;
 
-	color: white;
-	background-color: $bg1;
+	@include theme(color, text);
+	@include theme(background-color, bg1);
 
 	div.nav {
 		list-style-type: none;
+
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
@@ -231,54 +348,197 @@ div.title-bar {
 			text-decoration: none;
 			border-left: 1px solid dimgrey;
 			white-space: nowrap;
-			background-color: $bg1;
+			@include theme(background-color, bg1);
 			//border-bottom: 1px solid dimgrey;
 
 			&.active {
-				background-color: $accent1;
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
 			}
 
 			&:hover {
-				background-color: $accent1;
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
 			}
 
 			h3 {
 				font-weight: normal;
 				padding: 0 2ch;
 			}
+
+			&.search {
+				display: flex;
+				flex-direction: row;
+				align-items: stretch;
+			}
+
+			&.hamburger {
+				@media (any-hover: none) {
+					display: flex;
+				}
+				@media (any-hover: hover) {
+					display: none;
+				}
+
+				flex-direction: row;
+				align-items: stretch;
+				svg {
+					display: block;
+					fill: none;
+					@include theme(stroke, text);
+					stroke-width: 7%;
+				}
+			}
+
+			&:not(.hamburger) {
+				@media (any-hover: none) {
+					display: none;
+				}
+			}
+
+			svg {
+				width: 5ch;
+				padding: 0 1ch;
+				margin: auto 0;
+				@include theme(fill, text);
+			}
 		}
 	}
 
 	div.title {
-		margin: 1ch;
+		//margin: 1ch;
 		padding-left: 1ch;
-		color: white;
+		@include theme(color, text);
 		white-space: nowrap;
 
 		a {
 			text-decoration: none;
-			color: white;
+			@include theme(color, text);
 
 			h1 {
-				margin: 0;
+				margin-block-start: 0.33em;
+    			margin-block-end: 0.33em;
 				color: inherit;
 				font-weight: normal;
 			}
 
 			&:hover {
-				color: $accent1;
+				@include theme(color, accent1);
 			}
 		}
 	}
 }
 
+div#mobile-nav {
+	@media (any-hover: none) {
+		display: flex;
+	}
+	@media (any-hover: hover) {
+		display: none;
+	}
+	flex-direction: column;
+	align-items: stretch;
+	list-style-type: none;
+	gap: 1ch;
 
+	height: 150vh;
+	padding-top: 5vh;
+
+	overflow: hidden;
+
+	a {
+		text-align: center;
+		color: inherit;
+		text-decoration: none;
+		@include theme(background-color, bg3);
+
+
+		&.active {
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
+			}
+
+			&:hover {
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
+			}
+
+			h3 {
+				font-weight: normal;
+				padding: 0 2ch;
+			}
+	}
+
+	&.collapsed {
+		//height: 0;
+		//padding-top: 0;
+		margin-top: -155vh;
+	}
+
+	transition: margin-top 0.4s;
+}
+
+#slider-container-outer {
+	overflow: hidden;
+}
+
+#slider-container {
+	display: flex;
+	flex-wrap: nowrap;
+	flex-direction: row;
+	//justify-content: center;
+}
+
+/* CSS transition applied when translation of items happen */
+.slider-container-transition {
+	transition: transform 1s ease-in-out;
+}
+
+.slider-item {
+	width: 100%;
+	flex-shrink: 0;
+	flex-grow:1;
+	max-height: 50vh;
+
+	/* Center and scale the image nicely */
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: cover;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+
+	img {
+		height: 100%;
+		width: auto;
+		object-fit: contain;
+		z-index: 100;
+		flex-grow: 1;
+
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+	}
+
+	//div {
+	//	width: 35%;
+	//	height: 90%;
+	//}
+}
+
+#body.noscroll {
+	min-height: 145vh;
+	height: 145vh;
+	max-height: 145vh;
+	overflow-y: hidden !important;
+}
 
 div.footer {
-	background-color: #272727;
+	@include theme(background-color, bg1);
 	position: relative;
 	bottom: 0;
-	height: 4ch;
+	//height: 4ch;
 	width: 100vw;
 	padding: 1ch;
 

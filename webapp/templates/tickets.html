@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Tickets</h2>
+
+	{% if web_config["tickets-active"] == "1" %}
+		You will be redirected to our tickets shop in 5 seconds. If this doesnt work, press the button below<br><br>
+		<button type="button" class="quick-button" onclick="window.location.href='{{ web_config["tickets-link"] }}'">
+			Go to Tickets Shop
+		</button>
+		<meta http-equiv="refresh" content="2;url={{ web_config["tickets-link"] }}"/>
+	{% else %}
+		Unfortunately, Tickets for our next show are not currently for sale. <br><br>
+		<button type="button" class="quick-button" onclick="window.location.href='/'">
+			Return To Homepage
+		</button>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Search</h2>
+
+	<form action="/search" method="get">
+		<div class="fancy-input">
+			<input id="search" name="search" type="text" placeholder=" " value="{{ arg }}">
+			<label for="search">Search</label>
+		</div>
+	</form>
+
+	<div class="results">
+		<h3>Results</h3>
+		<h4>Shows</h4>
+		<hr>
+		{% for entry in results["Shows"] %}
+			<a href="/past-shows/{{ entry.id }}">{{ entry.title }}</a><br>
+		{% endfor %}
+
+		<h4>Blogposts</h4>
+		<hr>
+		{% for entry in results["Blogposts"] %}
+			<a href="/blog/{{ entry.id }}">{{ entry.title }}</a><br>
+		{% endfor %}
+	</div>
+{% endblock %}

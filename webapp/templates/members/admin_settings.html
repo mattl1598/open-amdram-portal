@@ -1,0 +1,28 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h1>Admin Settings</h1>
+	<form action="" method=post>
+		<div class="fancy-input">
+			<input type="text" name="site-name" value="{{ settings_dict.get("site-name") }}">
+			<label for="site-name">Site Name</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<input type="text" name="tickets-link" value="{{ settings_dict.get("tickets-link") }}">
+			<label for="tickets-link">Tickets Url</label>
+		</div>
+
+		<br>
+		<div class="fancy-input">
+			<textarea name="socials" style="height: 10ch;">{{ settings_dict.get("socials") }}</textarea>
+			<label for="socials">Social Links (comma seperated)</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<textarea name="about" style="height: 60ch;">{{ settings_dict.get("about") }}</textarea>
+			<label for="about">About Us Content (Markdown)</label>
+		</div>
+		<br>
+		<input type="submit">
+	</form>
+{% endblock %}

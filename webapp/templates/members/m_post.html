@@ -1,0 +1,8 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h3>{{ post.show_title }}</h3>
+	<h1>{{ post.title }}</h1>
+	{{ post.date.strftime("%d %b %Y") }} by {{ post.firstname }} {{ post.lastname }}
+
+	{{ md(post.content) | safe }}
+{% endblock %}
