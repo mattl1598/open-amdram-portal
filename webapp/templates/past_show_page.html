@@ -26,7 +26,8 @@
 						<div id="div{{ loop.index }}">
 							<img id="photo{{ loop.index }}"
 							     class="{% if not loop.first %}img-hidden{% endif %}"
-							     data-data-src="/photo/{{ photo.photo_url }}"
+{#							     data-data-src="/photo/{{ photo.photo_url }}"#}
+							     src="/photo/{{ photo.photo_url }}"
 							     alt="Photo"
 							>
 						</div>
