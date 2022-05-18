@@ -164,6 +164,7 @@ def choose_album():
 		}
 
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems:search?access_token={access_token}"
+		print(url)
 		z = requests.post(url, data).json()
 		pprint(z)
 		next_token = "not none"
