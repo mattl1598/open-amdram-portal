@@ -13,7 +13,6 @@ from webapp.models import KeyValue, Member, Show, ShowPhotos, User, MemberShowLi
 @app.route("/video/<id>")
 def get_photo(id):
 	route = request.url_rule.rule[1:].split("/")[0]
-	print(route)
 
 	if session.get("access_token") is not None and session.get("access_token_expires") > int(time.time()):
 		session["access_token"] = session.get("access_token")
@@ -42,7 +41,6 @@ def get_photo(id):
 	if route == "photo":
 		return redirect(f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}")
 	elif route == "video":
-		print(f"{x.get('baseUrl')}{dv}")
 		return redirect(f"{x.get('baseUrl')}{dv}")
 	else:
 		abort(404)
@@ -50,10 +48,12 @@ def get_photo(id):
 
 @app.route("/members/set_show_photos/oauth")
 def oauth():
-	redirect_url = request.url_root + "members/set_show_photos/form"
+	if "localhost" in request.url_root:
+		redirect_url = request.url_root + "members/set_show_photos/form"
+	else:
+		redirect_url = str(request.url_root + "members/set_show_photos/form").replace("http://", "https://")
 	refresh_time = KeyValue.query.filter_by(key="refresh_time").first()
-	print(int(refresh_time.value))
-	print(int(time.time()))
+
 	if (refresh_time is not None) and (int(refresh_time.value) > int(time.time())):
 		return redirect(redirect_url)
 	else:
@@ -119,9 +119,7 @@ def choose_album():
 				"client_secret": client_secret,
 				"grant_type": "refresh_token"
 			}
-			pprint(data)
 			x = requests.post(url=url, data=data)
-			pprint(x.json())
 			access_token = x.json().get("access_token")
 
 		url = "https://photoslibrary.googleapis.com/v1/albums"
@@ -132,7 +130,6 @@ def choose_album():
 		while next_token is not None:
 			for album in y.get("albums"):
 				albums.append((album.get("id"), album.get("title"),))
-			print(next_token := y.get("nextPageToken"))
 			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={next_token}").json()
 
 		shows = Show.query \
@@ -155,9 +152,7 @@ def choose_album():
 			"client_secret": client_secret,
 			"grant_type": "refresh_token"
 		}
-		pprint(data)
 		x = requests.post(url=url, data=data)
-		pprint(x.json())
 		access_token = x.json().get("access_token")
 
 		data = {
@@ -165,7 +160,6 @@ def choose_album():
 			"pageSize": 100,
 			"access_token": access_token
 		}
-		pprint(data)
 
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems:search?access_token={access_token}"
 		z = requests.post(url, data).json()
