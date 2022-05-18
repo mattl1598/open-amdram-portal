@@ -124,7 +124,7 @@ def choose_album():
 
 		url = "https://photoslibrary.googleapis.com/v1/albums"
 		y = requests.get(url + f"?access_token={access_token}&pageSize=50").json()
-		pprint(y)
+		# pprint(y)
 
 		albums = []
 		next_token = "not none"
