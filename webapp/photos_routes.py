@@ -124,13 +124,15 @@ def choose_album():
 
 		url = "https://photoslibrary.googleapis.com/v1/albums"
 		y = requests.get(url + f"?access_token={access_token}&pageSize=50").json()
+		pprint(y)
 
 		albums = []
 		next_token = "not none"
-		while next_token is not None:
+		while y.get("nextPageToken") is not None:
 			for album in y.get("albums"):
 				albums.append((album.get("id"), album.get("title"),))
-			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={next_token}").json()
+
+			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={y.get('nextPageToken')}").json()
 
 		shows = Show.query \
 			.with_entities(Show.id, Show.title)
