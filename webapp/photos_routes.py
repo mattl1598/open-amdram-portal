@@ -147,6 +147,7 @@ def choose_album():
 
 	else:
 		refresh_token = request.form.get("refresh_token")
+		print(refresh_token)
 		url = "https://oauth2.googleapis.com/token"
 		data = {
 			"refresh_token": refresh_token,
@@ -154,6 +155,7 @@ def choose_album():
 			"client_secret": client_secret,
 			"grant_type": "refresh_token"
 		}
+		pprint(data)
 		x = requests.post(url=url, data=data)
 		access_token = x.json().get("access_token")
 		pprint(x)
