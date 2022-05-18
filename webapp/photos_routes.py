@@ -156,6 +156,8 @@ def choose_album():
 		}
 		x = requests.post(url=url, data=data)
 		access_token = x.json().get("access_token")
+		pprint(x)
+		print("test123")
 
 		data = {
 			"albumId": request.form.get("album"),
