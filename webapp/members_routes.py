@@ -229,7 +229,7 @@ def edit_show(show_id):
 		MSL_ids = [value[0] for value in MSL.query.with_entities(MSL.id).all()]
 
 		if show_id == "new":
-			used_ids = [value[0] for value in User.query.with_entities(User.id).all()]
+			used_ids = [value[0] for value in Show.query.with_entities(Show.id).all()]
 			new_id = corha.rand_string(dic["show-title"], 16, used_ids)
 
 			new_show = Show(
