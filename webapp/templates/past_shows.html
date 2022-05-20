@@ -34,7 +34,7 @@
 				{% set url = "/past-shows/" + show.id %}
 			{% endif %}
 			<tr class="link" onclick="location.href='{{ url }}'">
-				<td>{{ loop.index0 }}</td>
+				<td>{{ '%04d' % loop.index0 }}</td>
 				<td><img class="programme" src="{{ show.programme }}" alt="{{ show.title }} programme cover"></td>
 				<td class="title"><h3>{{ show.title }}</h3></td>
 				<td>{{ show.season }} {{ show.date.year }}</td>

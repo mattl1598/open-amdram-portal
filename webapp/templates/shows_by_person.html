@@ -20,15 +20,16 @@
 		<tr>
 			<th>dateIndex</th>
 			<th></th>
-			<th onclick="sortTable('past_shows', 1)">Show</th>
+			<th onclick="sortTable('past_shows', 2)">Show</th>
 			<th onclick="sortTable('past_shows', 0)">Season</th>
-			<th onclick="sortTable('past_shows', 3)">Cast Roles</th>
-			<th onclick="sortTable('past_shows', 3)">Crew Roles</th>
+			<th onclick="sortTable('past_shows', 4)">Cast Roles</th>
+			<th onclick="sortTable('past_shows', 5)">Crew Roles</th>
 		</tr>
 
 		{% for k,v in shows.items() %}
 			<tr class="link" onclick="location.href='/past-shows/{{ k }}';">
-				<td>{{ loop.index0 }}</td>
+{#				<td>{{ '%04d' % loop.index0 }}</td>#}
+				<td>{{ show_details[k].date }}</td>
 				<td><img class="programme" src="{{ show_details[k].programme }}" alt="{{ show_details[k].title }} programme cover"></td>
 				<td class="title"><h3>{{ show_details[k].title }}</h3></td>
 				<td>{{ show_details[k].season }} {{ show_details[k].date.year }}</td>
@@ -66,4 +67,10 @@
 			</tr>
 		{% endfor %}
 	</table>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			sortTable('past_shows', 0)
+			sortTable('past_shows', 0)
+		}, false)
+	</script>
 {% endblock %}

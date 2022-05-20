@@ -55,8 +55,6 @@ def oauth():
 	refresh_time = KeyValue.query.filter_by(key="refresh_time").first()
 
 	if (refresh_time is not None) and (int(refresh_time.value) > int(time.time())):
-		return redirect(redirect_url)
-	else:
 		client_id = app.config['g_client_id']
 		client_secret = app.config['g_client_secret']
 
@@ -73,6 +71,8 @@ def oauth():
 			f"client_id={client_id}"
 
 		return redirect(oauth2_url)
+	else:
+		return redirect(redirect_url)
 
 
 @app.route("/members/set_show_photos/form", methods=["GET", "POST"])
@@ -128,19 +128,22 @@ def choose_album():
 
 		albums = []
 		next_token = "not none"
-		while y.get("nextPageToken") is not None:
+		while next_token is not None:
+			next_token = y.get('nextPageToken')
 			for album in y.get("albums"):
 				albums.append((album.get("id"), album.get("title"),))
 
-			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={y.get('nextPageToken')}").json()
+			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={next_token}").json()
 
 		shows = Show.query \
-			.with_entities(Show.id, Show.title)
+			.order_by(Show.date.desc()) \
+			.with_entities(Show.id, Show.title)\
+			.all()
 
 		return render_template(
 			"set_show_photos.html",
 			css="m_dashboard.css",
-			albums=albums,
+			albums=sorted(albums, key=lambda tup: tup[1]),
 			shows=shows,
 			refresh_token=refresh_token
 		)
@@ -175,7 +178,7 @@ def choose_album():
 		photos = []
 		while next_token is not None:
 			for photo in z.get("mediaItems"):
-				print(photo.get("id"))
+				# print(photo.get("id"))
 				photo_tuple = (
 					list({"photo", "video"}.intersection(set(photo.get("mediaMetadata").keys())))[0],
 					photo.get("id"),

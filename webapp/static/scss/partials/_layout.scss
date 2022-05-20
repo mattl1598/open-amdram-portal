@@ -498,7 +498,7 @@ div#mobile-nav {
 	width: 100%;
 	flex-shrink: 0;
 	flex-grow:1;
-	max-height: 50vh;
+	height: 50vh;
 
 	/* Center and scale the image nicely */
 	background-position: center center;
@@ -512,7 +512,7 @@ div#mobile-nav {
 
 	img {
 		height: 100%;
-		width: auto;
+		width: 100%;
 		object-fit: contain;
 		z-index: 100;
 		flex-grow: 1;

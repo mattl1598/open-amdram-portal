@@ -379,7 +379,7 @@ def u(user_id, test):
 	for link in msls:
 		shows.setdefault(link.show_id, []).append(MemberRenderer(link, user))
 
-	show_details = {i.id: i for i in Show.query.filter(Show.id.in_(shows.keys())).all()}
+	show_details = {i.id: i for i in Show.query.order_by(Show.date.desc()).filter(Show.id.in_(shows.keys())).all()}
 
 	return render_template(
 		"shows_by_person.html",
@@ -420,7 +420,7 @@ def m(member_id, test):
 	for link in msls:
 		shows.setdefault(link.show_id, []).append(MemberRenderer(link))
 
-	show_details = {i.id: i for i in Show.query.filter(Show.id.in_(shows.keys())).all()}
+	show_details = {i.id: i for i in Show.query.order_by(Show.date.desc()).filter(Show.id.in_(shows.keys())).all()}
 
 	return render_template(
 		"shows_by_person.html",
