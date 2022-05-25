@@ -1,5 +1,5 @@
 # Open Am-Dram Portal
-
+## FROZEN - THIS BRANCH PRESERVES THE PROJECT FOR UNI DISSERTATION REFERENCE ONLY
 An open-source website and portal for Amateur Dramatics groups.
 
 Currently being developed as part of a uni degree final project.
