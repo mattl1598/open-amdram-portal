@@ -1,0 +1,25 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<form action="" method=post>
+		<input type="hidden" name="id" value="{{ post.id }}">
+		<br>
+		<div class="fancy-input">
+			<input type="text" name="title" placeholder=" " value="{{ post.title }}">
+			<label for="title">Title</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<input type="date" name="last-perf" id="last-perf" value="{{ post.date.strftime('%Y-%m-%d') }}" required>
+			<label for="type">Publish Date</label>
+		</div>
+		<br>
+		<label for="content">Blog Content</label>
+		<textarea id="wysiwyg" name="content">{{ post.content }}</textarea>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const easyMDE = new EasyMDE({element: document.querySelector("#wysiwyg") });
+			}, false)
+		</script>
+		<input type="submit">
+	</form>
+{% endblock %}

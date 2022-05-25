@@ -2,24 +2,26 @@
 {% block portal_content %}
 	<h1>{{ show.title }}</h1>
 
-	<div class="manage">
-		<h2>Manage Show</h2>
-		<h3>Add Files</h3>
-		<form action="/members/upload_file/{{ show.id }}" method=post enctype=multipart/form-data>
-			<input type=file name=file>
-            <input type=submit value=Upload>
-		</form>
-		<br>
-		<h3>Create a New Post</h3>
-		<button type="button" onclick="window.location.href='/members/new_post/{{ show.id }}'">Create New Post</button>
-		<hr>
-	</div>
+	{% if current_user in editors %}
+		<div class="manage">
+			<h2>Manage Show</h2>
+			<h3>Add Files</h3>
+			<form action="/members/upload_file/{{ show.id }}" method=post enctype=multipart/form-data>
+				<input type=file name=file>
+	            <input type=submit value=Upload>
+			</form>
+			<br>
+			<h3>Create a New Post</h3>
+			<button type="button" onclick="window.location.href='/members/new_post/{{ show.id }}'">Create New Post</button>
+			<hr>
+		</div>
+	{% endif %}
 	
 	<div class="files">
 		<h2>Files</h2>
 		{% for file in files %}
 			<a href="/members/file/{{ file.id }}/{{ file.name }}" download>{{ file.name }}</a>
-			<a href="/members/file_delete/{{ file.id }}/{{ file.name }}" onclick="return confirm('Are you sure?')">Delete</a>
+			{% if current_user in editors %}<a href="/members/file_delete/{{ file.id }}/{{ file.name }}" onclick="return confirm('Are you sure?')">Delete</a>{% endif %}
 			<br>
 		{% endfor %}
 		{% if len(files) == 0 %}

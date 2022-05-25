@@ -71,6 +71,15 @@
 	                <li><a href="/members/show/{{ m_show.id }}">{{ m_show.title }}</a></li>
 	            {% endfor %}
             </ul>
+
+            {% if current_user.role in ["author", "admin"] %}
+	            <h3>Blog Tools</h3>
+	            <ul>
+		            <li><a href="/members/manage-blog">Manage Blog</a></li>
+		            <li><a href="/members">Create New Blog</a></li>
+	            </ul>
+            {% endif %}
+
             {% if current_user.role == "admin" %}
 	            <h3>Admin Tools</h3>
 	            <ul>

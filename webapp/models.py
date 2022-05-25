@@ -46,7 +46,7 @@ class User(UserMixin, db.Model):
 		super(User, self).__init__(**kwargs)
 
 	def __repr__(self):
-		return f"User('{self.id}', '{self.firstname}', '{self.lastname}', '{self.username}', '{self.role}')"
+		return f"User('{self.id}', '{self.firstname}', '{self.lastname}', '{self.role}')"
 
 	def update(self, **kwargs):
 		for key, value in kwargs.items():

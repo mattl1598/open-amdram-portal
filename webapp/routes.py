@@ -12,7 +12,7 @@ from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, fb_icon, ig_icon, other_icon, magnify, tw_icon
+from webapp.svgs import blog_icon, eye, fb_icon, ig_icon, other_icon, magnify, tw_icon, cross
 import json
 from lorem_text import lorem as lorem_func
 
@@ -61,7 +61,9 @@ def inject_nav():
 		"ig_icon": ig_icon,
 		"other_icon": other_icon,
 		"blog_icon": blog_icon,
-		"search": magnify
+		"search": magnify,
+		"eye": eye,
+		"x": cross
 	}
 
 	nav = [
@@ -475,7 +477,7 @@ def members():
 		if request.method == "POST":
 			user = User.query.filter_by(email=request.form['email']).first()
 			if user is not None and user.verify_password(request.form['password']):
-				if user.otp_secret != "":
+				if user.otp_secret != "" and user.otp_secret is not None:
 					session['email'] = request.form['email']
 					return redirect(url_for("otp"))
 				else:
