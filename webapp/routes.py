@@ -501,9 +501,14 @@ def otp():
 		session.pop('email', None)
 		if totp.verify(request.form['otp']):
 			login_user(user)
-			return redirect(url_for("frontpage"))
+			return redirect(url_for("dashboard"))
 		else:
 			return redirect(url_for("members"))
+
+
+@app.get("/login")
+def login():
+	return redirect(url_for("members"))
 
 
 @app.route("/js/<string:filename>", methods=["GET"])
