@@ -1,8 +1,8 @@
-{% extends "layout.html" %}
+{% extends template %}
 {% block content %}
 	<div class="flex-container">
 		<div class="top-bar">
-			<div class="svg-button" onclick="location.href='/blog';">
+			<div class="svg-button" onclick="location.href='/blog?{{ embedded }}';">
 				<svg viewBox="0 0 10 20" fill-opacity="0">
 					<path d="m 10 0 l -10 10 l 10 10"></path>
 				</svg>

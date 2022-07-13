@@ -124,8 +124,14 @@ div.main-section {
 	div.content {
 
 		@media (any-hover: hover) {
-			min-width: 40%;
-			max-width: 60%;
+			&:not(.embedded) {
+				min-width: 40%;
+				max-width: 60%;
+			}
+			&.embedded {
+				width: 100%;
+			}
+
 		}
 		@media (any-hover: none) {
 			width: 100%;

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" id="html" class="light">
+<head>
+	<meta charset="UTF-8">
+	<title>{{ title }} - {{ web_config["site-name"] }}</title>
+	<link href="/css/{{ css }}" rel="stylesheet" type="text/css">
+</head>
+<body class="font_single" id="body">
+	<div class="main-section embedded">
+		<div class="content embedded">
+			{% block content %}
+			{% endblock %}
+		</div>
+	</div>
+</body>
+</html>

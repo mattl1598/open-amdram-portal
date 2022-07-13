@@ -237,7 +237,13 @@ def search():
 @app.route("/blog", methods=["GET"])
 def blogs():
 	posts = BlogPost.query.order_by(BlogPost.date.desc()).all()
-	return render_template("blogs.html", css="blogs.css", posts=posts)
+	return render_template(
+		"blogs.html",
+		template={True: "blank_template.html", False: "layout.html"}["embedded" in request.args],
+		embedded={True: "embedded", False: ""}["embedded" in request.args],
+		css="blogs.css",
+		posts=posts
+	)
 
 
 @app.route("/blog/latest", methods=["GET"])
@@ -254,6 +260,8 @@ def blog_post(post_id):
 	db.session.commit()
 	return render_template(
 		"post.html",
+		template={True: "blank_template.html", False: "layout.html"}["embedded" in request.args],
+		embedded={True: "embedded", False: ""}["embedded" in request.args],
 		post=post,
 		author=author,
 		css="post.css"
