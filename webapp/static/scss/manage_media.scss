@@ -1,0 +1,48 @@
+@import "partials/m_layout";
+@import "partials/layout";
+@import "partials/variables";
+
+.media_items {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1ch;
+
+	div.media_item {
+		border-radius: 0.5ch;
+		padding: 0.5ch 0.5ch;
+		text-align: center;
+		text-decoration: none;
+		@include theme(background-color, accent2);
+		@include theme(color, text);
+		border: 3px solid;
+		@include theme-adjust(border-color, accent2, darken, 20%);
+
+		display: grid;
+		overflow: hidden;
+
+		&:hover {
+			@include theme(background-color, accent1);
+		}
+
+		img {
+			grid-area: 1/-1;
+			z-index: 10;
+			object-fit: cover;
+		}
+		svg {
+			grid-area: 1/-1;
+			z-index: 20;
+			object-fit: cover;
+			opacity: 0;
+			fill: #ffffff;
+
+			&:hover {
+				opacity: 100%;
+				transition: opacity 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;
+				backdrop-filter: blur(10px) brightness(0.4);
+				cursor: pointer;
+			}
+		}
+	}
+}

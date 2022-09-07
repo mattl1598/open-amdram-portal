@@ -1,19 +1,38 @@
+import io
+import json
 import time
+
+from flask_login import login_required
+from PIL import Image
 from pprint import pprint
 
 import requests
 from corha import corha
-from flask import abort, jsonify, make_response, redirect, render_template, send_file, url_for, request, session
-from flask_login import login_user, logout_user, current_user, login_required
+from flask import abort, redirect, render_template, url_for, request, session, jsonify  # , make_response, send_file
+# from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.datastructures import FileStorage
+
 from webapp import app, db
-from webapp.models import KeyValue, Member, Show, ShowPhotos, User, MemberShowLink as MSL
+from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia  # , User, Member, MemberShowLink as MSL
 
 
-@app.route("/photo/<id>")
-@app.route("/video/<id>")
-def get_photo(id):
-	route = request.url_rule.rule[1:].split("/")[0]
+def get_albums():
+	url = "https://photoslibrary.googleapis.com/v1/albums"
+	y = requests.get(url + f"?access_token={session.get('access_token')}&pageSize=50").json()
 
+	albums = []
+	next_token = "not none"
+	while next_token is not None:
+		next_token = y.get('nextPageToken')
+		for album in y.get("albums"):
+			albums.append((album.get("id"), album.get("title"),))
+
+		y = requests.get(url + f"?access_token={session.get('access_token')}&pageSize=50&pageToken={next_token}").json()
+
+	return albums
+
+
+def update_access_token():
 	if session.get("access_token") is not None and session.get("access_token_expires") > int(time.time()):
 		session["access_token"] = session.get("access_token")
 		session["access_token_expires"] = session.get("access_token_expires")
@@ -32,16 +51,186 @@ def get_photo(id):
 		session["access_token_expires"] = int(x.get("expires_in")) + int(time.time())
 		session.modified = True
 
-	dv = ""
-	if route == "video":
-		dv = "=dv"
 
-	url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{id}?access_token={session.get('access_token')}"
-	x = requests.get(url=url).json()
-	if route == "photo":
-		return redirect(f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}")
-	elif route == "video":
-		return redirect(f"{x.get('baseUrl')}{dv}")
+@login_required
+@app.route("/members/manage_media", methods=["POST", "GET"])
+def manage_media(**kwargs):
+	if request.method == "POST" or kwargs.get("mammoth") == "true":
+		b_in = io.BytesIO()
+		if kwargs.get("mammoth") == "true":
+			print("mammoth")
+			filename = kwargs.get("image_name").replace(' ', '_')
+			b_in = kwargs.get("image")
+		else:
+			file = request.files.get('fileElem')
+			print(file.content_type)
+			filename = file.filename.replace(' ', '_')
+			file.save(b_in)
+		if filename.rsplit('.', 1)[1] != "webp":
+			b_out = io.BytesIO()
+			with Image.open(b_in) as im:
+				im.save(b_out, format="webp")
+		else:
+			b_out = b_in
+
+		update_access_token()
+
+		url = "https://photoslibrary.googleapis.com/v1/uploads"
+		headers = {
+			"Content-type": "application/octet-stream",
+			"X-Goog-Upload-Content-Type": "image/webp",
+			"X-Goog-Upload-Protocol": "raw"
+		}
+
+		x = requests.post(
+			url + f"?access_token={session.get('access_token')}",
+			headers=headers,
+			data=b_out.getvalue()
+		)
+
+		url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
+		headers = {
+			"Content-type": "application/json"
+		}
+		data = {
+			"newMediaItems": [
+				{
+					"description": "",
+					"simpleMediaItem": {
+						"fileName": f"{filename.rsplit('.', 1)[0]}.webp",
+						"uploadToken": f"{x.content.decode('utf-8')}"
+					}
+				}
+			]
+		}
+
+		x = requests.post(
+			url + f"?access_token={session.get('access_token')}",
+			headers=headers,
+			data=json.dumps(data)
+		)
+		pprint(x.json())
+
+		new_item = StaticMedia(
+			id=StaticMedia.get_new_id(),
+			item_id=x.json()["newMediaItemResults"][0]["mediaItem"]["id"],
+			filename=x.json()["newMediaItemResults"][0]["mediaItem"]["filename"],
+			item_type=x.json()["newMediaItemResults"][0]["mediaItem"]["mimeType"],
+			item_dim=",".join(
+				[
+					x.json()["newMediaItemResults"][0]["mediaItem"]["mediaMetadata"][i]
+					for i in ["width", "height"]
+				]
+			)
+		)
+
+		db.session.add(new_item)
+		db.session.commit()
+
+		if kwargs.get("mammoth") == "true":
+			return {
+				"path": f"/media/{new_item.id}/{new_item.filename}"
+			}
+		else:
+			return redirect(request.endpoint)
+	else:
+		if "delete" in request.args.keys():
+			media_db = StaticMedia.query.filter_by(id=request.args.get("delete")).first()
+			StaticMedia.query.filter_by(id=request.args.get("delete")).delete()
+
+			update_access_token()
+
+			albums = {b: a for (a, b) in get_albums()}
+
+			if "OADP_DELETE_ME" in albums.keys():
+				album_id = albums.get("OADP_DELETE_ME")
+			else:
+				x = requests.post(
+					url=f"https://photoslibrary.googleapis.com/v1/albums?access_token={session.get('access_token')}",
+					json={
+						"album": {
+							"title": "OADP_DELETE_ME"
+						}
+					}
+				)
+
+				album_id = x.json().get("id")
+
+			requests.post(
+				url=f"https://photoslibrary.googleapis.com/v1/albums/{album_id}:batchAddMediaItems"
+				f"?access_token={session.get('access_token')}",
+				json={
+						"mediaItemIds": [
+								media_db.item_id
+							]
+					}
+			)
+
+			db.session.commit()
+
+			return redirect(request.endpoint)
+		else:
+			media_db = StaticMedia.query.all()
+
+		if len(media_db):
+			media_ids = {
+				f"{x.item_id}": f"{x.id}"
+				for x in media_db
+			}
+
+			update_access_token()
+
+			url = f"https://photoslibrary.googleapis.com/v1/mediaItems:batchGet?mediaItemIds="
+			url += f"{'&mediaItemIds='.join(media_ids.keys())}"
+			url += f"&access_token={session.get('access_token')}"
+
+			x = requests.get(url)
+
+			thumbs = [
+				(media_ids[i["mediaItem"]["id"]], f'{i["mediaItem"]["baseUrl"]}=d', i["mediaItem"]["filename"],)
+				for i in x.json()["mediaItemResults"]
+			]
+
+		else:
+			thumbs = []
+
+		return render_template(
+			"members/upload_media.html",
+			thumbs=thumbs,
+			css="manage_media.css",
+			js="manage_media.js"
+		)
+
+
+@app.route("/photo/<id>")
+@app.route("/video/<id>")
+@app.route("/media/<id>/<filename>")
+def get_photo(id, **kwargs):
+	route = request.url_rule.rule[1:].split("/")[0]
+
+	update_access_token()
+
+	if route in ["photo", "video"]:
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{id}?access_token={session.get('access_token')}"
+		x = requests.get(url=url).json()
+		if route == "photo":
+			# return redirect(
+			# 	f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}"
+			# )
+			return redirect(
+				f"{x.get('baseUrl')}=w1000-h1000"
+			)
+		elif route == "video":
+			return redirect(f"{x.get('baseUrl')}=dv")
+	elif route == "media":
+		print(request.referrer)
+		item = StaticMedia.query.filter_by(id=id, filename=kwargs["filename"]).first_or_404()
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
+			f"access_token={session.get('access_token')}"
+		x = requests.get(url=url).json()
+		return redirect(
+			f"{x.get('baseUrl')}=d"
+		)
 	else:
 		abort(404)
 
@@ -56,7 +245,7 @@ def oauth():
 
 	if (refresh_time is not None) and (int(refresh_time.value) > int(time.time())):
 		client_id = app.config['g_client_id']
-		client_secret = app.config['g_client_secret']
+		# client_secret = app.config['g_client_secret']
 
 		auth_endpoint = "https://accounts.google.com/o/oauth2/v2/auth"
 		scope = "https://www.googleapis.com/auth/photoslibrary"
@@ -137,7 +326,7 @@ def choose_album():
 
 		shows = Show.query \
 			.order_by(Show.date.desc()) \
-			.with_entities(Show.id, Show.title)\
+			.with_entities(Show.id, Show.title) \
 			.all()
 
 		return render_template(

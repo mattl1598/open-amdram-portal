@@ -1,8 +1,20 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from corha import corha
 from webapp import db
 from webapp import login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+
+
+class NewIdGetter:
+
+	def __init__(self, **kwargs):
+		print(kwargs)
+
+	@classmethod
+	def get_new_id(cls):
+		used_ids = [value[0] for value in cls.query.with_entities(cls.id).all()]
+		return corha.rand_string(datetime.now(timezone.utc).isoformat(), 16, used_ids)
 
 
 class KeyValue(db.Model):
@@ -20,7 +32,7 @@ class Files(db.Model):
 	content = db.Column(db.LargeBinary)
 
 
-class Post(db.Model):
+class Post(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	type = db.Column(db.String(16))
 	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
@@ -28,6 +40,7 @@ class Post(db.Model):
 	title = db.Column(db.String(40))
 	content = db.Column(db.Text)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	views = db.Column(db.Integer, default=0)
 
 
 class User(UserMixin, db.Model):
@@ -39,7 +52,8 @@ class User(UserMixin, db.Model):
 	password_hash = db.Column(db.String(128))
 	password = db.Column(db.String(60))
 	role = db.Column(db.String(30))
-	post = db.relationship('BlogPost', backref='user', lazy=True)
+	blogpost = db.relationship('BlogPost', backref='user', lazy=True)
+	post = db.relationship('Post', backref='user', lazy=True)
 	member = db.relationship('Member', backref='user', lazy=True)
 
 	def __init__(self, **kwargs):
@@ -147,3 +161,11 @@ class ShowPhotos(db.Model):
 	photo_type = db.Column(db.String(30))
 	photo_desc = db.Column(db.Text)
 
+
+class StaticMedia(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	item_id = db.Column(db.Text)
+	filename = db.Column(db.Text)
+	item_type = db.Column(db.String(30))
+	item_dim = db.Column(db.Text)

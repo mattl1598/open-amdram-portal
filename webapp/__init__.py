@@ -1,5 +1,5 @@
 import markdown as markdown
-from flask import Flask, session
+from flask import Flask  # , session
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sass import compile
@@ -21,6 +21,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1000 * 1000
 db = SQLAlchemy(app)
 
+
+# TODO move to env file
 app.config['g_client_id'] = "1038842806205-nfa619btg2u0vq5pv572i2nl6jjtd07a.apps.googleusercontent.com"
 app.config['g_client_secret'] = "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"
 
@@ -32,6 +34,7 @@ app.jinja_env.globals.update(
 	len=len
 )
 
+# TODO investigate circular imports in flask
 from webapp import routes, members_routes, photos_routes
 
 from webapp import models

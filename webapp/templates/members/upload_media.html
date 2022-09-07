@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Manage Static Media</h2>
+	<form action="/members/manage_media" method="POST" enctype="multipart/form-data">
+		<input type="file" name="fileElem" id="fileElem">
+		<button type="submit">Upload</button>
+	</form>
+	<hr>
+	<div class="media_items">
+{#		<h3>images go here</h3>#}
+		{% for image in thumbs %}
+			<div class="media_item" onclick="confirm_delete('{{ "?delete=" }}{{ image[0] }}')">
+				<img src="{{ image[1] }}" alt="{{ image[0] }}" title="{{ image[2] }}" width="200" height="200">
+				<svg viewbox="0 0 50 50" width="200" height="200">{{ icons["trash"] | safe }}</svg>
+			</div>
+		{% endfor %}
+	</div>
+
+{% endblock %}

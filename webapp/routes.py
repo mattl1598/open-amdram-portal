@@ -1,26 +1,25 @@
 import string
 from datetime import datetime
-from itertools import groupby
-from operator import attrgetter
 from urllib.parse import urlparse
+from lorem_text import lorem as lorem_func
 import corha
 import pyotp
+# import json
+
 from flask import abort, make_response, redirect, render_template, send_file, url_for, request, session
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import login_user, current_user  # , login_required, logout_user
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, eye, fb_icon, ig_icon, other_icon, magnify, tw_icon, cross
-import json
-from lorem_text import lorem as lorem_func
+from webapp.svgs import blog_icon, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross
 
 
-class NavItem():
-	def __init__(self, t, l):
-		title = t
-		link = l
+class NavItem:
+	def __init__(self, tit, lin):
+		self.title = tit
+		self.link = lin
 
 
 class MemberRenderer:
@@ -63,22 +62,23 @@ def inject_nav():
 		"blog_icon": blog_icon,
 		"search": magnify,
 		"eye": eye,
+		"trash": trash,
 		"x": cross
 	}
 
 	nav = [
-		{"title": "Home", "link": "/"},
-		# {"title": "Lorem", "link": "/lorem"},
-		{"title": "Blog", "link": "/blog"},
-		{"title": "Past Shows", "link": "/past-shows"},
-		{"title": "Auditions", "link": "/auditions"},
-		{"title": "About Us", "link": "/about-us"},
-		{"title": "Members", "link": "/members"}
+		{"title": "Home", "link": "/", "is_active": False},
+		# {"title": "Lorem", "link": "/lorem", "is_active": False},
+		{"title": "Blog", "link": "/blog", "is_active": False},
+		{"title": "Past Shows", "link": "/past-shows", "is_active": False},
+		{"title": "Auditions", "link": "/auditions", "is_active": False},
+		{"title": "About Us", "link": "/about-us", "is_active": False},
+		{"title": "Members", "link": "/members", "is_active": False}
 	]
 	if request.url_rule is not None:
 		route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
 		for i in range(0, len(nav)):
-			nav[i]["is_active"] = (route_split[0] == nav[i]["link"])
+			nav[i].__setitem__("is_active", route_split[0] == nav[i]["link"])
 
 	raw_socials = KeyValue.query.filter_by(key="socials").first().value.translate(
 		str.maketrans('', '', string.whitespace)).replace("https://", "").replace("http://", "").split(",")
@@ -101,8 +101,8 @@ def inject_nav():
 		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value
 	}
 
-	if (latest_blog := BlogPost.query.order_by(BlogPost.date.desc()).first()) is not None:
-		web_config["latest_blog"] = (latest_blog.date.strftime("%b %Y"), latest_blog.title,)
+	if (db_latest_blog := BlogPost.query.order_by(BlogPost.date.desc()).first()) is not None:
+		web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
 
 	m_shows = Show.query\
 		.order_by(Show.date.desc())\
@@ -236,7 +236,7 @@ def search():
 
 @app.route("/blog", methods=["GET"])
 def blogs():
-	posts = BlogPost.query.order_by(BlogPost.date.desc()).all()
+	posts = Post.query.filter_by(type="blog").order_by(Post.date.desc()).all()
 	return render_template(
 		"blogs.html",
 		template={True: "blank_template.html", False: "layout.html"}["embedded" in request.args],
@@ -248,13 +248,13 @@ def blogs():
 
 @app.route("/blog/latest", methods=["GET"])
 def latest_blog():
-	post = BlogPost.query.order_by(BlogPost.date.desc()).first_or_404()
+	post = Post.query.order_by(Post.date.desc()).first_or_404()
 	return redirect("/".join(["/blog", post.id]))
 
 
 @app.route("/blog/<post_id>", methods=["GET"])
 def blog_post(post_id):
-	post = BlogPost.query.filter_by(id=post_id).first_or_404()
+	post = Post.query.filter_by(id=post_id).first_or_404()
 	author = User.query.filter_by(id=post.author).first()
 	post.views += 1
 	db.session.commit()
@@ -300,6 +300,8 @@ def past_show_redirect(show_id):
 
 @app.route("/past-shows/<show_id>/<test>")
 def past_show_page(show_id, test):
+	test += " "
+
 	show = Show.query.filter_by(id=show_id).first_or_404()
 
 	raw_cast = MSL.query \
@@ -362,11 +364,12 @@ def u_redirect(user_id):
 
 @app.route("/past-shows/u/<user_id>/<test>")
 def u(user_id, test):
+	test.append(" ")
 	user_members = [
 		i[0] for i in
-		Member.query\
-		.filter(Member.associated_user == user_id)\
-		.with_entities(Member.id)\
+		Member.query
+		.filter(Member.associated_user == user_id)
+		.with_entities(Member.id)
 		.all()
 	]
 
@@ -410,6 +413,7 @@ def m_redirect(member_id):
 
 @app.route("/past-shows/m/<member_id>/<test>")
 def m(member_id, test):
+	test.append(" ")
 	member = Member.query.filter_by(id=member_id).first_or_404()
 	msls = MSL.query \
 		.filter(MSL.member_id == member_id) \
@@ -445,7 +449,7 @@ def m(member_id, test):
 @app.route("/lorem", methods=["GET"])
 def lorem():
 	# text = lorem.paragraphs(20)
-	return render_template("lorem.html", lorem=lorem_func.paragraphs(50), css="frontpage.css")
+	return render_template("lorem.html", lorem=lorem_func.paragraphs(30), css="frontpage.css")
 
 
 @app.route("/database", methods=["GET"])

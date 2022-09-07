@@ -42,7 +42,7 @@ function uploadFile(file) {
 	let url = '/members/manage-blog/upload'
 	let formData = new FormData()
 
-	formData.append('file', file)
+	formData.append('fileElem', file)
 
 	fetch(url, {
 		method: 'POST',

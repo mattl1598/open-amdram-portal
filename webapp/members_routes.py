@@ -1,19 +1,21 @@
 import io
-import pickle
-from datetime import datetime
-
 import dotmap
-import mammoth as mammoth
-from PIL import Image
+import json
 
+import mammoth as mammoth
+import requests
+from PIL import Image
+from PIL.ExifTags import TAGS
+from datetime import datetime
 from corha import corha
-from flask import abort, flash, make_response, redirect, render_template, send_file, url_for, request, session
-from flask_login import login_user, logout_user, current_user, login_required
+
+from flask import flash, make_response, redirect, render_template, send_file, url_for, request  # , abort, session
+from flask_login import logout_user, current_user, login_required  # , login_user
 from sqlalchemy import not_, or_
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, User, MemberShowLink as MSL
-import json
+from webapp.photos_routes import manage_media
 
 
 class BlankShow:
@@ -33,13 +35,13 @@ def dashboard():
 		.join(Show, Post.show_id == Show.id) \
 		.order_by(Post.date.desc()) \
 		.with_entities(
-		Post.id,
-		Post.date,
-		Post.title,
-		Post.content,
-		Show.title.label("show_title"),
-		Show.subtitle.label("show_subtitle")
-	) \
+			Post.id,
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		) \
 		.limit(10) \
 		.all()
 
@@ -58,15 +60,15 @@ def member_post(id):
 		.join(User, Post.author == User.id) \
 		.join(Show, Post.show_id == Show.id) \
 		.with_entities(
-		Post.id,
-		Post.date,
-		Post.title,
-		Post.content,
-		Show.title.label("show_title"),
-		Show.subtitle.label("show_subtitle"),
-		User.firstname,
-		User.lastname
-	) \
+			Post.id,
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle"),
+			User.firstname,
+			User.lastname
+		) \
 		.first_or_404()
 
 	return render_template(
@@ -133,7 +135,7 @@ def new_post(show_id):
 		)
 	else:
 		used_ids = [value[0] for value in Post.query.with_entities(Post.id).all()]
-		new_post = Post(
+		db_new_post = Post(
 			id=corha.rand_string(request.form.get("title"), 16, used_ids),
 			type=request.form.get("type"),
 			author=current_user.id,
@@ -143,7 +145,7 @@ def new_post(show_id):
 			date=datetime.now()
 		)
 
-		db.session.add(new_post)
+		db.session.add(db_new_post)
 		db.session.commit()
 
 		return redirect(f"/members/show/{show_id}")
@@ -155,9 +157,10 @@ def manage_blog():
 	if current_user.is_authenticated:
 		posts = []
 		if current_user.role == "author":
-			posts = BlogPost.query.filter_by(author=current_user.id).order_by(BlogPost.date.desc()).all()
+			# posts = BlogPost.query.filter_by(author=current_user.id).order_by(BlogPost.date.desc()).all()
+			posts = Post.query.filter_by(type="blog", author=current_user.id).order_by(Post.date.desc()).all()
 		elif current_user.role == "admin":
-			posts = BlogPost.query.order_by(BlogPost.date.desc()).all()
+			posts = Post.query.filter_by(type="blog").order_by(Post.date.desc()).all()
 		return render_template(
 			"members/manage_blog.html",
 			posts=posts,
@@ -172,41 +175,42 @@ def manage_blog():
 @app.post("/members/manage-blog/upload")
 @login_required
 def upload_blog():
-	used_ids = [value[0] for value in BlogPost.query.with_entities(BlogPost.id).all()]
-	blog_id = corha.rand_string(datetime.utcnow().isoformat(), 16, used_ids)
-
-	def convert_image(image, id=blog_id):
-		img_count = BlogImage.query.filter_by(blog_id=id).count()
-		sp_logo = BlogImage.query.get(("sitewide", 0)).image
+	def convert_image(image):
 		b = io.BytesIO()
 		with image.open() as image_bytes:
 			pil_image = Image.open(image_bytes, "r", None)
-			pil_image = pil_image.convert('RGB')
-			pil_image.save(b, "JPEG")
-			b.seek(0)
+			if (exif := pil_image._getexif()) is not None:
+				orientation = exif.get(274)
+			else:
+				orientation = 1
 
-		if b.read() == sp_logo:
-			id = "sitewide"
-			img_count = 0
-		else:
-			b.seek(0)
-			new_img = BlogImage(
-				blog_id=id,
-				image_no=img_count,
-				image=b.read()
+			pil_image = pil_image.rotate(
+				{1: 0, 2: 0, 3: 180, 4: 180, 5: 270, 6: 270, 7: 90, 8: 90}[orientation],
+				expand=True
 			)
-			db.session.add(new_img)
-			db.session.commit()
+
+			pil_image.save(b, "webp")
+			b.seek(0)
+		filename = "test.webp"
+
+		x = manage_media(
+			mammoth="true",
+			image_name=filename,
+			image=b
+		)
 
 		return {
-			"src": f"/blog_img/{id}/{img_count}"
+			"alt": "test.webp",
+			"src": x.get("path")
 		}
 
 	result = mammoth.convert_to_markdown(
-		request.files.get('file'),
-		convert_image=mammoth.images.img_element(convert_image))
+		request.files.get('fileElem'),
+		convert_image=mammoth.images.img_element(convert_image)
+	)
 
-	# modify markdown to match github style
+
+	# modify markdown to match GitHub style
 
 	# use ** to denote bold text rather than __
 	markdown = result.value.replace("__", "**")
@@ -221,24 +225,27 @@ def upload_blog():
 	markdown = markdown.replace("](http://", "](https://")
 	# remove initial hr element
 	markdown = markdown.replace("*** ***", "")
+	# alt text new line workaround
+	markdown = markdown.replace("\n", " ")
+	# TODO implement alt_text replacement workaround
 
 	for i in range(len(markdown)):
 		if markdown[i] not in [" ", "\n"]:
 			markdown = markdown[i:]
 			break
 
-	post = BlogPost(**{
-		"id": blog_id,
+	post = Post(**{
+		"id": Post.get_new_id(),
 		"date": datetime.utcnow(),
-		"title": request.files.get('file').filename.rstrip(".docx"),
+		"title": request.files.get('fileElem').filename.rstrip(".docx"),
 		"content": markdown,
-		"category": "blogpost",
+		"type": "blog",
 		"author": current_user.id,
 		"views": 0
 	})
 	db.session.add(post)
 	db.session.commit()
-	return make_response(blog_id, 200)
+	return make_response(post.id, 200)
 
 
 @app.route("/members/manage-blog/editor", methods=["GET", "POST"])
@@ -246,15 +253,15 @@ def upload_blog():
 def blog_editor():
 	if request.method == "GET":
 		if "new" in request.args.keys():
-			used_ids = [value[0] for value in BlogPost.query.with_entities(BlogPost.id).all()]
 			post = dotmap.DotMap({
-				"id": corha.rand_string(datetime.utcnow().isoformat(), 16, used_ids),
+				"id": Post.get_new_id(),
 				"date": datetime.utcnow(),
 				"title": "",
 				"content": ""
 			})
 		else:
-			post = BlogPost.query.filter_by(id=request.args.get("post")).first_or_404()
+			# post = BlogPost.query.filter_by(id=request.args.get("post")).first_or_404()
+			post = Post.query.filter_by(id=request.args.get("post")).first_or_404()
 		return render_template(
 			"members/blog_form.html",
 			post=post,
@@ -267,12 +274,12 @@ def blog_editor():
 		)
 	else:
 		if "new" in request.args.keys():
-			new_blogpost = BlogPost(
+			new_blogpost = Post(
 				id=request.form.get("id"),
 				title=request.form.get("title"),
 				date=request.form.get("date"),
 				content=request.form.get("content"),
-				category="blogpost",
+				type="blogpost",
 				author=current_user.id,
 				views=0
 			)
@@ -280,7 +287,7 @@ def blog_editor():
 			db.session.add(new_blogpost)
 			db.session.commit()
 		else:
-			post = BlogPost.query.filter_by(id=request.args.get("id")).first_or_404()
+			post = Post.query.filter_by(id=request.args.get("post")).first_or_404()
 			post.title = request.form.get("title")
 			post.date = request.form.get("date")
 			post.content = request.form.get("content")
@@ -355,10 +362,10 @@ def edit_show(show_id):
 			raw_msl = MSL.query \
 				.filter_by(show_id=show_id) \
 				.with_entities(
-				MSL.cast_or_crew,
-				MSL.role_name,
-				MSL.member_id
-			) \
+					MSL.cast_or_crew,
+					MSL.role_name,
+					MSL.member_id
+				) \
 				.all()
 			for member in raw_msl:
 				prefill_members[member.cast_or_crew].setdefault(member.role_name, []).append(member.member_id)
@@ -398,7 +405,7 @@ def edit_show(show_id):
 			for key in request.form.keys()
 		}
 
-		MSL_ids = [value[0] for value in MSL.query.with_entities(MSL.id).all()]
+		msl_ids = [value[0] for value in MSL.query.with_entities(MSL.id).all()]
 
 		if show_id == "new":
 			used_ids = [value[0] for value in Show.query.with_entities(Show.id).all()]
@@ -431,13 +438,13 @@ def edit_show(show_id):
 
 				for role in form_roles:
 					new_role = MSL(
-						id=(new_MSL_ID := corha.rand_string(dic["show-title"], 16, MSL_ids)),
+						id=(new_MSL_ID := corha.rand_string(dic["show-title"], 16, msl_ids)),
 						show_id=new_id,
 						cast_or_crew=msl_type,
 						role_name=role[0],
 						member_id=role[1]
 					)
-					MSL_ids.append(new_MSL_ID)
+					msl_ids.append(new_MSL_ID)
 					db.session.add(new_role)
 
 			db.session.commit()
@@ -481,24 +488,24 @@ def edit_show(show_id):
 
 				for role in to_add:
 					new_role = MSL(
-						id=(new_MSL_ID := corha.rand_string(dic["show-title"], 16, MSL_ids)),
+						id=(new_MSL_ID := corha.rand_string(dic["show-title"], 16, msl_ids)),
 						show_id=show_id,
 						cast_or_crew=msl_type,
 						role_name=role[0],
 						member_id=role[1]
 					)
 
-					MSL_ids.append(new_MSL_ID)
+					msl_ids.append(new_MSL_ID)
 					db.session.add(new_role)
 
 				for role in to_remove:
 					MSL.query \
 						.filter_by(
-						show_id=show_id,
-						cast_or_crew=msl_type,
-						role_name=role[0],
-						member_id=role[1]
-					) \
+							show_id=show_id,
+							cast_or_crew=msl_type,
+							role_name=role[0],
+							member_id=role[1]
+						) \
 						.delete()
 
 			db.session.commit()
