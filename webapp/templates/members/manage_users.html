@@ -1,0 +1,28 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	{% if user is not none %}
+		<h3>Invite Details</h3>
+		Email: {{ user.email }}<br>
+		Temp Password: {{ user.id }}
+		<hr>
+	{% endif %}
+	<form method="post">
+		<h3>Invite User</h3>
+		<div class="fancy-input">
+			<input type="text" name="firstname">
+			<label for="site-name">Firstname</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<input type="text" name="lastname">
+			<label for="site-name">Lastname</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<input type="text" name="email">
+			<label for="email">Email</label>
+		</div>
+		<br>
+		<input type="submit">
+	</form>
+{% endblock %}

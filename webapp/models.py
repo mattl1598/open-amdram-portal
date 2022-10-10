@@ -43,7 +43,7 @@ class Post(db.Model, NewIdGetter):
 	views = db.Column(db.Integer, default=0)
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
 	lastname = db.Column(db.String(30))

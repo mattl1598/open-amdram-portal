@@ -552,6 +552,39 @@ def add_show_member():
 		return redirect(url_for("add_show_member"))
 
 
+@app.route("/members/manage_users", methods=["GET", "POST"])
+def manage_users():
+	if request.method == "GET":
+		user = None
+		if "u" in request.args.keys():
+			user = User.query\
+				.filter_by(id=request.args.get("u"))\
+				.with_entities(
+					User.id,
+					User.email
+				)\
+				.first_or_404()
+		return render_template(
+			"members/manage_users.html",
+			user=user,
+			css="m_dashboard.css"
+		)
+	else:
+		new_id = User.get_new_id()
+		new_user = User(
+			id=new_id,
+			firstname=request.form.get("firstname"),
+			lastname=request.form.get("lastname"),
+			email=request.form.get("email"),
+			role=request.form.get("role"),
+			password=new_id
+		)
+		db.session.add(new_user)
+		db.session.commit()
+
+		return redirect(url_for("manage_users", kwargs={"u": new_id}))
+
+
 @app.route("/members/admin_settings", methods=["GET", "POST"])
 @login_required
 def admin_settings():
