@@ -31,8 +31,10 @@ class BlankShow:
 
 @app.before_request
 def force_password_change():
-	if current_user.is_authenticated and session.get('set_password'):
-		return redirect(url_for("/members/account_settings", kwargs={"pwd": "set"}))
+	print(request.endpoint)
+	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
+		if current_user.is_authenticated and session.get('set_password'):
+			return redirect(url_for("account_settings", pwd="set"))
 
 
 @app.route("/members/dashboard")
@@ -582,7 +584,7 @@ def manage_users():
 		db.session.add(new_user)
 		db.session.commit()
 
-		return redirect(url_for("manage_users", kwargs={"u": new_id}))
+		return redirect(url_for("manage_users", u=new_id))
 
 
 @app.route("/members/admin_settings", methods=["GET", "POST"])
@@ -633,7 +635,7 @@ def account_settings():
 
 		# TODO: add 2 factor setup menu
 
-		return redirect(url_for("account_settings", kwargs={"e": error}))
+		return redirect(url_for("account_settings", e=error))
 
 
 @app.route("/members/logout")
