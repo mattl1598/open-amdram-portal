@@ -117,6 +117,8 @@
 						<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
 					{% endfor %}
 				</select></span>
+				<button class="swapper" type="button" onclick="swapRows(this, 'cast', -1)">▲</button>
+				<button class="swapper" type="button" onclick="swapRows(this, 'cast', 1)">▼</button>
 			</div>
 		</template>
 		<template id="crew-template">
@@ -127,6 +129,8 @@
 						<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
 					{% endfor %}
 				</select></span>
+				<button class="swapper" type="button" onclick="swapRows(this, 'crew', -1)">▲</button>
+				<button class="swapper" type="button" onclick="swapRows(this, 'crew', 1)">▼</button>
 			</div>
 		</template>
 	</form>

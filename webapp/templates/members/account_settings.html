@@ -1,0 +1,39 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h1>Account Settings</h1>
+	<div class="form_container">
+		{% if request.args.get("pwd") == "set" %}
+			<h2><span class="form_error">For account security, you need to change your password.</span></h2>
+		{% endif %}
+		<form action="" method=post>
+			<h2>Change Password</h2>
+			<div class="fancy-input">
+
+				<input type="password" name="old_password" placeholder=" " required>
+				<label for="old_password">
+					Old Password
+					{% if request.args.get('e') == "old_password" %}
+						<span class="form_error"> - Wrong Password</span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="password" name="new_password" required>
+				<label for="new_password">New Password</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="password" name="confirm_new_password" placeholder=" " required>
+				<label for="confirm_new_password">
+					Confirm New Password
+					{% if request.args.get('e') == "confirm_new_password" %}
+						<span class="form_error"> - Passwords do not match </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<input type="submit" name="submit" value="Change Password">
+		</form>
+	</div>
+{% endblock %}

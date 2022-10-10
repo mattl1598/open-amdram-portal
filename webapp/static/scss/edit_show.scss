@@ -64,6 +64,10 @@ button {
 		cursor: pointer;
 		@include theme-adjust(box-shadow, accent2, rgba, .37, inset 0 0 0 1000ch);
 	}
+
+	&.swapper {
+		margin: 1ch 0;
+	}
 }
 
 .entries-container {

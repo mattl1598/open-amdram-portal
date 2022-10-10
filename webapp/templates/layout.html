@@ -37,7 +37,14 @@
 {% endif %}
 
 <div class="title-bar">
-	<div class="title"><a href="/"><h1>{{ web_config["site-name"] }}</h1></a></div>
+	<div class="title">
+		<a href="/">
+			{% if web_config.get("site_logo") is not none %}
+				{{ web_config.get("site_logo").value | safe }}
+			{% endif %}
+			<h1>{{ web_config["site-name"] }}</h1>
+		</a>
+	</div>
 	<div class="nav">
 		{% for item in nav %}
 			<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
@@ -90,6 +97,8 @@
 		            <li><a href="/members/admin_settings">Admin Settings</a></li>
 	            </ul>
             {% endif %}
+
+	        <a href="/members/account_settings"><h3>Account Settings</h3></a>
 			<a href="/members/logout"><h3>Logout</h3></a>
 		</div>
 	{% endif %}

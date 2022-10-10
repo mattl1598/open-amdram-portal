@@ -1,3 +1,45 @@
+function swapRows(element, role_type, dir) {
+	let startInt = parseInt(element.parentElement.id.replace(role_type, ""))
+
+	let rowA = document.querySelector(`#${role_type}${startInt}`)
+	let rowB = document.querySelector(`#${role_type}${startInt+dir}`)
+
+	if (role_type === "cast") {
+		let roleA = rowA.querySelector(`#${role_type}_roles${startInt}`)
+		let roleB = rowB.querySelector(`#${role_type}_roles${startInt+dir}`)
+
+		let scratch = roleA.value
+
+		roleA.value = roleB.value
+		roleB.value = scratch
+	} else {
+		let roleA = rowA.querySelector(`#${role_type}_roles${startInt}`).tomselect
+		let roleB = rowB.querySelector(`#${role_type}_roles${startInt+dir}`).tomselect
+
+		let scratch = roleA.getValue()
+
+		roleA.setValue(roleB.getValue())
+		roleB.setValue(scratch)
+	}
+
+	let membersA = rowA.querySelector(`#${role_type}_members${startInt}`).tomselect
+	let membersB = rowB.querySelector(`#${role_type}_members${startInt+dir}`).tomselect
+
+	let A = [...membersA.getValue()]
+	let B = [...membersB.getValue()]
+
+	membersA.clear(true)
+	membersB.clear(true)
+
+	console.log(A)
+	console.log(B)
+
+	membersA.setValue(B)
+	membersB.setValue(A)
+}
+
+
+
 function addCast(prefill_role="", members=[]) {
 	let val = document.querySelector("#cast_count").value
 	val++

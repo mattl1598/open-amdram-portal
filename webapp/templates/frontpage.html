@@ -6,6 +6,10 @@
 		<h3>{{ post.show_subtitle }}</h3>
 	</div>
 	<hr>
-	<h2>{{ post.title }}</h2>
-	<div class="post_content">{{ md(post.content) | safe }}</div>
+	{% if post is not none and post.title %}
+		<h2>{{ post.title }}</h2>
+		<div class="post_content">{{ md(post.content) | safe }}</div>
+	{% else %}
+		<p>More Info on our next show is coming soon.</p>
+	{% endif %}
 {% endblock %}

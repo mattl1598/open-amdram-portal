@@ -97,11 +97,12 @@ def inject_nav():
 
 	web_config = {
 		"site-name": KeyValue.query.filter_by(key="site-name").first().value,
+		"site_logo": KeyValue.query.filter_by(key="site_logo").first(),
 		"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
 		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value
 	}
 
-	if (db_latest_blog := BlogPost.query.order_by(BlogPost.date.desc()).first()) is not None:
+	if (db_latest_blog := Post.query.filter_by(type="blog").order_by(Post.date.desc()).first()) is not None:
 		web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
 
 	m_shows = Show.query\
@@ -111,7 +112,13 @@ def inject_nav():
 
 	session.permanent = True
 
-	return dict(nav=nav, socials=socials, web_config=web_config, icons=icons, m_shows=m_shows)
+	return dict(
+		nav=nav,
+		socials=socials,
+		web_config=web_config,
+		icons=icons,
+		m_shows=m_shows
+	)
 
 
 @app.route("/", methods=["GET"])
@@ -248,7 +255,7 @@ def blogs():
 
 @app.route("/blog/latest", methods=["GET"])
 def latest_blog():
-	post = Post.query.order_by(Post.date.desc()).first_or_404()
+	post = Post.query.filter_by(type="blog").order_by(Post.date.desc()).first_or_404()
 	return redirect("/".join(["/blog", post.id]))
 
 
@@ -316,6 +323,7 @@ def past_show_page(show_id, test):
 			Member.lastname,
 			Member.associated_user
 		) \
+		.order_by(MSL.order_val) \
 		.all()
 	cast = {}
 	for member in raw_cast:
@@ -334,6 +342,7 @@ def past_show_page(show_id, test):
 			Member.lastname,
 			Member.associated_user
 		) \
+		.order_by(MSL.order_val) \
 		.all()
 	crew = {}
 	for member in raw_crew:
@@ -364,7 +373,7 @@ def u_redirect(user_id):
 
 @app.route("/past-shows/u/<user_id>/<test>")
 def u(user_id, test):
-	test.append(" ")
+	test += " "
 	user_members = [
 		i[0] for i in
 		Member.query
@@ -413,7 +422,7 @@ def m_redirect(member_id):
 
 @app.route("/past-shows/m/<member_id>/<test>")
 def m(member_id, test):
-	test.append(" ")
+	test += " "
 	member = Member.query.filter_by(id=member_id).first_or_404()
 	msls = MSL.query \
 		.filter(MSL.member_id == member_id) \
@@ -493,6 +502,7 @@ def members():
 					session['email'] = request.form['email']
 					return redirect(url_for("otp"))
 				else:
+					session['set_password'] = request.form.get('password') == user.id
 					login_user(user)
 					return redirect(url_for('dashboard'))
 			else:

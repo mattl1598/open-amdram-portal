@@ -96,6 +96,7 @@ class MemberShowLink(db.Model):
 	cast_or_crew = db.Column(db.String(16))
 	role_name = db.Column(db.Text)
 	member_id = db.Column(db.String(16), db.ForeignKey('member.id'))
+	order_val = db.Column(db.Integer)
 
 
 class BlogPost(db.Model):

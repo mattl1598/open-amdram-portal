@@ -7,6 +7,12 @@
 			<label for="site-name">Site Name</label>
 		</div>
 		<br>
+		<div>
+			<label for="tickets-active">Enable Ticket Sales:</label>
+			<input type="hidden" name="tickets-active" value="0">
+			<input type="checkbox" name="tickets-active" value="1" {% if settings_dict.get("tickets-active") == "1" %}checked{% endif %}>
+		</div>
+		<br>
 		<div class="fancy-input">
 			<input type="text" name="tickets-link" value="{{ settings_dict.get("tickets-link") }}">
 			<label for="tickets-link">Tickets Url</label>

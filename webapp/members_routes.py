@@ -9,9 +9,11 @@ from PIL.ExifTags import TAGS
 from datetime import datetime
 from corha import corha
 
-from flask import flash, make_response, redirect, render_template, send_file, url_for, request  # , abort, session
+from flask import flash, make_response, redirect, render_template, send_file, session, url_for, \
+	request  # , abort, session
 from flask_login import logout_user, current_user, login_required  # , login_user
 from sqlalchemy import not_, or_
+from werkzeug.security import check_password_hash
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, User, MemberShowLink as MSL
@@ -25,6 +27,12 @@ class BlankShow:
 	author = ""
 	programme = ""
 	gallery_link = ""
+
+
+@app.before_request
+def force_password_change():
+	if current_user.is_authenticated and session.get('set_password'):
+		return redirect(url_for("/members/account_settings", kwargs={"pwd": "set"}))
 
 
 @app.route("/members/dashboard")
@@ -366,6 +374,7 @@ def edit_show(show_id):
 					MSL.role_name,
 					MSL.member_id
 				) \
+				.order_by(MSL.order_val) \
 				.all()
 			for member in raw_msl:
 				prefill_members[member.cast_or_crew].setdefault(member.role_name, []).append(member.member_id)
@@ -379,6 +388,7 @@ def edit_show(show_id):
 			.filter_by(cast_or_crew="crew") \
 			.with_entities(MSL.role_name) \
 			.distinct() \
+			.order_by(MSL.order_val) \
 			.all()
 
 		modules = {
@@ -434,7 +444,7 @@ def edit_show(show_id):
 					if role != "":
 						print(msl_type + "_members" + str(i))
 						for j in dic.get(msl_type + "_members" + str(i)):
-							form_roles.append((role, j,))
+							form_roles.append((role, j, i,))
 
 				for role in form_roles:
 					new_role = MSL(
@@ -442,7 +452,8 @@ def edit_show(show_id):
 						show_id=new_id,
 						cast_or_crew=msl_type,
 						role_name=role[0],
-						member_id=role[1]
+						member_id=role[1],
+						order_val=role[2]
 					)
 					msl_ids.append(new_MSL_ID)
 					db.session.add(new_role)
@@ -462,7 +473,7 @@ def edit_show(show_id):
 
 			for msl_type in ["cast", "crew"]:
 				existing_roles = set([
-					(r.role_name, r.member_id,)
+					(r.role_name, r.member_id, r.order_val)
 					for r in MSL.query.filter_by(
 						show_id=show_id,
 						cast_or_crew=msl_type
@@ -481,7 +492,7 @@ def edit_show(show_id):
 						print(msl_type + "_members" + str(i))
 						if (members := dic.get(msl_type + "_members" + str(i))) is not None:
 							for j in members:
-								form_roles.append((role, j,))
+								form_roles.append((role, j, i,))
 
 				to_remove = existing_roles.difference(set(form_roles))
 				to_add = set(form_roles).difference(existing_roles)
@@ -492,7 +503,8 @@ def edit_show(show_id):
 						show_id=show_id,
 						cast_or_crew=msl_type,
 						role_name=role[0],
-						member_id=role[1]
+						member_id=role[1],
+						order_val=role[2]
 					)
 
 					msl_ids.append(new_MSL_ID)
@@ -504,7 +516,8 @@ def edit_show(show_id):
 							show_id=show_id,
 							cast_or_crew=msl_type,
 							role_name=role[0],
-							member_id=role[1]
+							member_id=role[1],
+							order_val=role[2]
 						) \
 						.delete()
 
@@ -561,6 +574,33 @@ def admin_settings():
 		flash("Done!")
 
 		return redirect(url_for("admin_settings"))
+
+
+@app.route("/members/account_settings", methods=["GET", "POST"])
+@login_required
+def account_settings():
+	if request.method == "GET":
+		return render_template(
+			"members/account_settings.html",
+			css="account_settings.css"
+		)
+	else:
+		error = ""
+		# password changing logic
+		if request.form.get("submit") == "Change Password":
+			if current_user.verify_password(request.form.get('old_password')):
+				if request.form.get('new_password') == request.form.get('confirm_new_password'):
+					current_user.password = request.form.get('new_password')
+					db.session.commit()
+					session['set_password'] = False
+				else:
+					error = "confirm_new_password"
+			else:
+				error = "old_password"
+
+		# TODO: add 2 factor setup menu
+
+		return redirect(url_for("account_settings", kwargs={"e": error}))
 
 
 @app.route("/members/logout")

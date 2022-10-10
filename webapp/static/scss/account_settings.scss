@@ -1,0 +1,22 @@
+@import "partials/m_layout";
+@import "partials/layout";
+@import "partials/variables";
+@import "partials/form_element";
+
+div.form_container {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+form {
+	width: 70%;
+	padding: 2ch;
+	border: 3px solid;
+	@include theme-adjust(border-color, accent2, darken, 0%);
+	border-radius: 1ch;
+
+	h2 {
+		margin-top: 0;
+	}
+}

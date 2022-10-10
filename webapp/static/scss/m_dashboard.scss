@@ -8,11 +8,6 @@ a {
 	@include theme(color, text);
 }
 
-div.editor-toolbar {
-	background-color: white;
-}
-
-
 a.post {
 	h1,h2,h3 {
 		margin-block-start: 0.5em;
