@@ -620,7 +620,7 @@ def account_settings():
 			css="account_settings.css"
 		)
 	else:
-		error = ""
+		error = "success"
 		# password changing logic
 		if request.form.get("submit") == "Change Password":
 			if current_user.verify_password(request.form.get('old_password')):
