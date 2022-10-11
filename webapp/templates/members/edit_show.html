@@ -123,14 +123,14 @@
 		</template>
 		<template id="crew-template">
 			<div class="entry crew" id="crewtemplate">
+				<button class="swapper" type="button" onclick="swapRows(this, 'crew', -1)">▲</button>
+				<button class="swapper" type="button" onclick="swapRows(this, 'crew', 1)">▼</button>
 				<span class="r"><input type="text" placeholder="Role..." id="crew_rolestemplate"></span>
 				<span class="m"><select id="crew_memberstemplate" placeholder="Select Members">
 					{% for i in members %}
 						<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
 					{% endfor %}
 				</select></span>
-				<button class="swapper" type="button" onclick="swapRows(this, 'crew', -1)">▲</button>
-				<button class="swapper" type="button" onclick="swapRows(this, 'crew', 1)">▼</button>
 			</div>
 		</template>
 	</form>

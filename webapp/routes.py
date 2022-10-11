@@ -352,16 +352,29 @@ def past_show_page(show_id, test):
 	photos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="photo").all()
 	videos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="video").all()
 
-	return render_template(
-		"past_show_page.html",
-		show=show,
-		cast=cast,
-		crew=crew,
-		photos=photos,
-		videos=videos,
-		css="past_show_page.css",
-		js="past_show_page.js"
-	)
+	if "embedded" in request.args.keys():
+		return render_template(
+			"past_show_photos.html",
+			show=show,
+			cast=cast,
+			crew=crew,
+			photos=photos,
+			videos=videos,
+			css="past_show_page.css",
+			js="past_show_page.js"
+		)
+	else:
+
+		return render_template(
+			"past_show_page.html",
+			show=show,
+			cast=cast,
+			crew=crew,
+			photos=photos,
+			videos=videos,
+			css="past_show_page.css",
+			js="past_show_page.js"
+		)
 
 
 @app.route("/past-shows/u/<user_id>")

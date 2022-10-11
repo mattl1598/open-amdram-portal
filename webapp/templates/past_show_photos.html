@@ -1,0 +1,49 @@
+<html class="light">
+<head>
+	<meta charset="UTF-8">
+	<title>{{ title }} - {{ web_config["site-name"] }}</title>
+	<link href="/css/{{ css }}" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="/js/nav.js"></script>
+	{% if js is defined %}
+		<script type="text/javascript" src="/js/{{ js }}"></script>
+	{% endif %}
+</head>
+<body>
+	<div class="content">
+	{% if len(photos) != 0 %}
+		<h3>Photos <span id="photocount">1</span>/{{ len(photos) }}</h3>
+		<div class="gallery-container">
+			<div class="arrow" onclick="galleryIncr(-1)"><</div>
+			<div class="gallery-images">
+				{% for photo in photos %}
+					{% if loop.index <= 3 or loop.revindex <= 2 %}
+						<div id="div{{ loop.index }}">
+							<img id="photo{{ loop.index }}"
+							     class="{% if not loop.first %}img-hidden{% endif %}"
+							     src="/photo/{{ photo.photo_url }}"
+							     alt="Photo"
+							>
+						</div>
+					{% else %}
+						<div id="div{{ loop.index }}">
+							<img id="photo{{ loop.index }}"
+							     class="{% if not loop.first %}img-hidden{% endif %}"
+							     data-data-src="/photo/{{ photo.photo_url }}"
+{#							     src="/photo/{{ photo.photo_url }}"#}
+							     alt="Photo"
+							>
+						</div>
+					{% endif %}
+
+					{% if loop.last %}
+						<script>const photoMax = {{ loop.index }};</script>
+					{% endif %}
+				{% endfor %}
+			</div>
+			<div class="arrow" onclick="galleryIncr(1)">></div>
+		</div>
+	{% endif %}
+	</div>
+</body>
+</html>
+
