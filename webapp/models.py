@@ -147,7 +147,7 @@ class Show(db.Model):
 	genre = db.Column(db.Text)
 	author = db.Column(db.Text)
 	programme = db.Column(db.Text)
-	images_folder = db.Column(db.Text)
+	text_blob = db.Column(db.Text)
 	gallery_link = db.Column(db.Text)
 
 	member_show_link = db.relationship('MemberShowLink', backref='show', lazy=True)

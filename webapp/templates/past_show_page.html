@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
 	<h2>{{ show.title }}</h2>
+	<h3>{{ show.subtitle }}</h3>
+
+
 	{% if len(videos) != 0 %}
 		<h3>Video</h3>
 		<video width="100%" controls>

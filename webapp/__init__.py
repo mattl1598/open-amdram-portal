@@ -37,5 +37,5 @@ app.jinja_env.globals.update(
 # TODO investigate circular imports in flask
 from webapp import routes, members_routes, photos_routes
 
-from webapp import models
-db.create_all()
+# from webapp import models
+# db.create_all()
