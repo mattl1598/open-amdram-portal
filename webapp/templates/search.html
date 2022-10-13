@@ -11,16 +11,34 @@
 
 	<div class="results">
 		<h3>Results</h3>
-		<h4>Shows</h4>
 		<hr>
+		<h4>Shows</h4>
 		{% for entry in results["Shows"] %}
 			<a href="/past-shows/{{ entry.id }}">{{ entry.title }}</a><br>
 		{% endfor %}
-
-		<h4>Blogposts</h4>
 		<hr>
+		<h4>Blogposts</h4>
 		{% for entry in results["Blogposts"] %}
 			<a href="/blog/{{ entry.id }}">{{ entry.title }}</a><br>
+		{% endfor %}
+		<hr>
+		<h4>Members</h4>
+		{% for key, value in results["Users"].items() %}
+			<a href="{{ value[0].get_link() }}">
+				{{ value[0].firstname }} {{ value[0].lastname }}
+				<ul class="aliases">
+					<li>Sometimes as:</li>
+					{% for name in value %}
+						{% if name.has_diff %}
+							<li>{{ name.as_firstname }} {{ name.as_lastname }}</li>
+						{% endif %}
+					{% endfor %}
+				</ul>
+			</a>
+		{% endfor %}
+
+		{% for member in results["Members"] %}
+			<a href="{{ member.get_link() }}">{{ member.firstname }} {{ member.lastname }}</a><br>
 		{% endfor %}
 	</div>
 {% endblock %}

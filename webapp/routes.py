@@ -1,12 +1,13 @@
 import string
 from datetime import datetime
+from pprint import pprint
 from urllib.parse import urlparse
 from lorem_text import lorem as lorem_func
 import corha
 import pyotp
 # import json
 
-from flask import abort, make_response, redirect, render_template, send_file, url_for, request, session
+from flask import abort, make_response, redirect, render_template, Response, send_file, url_for, request, session
 from flask_login import login_user, current_user  # , login_required, logout_user
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
@@ -27,15 +28,22 @@ class MemberRenderer:
 	has_diff = False
 
 	def __init__(self, member, user=None):
-		self.role_type = member.cast_or_crew
+		try:
+			self.role_type = member.cast_or_crew
+		except AttributeError:
+			self.role_type = ""
+
+		try:
+			self.role = member.role_name
+		except AttributeError:
+			self.role = ""
+
 		if user is None:
 			self.id = member.id
-			self.role = member.role_name
 			self.firstname = member.firstname
 			self.lastname = member.lastname
 		else:
 			self.id = user.id
-			self.role = member.role_name
 			self.firstname = user.firstname
 			self.lastname = user.lastname
 			self.has_user = True
@@ -230,7 +238,35 @@ def search():
 				BlogPost.content.ilike(ilike_arg)
 			)
 		).all()
-		# results["Members"] = BlogPost.query.filter(
+		members = Member.query.filter(
+			or_(
+				Member.firstname.ilike(ilike_arg),
+				Member.lastname.ilike(ilike_arg)
+			)
+		).all()
+
+		results["Users"] = {}
+		results["Members"] = []
+
+		for member in members:
+			if member.associated_user is not None:
+				if member.associated_user not in results["Users"].keys():
+					user = User.query.filter_by(id=member.associated_user).first()
+					for i in Member.query.filter_by(associated_user=member.associated_user).all():
+						results["Users"].setdefault(member.associated_user, []).append(
+							MemberRenderer(
+								i,
+								user
+							)
+						)
+			else:
+				results["Members"].append(
+					MemberRenderer(
+						member
+					)
+				)
+
+		#  = BlogPost.query.filter(
 		# 	or_(
 		# 		BlogPost.title.ilike(ilike_arg),
 		# 		BlogPost.content.ilike(ilike_arg)
@@ -560,6 +596,14 @@ def css(filename):
 	fp = 'static/css/' + filename
 	response = make_response(send_file(fp.replace("\\", "/")))
 	response.headers['mimetype'] = 'text/css'
+	return response
+
+
+@app.get("/favicon.svg")
+def favicon():
+	response = Response(KeyValue.query.filter_by(key="site_logo").first().value, mimetype='image/svg+xml')
+	print(response.headers)
+	# response.headers['mimetype'] = 'image/svg+xml'
 	return response
 
 

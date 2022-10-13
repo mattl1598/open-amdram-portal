@@ -31,7 +31,6 @@ class BlankShow:
 
 @app.before_request
 def force_password_change():
-	print(request.endpoint)
 	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
 		if current_user.is_authenticated and session.get('set_password'):
 			return redirect(url_for("account_settings", pwd="set"))
@@ -602,7 +601,7 @@ def admin_settings():
 			css="m_dashboard.css"
 		)
 	else:
-		print(dict(request.form.items()))
+		# print(dict(request.form.items()))
 		for key, value in request.form.items():
 			KeyValue.query.filter_by(key=key).first().value = value
 

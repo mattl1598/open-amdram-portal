@@ -1,3 +1,7 @@
 @import "partials/layout";
 @import "partials/variables";
 @import "partials/form_element";
+
+.aliases:first-child {
+	list-style-type: none;
+}
