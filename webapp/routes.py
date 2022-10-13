@@ -13,7 +13,7 @@ from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross
+from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross
 
 
 class NavItem:
@@ -63,7 +63,8 @@ def inject_nav():
 		"search": magnify,
 		"eye": eye,
 		"trash": trash,
-		"x": cross
+		"x": cross,
+		"drama": drama
 	}
 
 	nav = [
@@ -99,11 +100,15 @@ def inject_nav():
 		"site-name": KeyValue.query.filter_by(key="site-name").first().value,
 		"site_logo": KeyValue.query.filter_by(key="site_logo").first(),
 		"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
-		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value
+		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value,
+		"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
 	}
 
 	if (db_latest_blog := Post.query.filter_by(type="blog").order_by(Post.date.desc()).first()) is not None:
 		web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
+
+	if (db_latest_show := Show.query.filter(Show.date < datetime.now()).order_by(Show.date.desc()).first()) is not None:
+		web_config["last_show"] = (db_latest_show.title, f"/past_shows/{db_latest_show.id}",)
 
 	m_shows = Show.query\
 		.order_by(Show.date.desc())\
@@ -490,6 +495,7 @@ def database():
 def about():
 	return render_template(
 		"about-us.html",
+		maps_url=KeyValue.query.filter_by(key="maps-url").first(),
 		about=KeyValue.query.filter_by(key="about").first_or_404(),
 		css="frontpage.css"
 	)

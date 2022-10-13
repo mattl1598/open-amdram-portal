@@ -433,7 +433,7 @@ def edit_show(show_id):
 				genre=dic.get("genre"),
 				author=dic.get("show-author"),
 				programme=dic.get("programme-img"),
-				gallery_link=dic.get("gallery-link")
+				text_blob=dic.get("text_blob")
 			)
 
 			db.session.add(new_show)
@@ -471,7 +471,7 @@ def edit_show(show_id):
 			show.genre = dic.get("genre")
 			show.author = dic.get("show-author")
 			show.programme = dic.get("programme-img")
-			show.gallery_link = dic.get("gallery-link")
+			show.text_blob = dic.get("text_blob")
 
 			for msl_type in ["cast", "crew"]:
 				existing_roles = set([
@@ -602,6 +602,7 @@ def admin_settings():
 			css="m_dashboard.css"
 		)
 	else:
+		print(dict(request.form.items()))
 		for key, value in request.form.items():
 			KeyValue.query.filter_by(key=key).first().value = value
 

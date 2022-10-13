@@ -271,7 +271,7 @@ div.main-section {
 			}
 		}
 
-		div.latest-blog {
+		div.generic_link {
 			a {
 				padding: 0.5ch 0.5ch;
 				text-align: center;
@@ -306,16 +306,17 @@ div.main-section {
 				transition: box-shadow 150ms ease-in-out;
 			}
 
-			a.blog {
+			&:nth-of-type(even) a.generic_link {
 				@include theme(background-color, accent2);
 				border: 3px solid;
 				@include theme-adjust(border-color, accent2, darken, 20%);
 			}
 
-			a.blog:nth-child(2n+1) {
+			&:nth-of-type(odd) a.generic_link {
 				@include theme(background-color, accent1);
 				border: 3px solid;
 				@include theme-adjust(border-color, accent1, darken, 20%);
+				color: white;
 			}
 
 			a:hover {

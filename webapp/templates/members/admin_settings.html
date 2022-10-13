@@ -9,8 +9,8 @@
 		<br>
 		<div>
 			<label for="tickets-active">Enable Ticket Sales:</label>
-			<input type="hidden" name="tickets-active" value="0">
 			<input type="checkbox" name="tickets-active" value="1" {% if settings_dict.get("tickets-active") == "1" %}checked{% endif %}>
+			<input type="hidden" name="tickets-active" value="0">
 		</div>
 		<br>
 		<div class="fancy-input">
@@ -27,6 +27,11 @@
 		<div class="fancy-input">
 			<textarea name="about" style="height: 60ch;">{{ settings_dict.get("about") }}</textarea>
 			<label for="about">About Us Content (Markdown)</label>
+		</div>
+		<br>
+		<div class="fancy-input">
+			<input type="text" name="maps-url" value="{{ settings_dict.get("maps-url") }}">
+			<label for="maps-url">Google Maps URL</label>
 		</div>
 		<br>
 		<input type="submit">

@@ -71,6 +71,9 @@ table.table_mode {
 		object-fit: cover;
 		vertical-align: middle;
 	}
+	td {
+		padding: 0 1ch;
+	}
 
 	tr:nth-child(2n) {
 		@include theme(background-color, bg3);

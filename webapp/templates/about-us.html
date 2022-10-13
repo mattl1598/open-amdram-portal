@@ -1,4 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+	{% if maps_url is not none %}
+		<iframe style="border: 0;" src="{{ maps_url.value }}"
+		        width="600" height="450" frameborder="0" allowfullscreen="allowfullscreen">
+		</iframe>
+	{% endif %}
 	{{ md(about.value) | safe }}
 {% endblock %}
