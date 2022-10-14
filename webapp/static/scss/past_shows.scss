@@ -85,6 +85,19 @@ table.table_mode {
 	span.card-subtitle {
 		display: none;
 	}
+
+	th span {
+		display: none;
+
+		&.desc {
+			display: inline;
+		}
+
+		&.asc {
+			display: inline-block;
+			transform: rotate(180deg);
+		}
+	}
 }
 
 table.cards_mode{

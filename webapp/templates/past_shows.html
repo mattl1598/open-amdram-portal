@@ -19,12 +19,12 @@
 	</div>
 
 	<table id="past_shows" class="cards_mode">
-		<tr>
+		<tr id="header">
 			<th>dateIndex</th>
 			<th></th>
-			<th onclick="sortTable('past_shows', 2)">Show</th>
-			<th onclick="sortTable('past_shows', 0)">Season</th>
-			<th onclick="sortTable('past_shows', 4)">Genre</th>
+			<th onclick="sortTable('past_shows', 2, 'show_arrow')">Show <span id="show_arrow">▼</span></th>
+			<th onclick="sortTable('past_shows', 0, 'season_arrow')">Season <span id="season_arrow" class="asc">▼</span></th>
+			<th onclick="sortTable('past_shows', 4, 'genre_arrow')">Genre <span id="genre_arrow">▼</span></th>
 		</tr>
 
 		{% for show in shows %}
@@ -42,4 +42,10 @@
 			</tr>
 		{% endfor %}
 	</table>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			sortTable('past_shows', 0, "season_arrow")
+			sortTable('past_shows', 0, "season_arrow")
+		}, false)
+	</script>
 {% endblock %}

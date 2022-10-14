@@ -17,13 +17,13 @@
 
 
 	<table id="past_shows" class="table_mode">
-		<tr>
+		<tr id="header">
 			<th>dateIndex</th>
 			<th></th>
-			<th onclick="sortTable('past_shows', 2)">Show</th>
-			<th onclick="sortTable('past_shows', 0)">Season</th>
-			<th onclick="sortTable('past_shows', 4)">Cast Roles</th>
-			<th onclick="sortTable('past_shows', 5)">Crew Roles</th>
+			<th onclick="sortTable('past_shows', 2, 'show_arrow')">Show <span id="show_arrow">▼</span></th>
+			<th onclick="sortTable('past_shows', 0, 'season_arrow')">Season <span id="season_arrow">▼</span></th>
+			<th onclick="sortTable('past_shows', 4, 'cast_arrow')">Cast Roles <span id="cast_arrow">▼</span></th>
+			<th onclick="sortTable('past_shows', 5, 'crew_arrow')">Crew Roles <span id="crew_arrow">▼</span></th>
 		</tr>
 
 		{% for k,v in shows.items() %}
@@ -69,8 +69,8 @@
 	</table>
 	<script>
 		document.addEventListener('DOMContentLoaded', function() {
-			sortTable('past_shows', 0)
-			sortTable('past_shows', 0)
+			sortTable('past_shows', 0, "season_arrow")
+			sortTable('past_shows', 0, "season_arrow")
 		}, false)
 	</script>
 {% endblock %}

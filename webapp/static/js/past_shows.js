@@ -3,8 +3,8 @@ function cssToggle(event, targetID, onClass, offClass) {
 	document.getElementById(targetID).classList.toggle(onClass)
 }
 
-function sortTable(id, n) {
-	var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+function sortTable(id, n, arrow_id) {
+	var table, headings, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
 	table = document.getElementById(id);
 	switching = true;
 	// Set the sorting direction to ascending:
@@ -56,4 +56,8 @@ function sortTable(id, n) {
 			}
 		}
 	}
+
+	headings = document.querySelectorAll("tr#header th span")
+	headings.forEach(element => element.classList.remove(...element.classList))
+	document.querySelector("#"+arrow_id).classList.add(dir)
 }
