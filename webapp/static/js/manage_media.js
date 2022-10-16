@@ -15,3 +15,10 @@ function select_media(element) {
 	info.querySelector("#image").src = data.url
 	info.querySelector("#delete").onclick = () => confirm_delete(`?delete=${data.id}`)
 }
+
+function copy_me(id) {
+	  var copyText = document.querySelector(`#${id}`).innerHTML;
+
+	   // Copy the text inside the text field
+	  navigator.clipboard.writeText(copyText);
+}
