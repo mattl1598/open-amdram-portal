@@ -187,7 +187,11 @@ def manage_media(**kwargs):
 			x = requests.get(url)
 
 			thumbs = [
-				(media_ids[i["mediaItem"]["id"]], f'{i["mediaItem"]["baseUrl"]}=d', i["mediaItem"]["filename"],)
+				(
+					media_ids[i["mediaItem"]["id"]],
+					f'{i["mediaItem"]["baseUrl"]}=d',
+					i["mediaItem"]["filename"],
+				)
 				for i in x.json()["mediaItemResults"]
 			]
 

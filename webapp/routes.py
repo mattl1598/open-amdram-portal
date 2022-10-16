@@ -602,8 +602,6 @@ def css(filename):
 @app.get("/favicon.svg")
 def favicon():
 	response = Response(KeyValue.query.filter_by(key="site_logo").first().value, mimetype='image/svg+xml')
-	print(response.headers)
-	# response.headers['mimetype'] = 'image/svg+xml'
 	return response
 
 
