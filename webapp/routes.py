@@ -190,6 +190,14 @@ def frontpage():
 	)
 
 
+@app.get("/links")
+def links():
+	return render_template(
+		"layout.html",
+		css="links.css"
+	)
+
+
 @app.route("/auditions", methods=["GET"])
 def auditions():
 	post = Post.query\
