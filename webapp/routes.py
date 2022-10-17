@@ -116,7 +116,7 @@ def inject_nav():
 		web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
 
 	if (db_latest_show := Show.query.filter(Show.date < datetime.now()).order_by(Show.date.desc()).first()) is not None:
-		web_config["last_show"] = (db_latest_show.title, f"/past_shows/{db_latest_show.id}",)
+		web_config["last_show"] = (db_latest_show.title, f"/past-shows/{db_latest_show.id}",)
 
 	m_shows = Show.query\
 		.order_by(Show.date.desc())\
@@ -218,7 +218,12 @@ def auditions():
 
 @app.route("/search", methods=["GET"])
 def search():
-	results = {}
+	results = {
+		"Shows": [],
+		"Blogposts": [],
+		"Members": [],
+		"Users": {},
+	}
 
 	if (arg := request.args.get("search")) is not None:
 		ilike_arg = "%" + arg + "%"
