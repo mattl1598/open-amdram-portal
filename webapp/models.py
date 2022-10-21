@@ -148,7 +148,7 @@ class Show(db.Model):
 	author = db.Column(db.Text)
 	programme = db.Column(db.Text)
 	text_blob = db.Column(db.Text)
-	gallery_link = db.Column(db.Text)
+	noda_review = db.Column(db.Text)
 
 	member_show_link = db.relationship('MemberShowLink', backref='show', lazy=True)
 	show_photos = db.relationship('ShowPhotos', backref='show', lazy=True)
