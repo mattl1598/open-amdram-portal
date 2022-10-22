@@ -1,3 +1,4 @@
+import io
 import string
 from datetime import datetime
 from pprint import pprint
@@ -5,10 +6,11 @@ from urllib.parse import urlparse
 from lorem_text import lorem as lorem_func
 import corha
 import pyotp
+import csv
 # import json
 
 from flask import abort, make_response, redirect, render_template, Response, send_file, url_for, request, session
-from flask_login import login_user, current_user  # , login_required, logout_user
+from flask_login import login_required, login_user, current_user  # , login_required, logout_user
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
 
@@ -538,6 +540,45 @@ def database():
 		"Photos": ShowPhotos.query.count()
 	}
 	return render_template("database.html", stats=stats, css="frontpage.css")
+
+
+@app.get("/csv")
+@login_required
+def csv_download():
+	if current_user.role == "admin":
+		valid = False
+		table = request.args.get("table")
+		if table == "shows":
+			valid = True
+			model = Show
+			data = model.query.order_by(Show.date.desc()).all()
+		elif table == "members":
+			valid = True
+			model = Member
+			data = model.query.order_by(Member.lastname.asc()).all()
+		elif table == "roles":
+			valid = True
+			model = MSL
+			data = model.query\
+				.order_by(MSL.show_id.asc())\
+				.order_by(MSL.cast_or_crew.asc())\
+				.order_by(MSL.order_val.asc())\
+				.all()
+
+		if valid:
+			file = io.StringIO()
+
+			outcsv = csv.writer(file)
+			# pprint([bytes(column.name, "UTF-8") for column in model.__mapper__.columns])
+			headings = [heading.name for heading in model.__mapper__.columns]
+			pprint(headings)
+			outcsv.writerow(headings)
+			[outcsv.writerow([getattr(curr, column.name) for column in model.__mapper__.columns]) for curr in data]
+			response = make_response(file.getvalue())
+			response.headers["Content-Disposition"] = f'attachment; filename="{table}.csv'
+			file.close()
+
+			return response
 
 
 @app.route("/about-us")

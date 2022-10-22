@@ -337,6 +337,48 @@ span.form_error {
 }
 
 
+.tooltip {
+	position: relative;
+	display: inline-block;
+	//border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+	.tooltip-text {
+		visibility: hidden;
+
+		@include theme(background-color, tooltip-bg);
+		@include theme(color, text);
+		text-align: center;
+		padding: 0.3rem 0;
+		border-radius: 0.4rem;
+		filter: drop-shadow(.15rem .15rem .15rem grey);
+
+		/* Position the tooltip text - see examples below! */
+		position: absolute;
+		z-index: 100;
+		width: 6rem;
+		top: 100%;
+		left: 50%;
+		margin-left: -3red; /* Use half of the width (120/2 = 60), to center the tooltip */
+	}
+
+	&:hover .tooltip-text {
+		visibility: visible;
+	}
+
+	.tooltip-text::after {
+		content: " ";
+		position: absolute;
+		bottom: 100%;  /* At the top of the tooltip */
+		left: 50%;
+		margin-left: -5px;
+		border: 5px solid transparent;
+		@include theme(border-bottom-color, bg4);
+	}
+}
+
+
+
+
+
 div.title-bar {
 	position: sticky;
 	top: 0;

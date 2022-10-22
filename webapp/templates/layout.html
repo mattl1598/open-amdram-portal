@@ -43,11 +43,12 @@
 
 <div class="title-bar">
 	<div class="title">
-		<a href="/">
+		<a href="/" class="tooltip">
 			{% if web_config.get("site_logo") is not none %}
 				{{ web_config.get("site_logo").value | safe }}
 			{% endif %}
 			<h1>{{ web_config["site-name"] }}</h1>
+			<span class="tooltip-text">Home</span>
 		</a>
 	</div>
 	<div class="nav">
