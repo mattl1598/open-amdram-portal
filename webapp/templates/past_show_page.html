@@ -6,9 +6,19 @@
 			<h4>{{ show.season }} - {{ show.date.strftime('%B %Y') }}</h4>
 			<span>Type: {{ show.show_type }} {{ show.genre }}</span>
 			<span>Written by: {{ show.author }}</span>
+			{% if show.noda_review %}
+				<span><a target="_blank" href="{{ show.noda_review }}">Read the NODA Review</a></span>
+			{% endif %}
 			<div>
 				{{ md(show.text_blob) | safe if show.text_blob is not none}}
 			</div>
+			{% if show.show_type == "Radio" %}
+				{% if show.radio_audio %}
+					<audio class="center unviewed" src="{{ show.radio_audio }}" controls="controls"></audio>
+				{% else %}
+					<span>Due to licensing restrictions, we are unable to host a copy of the play.</span>
+				{% endif %}
+			{% endif %}
 		</div>
 		<div class="details-cover">
 			<img class="programme" src="{{ show.programme }}" alt="{{ show.title }} programme cover">

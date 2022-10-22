@@ -1,3 +1,5 @@
+from os import walk
+
 import markdown as markdown
 from flask import Flask  # , session
 from flask_login import LoginManager
@@ -20,6 +22,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = app.envs.postgresql
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1000 * 1000
 db = SQLAlchemy(app)
+
+# get available sounds
+app.sounds_path = "static/sounds/"
+for (_, _, app.available_sounds) in walk("webapp/" + app.sounds_path):
+	print(app.available_sounds)
+	break
 
 
 # TODO move to env file

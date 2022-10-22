@@ -9,7 +9,8 @@ import pyotp
 import csv
 # import json
 
-from flask import abort, make_response, redirect, render_template, Response, send_file, url_for, request, session
+from flask import abort, make_response, redirect, render_template, Response, send_file, send_from_directory, url_for, \
+	request, session
 from flask_login import login_required, login_user, current_user  # , login_required, logout_user
 from sqlalchemy import or_
 from werkzeug.exceptions import HTTPException
@@ -567,11 +568,8 @@ def csv_download():
 
 		if valid:
 			file = io.StringIO()
-
 			outcsv = csv.writer(file)
-			# pprint([bytes(column.name, "UTF-8") for column in model.__mapper__.columns])
 			headings = [heading.name for heading in model.__mapper__.columns]
-			pprint(headings)
 			outcsv.writerow(headings)
 			[outcsv.writerow([getattr(curr, column.name) for column in model.__mapper__.columns]) for curr in data]
 			response = make_response(file.getvalue())
@@ -651,6 +649,15 @@ def css(filename):
 	response = make_response(send_file(fp.replace("\\", "/")))
 	response.headers['mimetype'] = 'text/css'
 	return response
+
+
+@app.get("/sounds/<filename>")
+def sound(filename):
+	if filename not in app.available_sounds:
+		abort(404)
+	else:
+		response = send_from_directory(app.sounds_path, filename)
+		return response
 
 
 @app.get("/favicon.svg")
