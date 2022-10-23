@@ -3,6 +3,20 @@ function cssToggle(event, targetID, onClass, offClass) {
 	document.getElementById(targetID).classList.toggle(onClass)
 }
 
+function quickSearch(e) {
+	let input = e.value.toLowerCase()
+	document.querySelectorAll("table#past_shows tr.link").forEach((row) => {
+			if (row !== undefined) {
+				if (row.dataset.searchable.toLowerCase().includes(input)) {
+					row.classList.remove("hide")
+				} else {
+					row.classList.add("hide")
+				}
+			}
+		}
+	)
+}
+
 function sortTable(id, n, arrow_id) {
 	var table, headings, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
 	table = document.getElementById(id);

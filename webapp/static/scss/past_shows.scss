@@ -1,6 +1,11 @@
 @import "partials/variables";
 @import "partials/layout";
 @import "partials/slider";
+@import "partials/form_element";
+
+.hide {
+	display: none !important;
+}
 
 .past_shows_title {
 	display: flex;
@@ -90,12 +95,18 @@ table.table_mode {
 		display: none;
 
 		&.desc {
-			display: inline;
+			display: inline-block;
+			&#season_arrow {
+				transform: rotate(180deg);
+			}
 		}
 
 		&.asc {
 			display: inline-block;
 			transform: rotate(180deg);
+			&#season_arrow {
+				transform: rotate(360deg);
+			}
 		}
 	}
 }

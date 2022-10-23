@@ -8,6 +8,13 @@
 			<h2>Past Shows</h2>
 		{% endif %}
 
+		<span>
+			<div class="fancy-input">
+				<input type="text" name="quick-search" id="quick-search" placeholder=" " oninput="quickSearch(this)">
+				<label for="quick-search">Quick Search</label>
+			</div>
+		</span>
+
 		<label class="cards_switch">
 			Table
 			<div class="switch">
@@ -33,12 +40,13 @@
 			{% else %}
 				{% set url = "/past-shows/" + show.id %}
 			{% endif %}
-			<tr class="link" onclick="location.href='{{ url }}'">
+			<tr class="link" id="{{ show.id }}" onclick="location.href='{{ url }}'"
+				data-searchable="{{ show.title }} {{ show.season }} {{ show.date.year }} {{ show.genre }} {{ show.author }} {{ show.subtitle }}">
 				<td>{{ '%04d' % loop.index0 }}</td>
 				<td><img class="programme" src="{{ show.programme }}" alt="{{ show.title }} programme cover"></td>
 				<td class="title"><h3>{{ show.title }}</h3></td>
-				<td>{{ show.season }} {{ show.date.year }}</td>
-				<td>{{ show.genre }}</td>
+				<td class="season">{{ show.season }} {{ show.date.year }}</td>
+				<td class="genre">{{ show.genre }}</td>
 			</tr>
 		{% endfor %}
 	</table>
