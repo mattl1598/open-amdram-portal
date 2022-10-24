@@ -67,6 +67,6 @@ const FlexSlider = {
 
 FlexSlider.init();
 
-// window.setInterval(function(){
-//   document.querySelector("#slider-container-outer").click()
-// }, 5000);
+window.setInterval(function(){
+  document.querySelector("#slider-container-outer").click()
+}, 5000);
