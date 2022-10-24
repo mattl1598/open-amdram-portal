@@ -21,26 +21,6 @@
 </head>
 
 <body id="body" class="{{ session.get("fontsize", "font_single") }}">
-{% if frontpage is defined %}
-	<div class="carousel" id="slider-container-outer">
-		<div id="slider-container" class="slider-container-transition">
-			{% for photo in photos %}
-				<div class="slider-item" data-position="{{ loop.index }}"
-				     style="background-image: url('/photo/{{ photo.photo_url }}');">
-{#					<div>#}
-{#						<h2>Our Last Show: <br>#}
-{#							{{ latest_show.title }}</h2>#}
-{#					</div>#}
-					<img id="photo{{ loop.index }}"
-					     src="/photo/{{ photo.photo_url }}"
-					     alt="Photo"
-					>
-				</div>
-			{% endfor %}
-		</div>
-	</div>
-{% endif %}
-
 <div class="title-bar">
 	<div class="title">
 		<a href="/" class="tooltip">
@@ -66,6 +46,26 @@
 		</a>
 	</div>
 </div>
+
+{% if frontpage is defined %}
+	<div class="carousel" id="slider-container-outer">
+		<div id="slider-container" class="slider-container-transition">
+			{% for photo in photos %}
+				<div class="slider-item" data-position="{{ loop.index }}"
+				     style="background-image: url('/photo/{{ photo.photo_url }}');">
+{#					<div>#}
+{#						<h2>Our Last Show: <br>#}
+{#							{{ latest_show.title }}</h2>#}
+{#					</div>#}
+					<img id="photo{{ loop.index }}"
+					     src="/photo/{{ photo.photo_url }}"
+					     alt="Photo"
+					>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+{% endif %}
 
 <div class="collapsed" id="mobile-nav">
 	{% for item in nav %}
@@ -170,9 +170,7 @@
 <div class="footer">
 	<div>
 		<strong>Powered By:</strong>
-		<div>Open AmDram Portal</div>
-		<div><a href="https://github.com/mattl1598/open-amdram-portal">github.com/mattl1598/open-amdram-portal</a></div>
-		<div>Opensource</div>
+		<div><a href="https://github.com/mattl1598/open-amdram-portal">Open AmDram Portal - Opensource</a></div>
 	</div>
 	<div class="accessibility">
 		<strong>Accessibility</strong>

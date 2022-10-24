@@ -88,11 +88,27 @@ def manage_media(**kwargs):
 			data=b_out.getvalue()
 		)
 
+		albums = {b: a for (a, b) in get_albums()}
+
+		if "OADP_Website_Media" in albums.keys():
+			album_id = albums.get("OADP_Website_Media")
+		else:
+			x = requests.post(
+				url=f"https://photoslibrary.googleapis.com/v1/albums?access_token={session.get('access_token')}",
+				json={
+					"album": {
+						"title": "OADP_Website_Media"
+					}
+				}
+			)
+			album_id = x.json().get("id")
+
 		url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
 		headers = {
 			"Content-type": "application/json"
 		}
 		data = {
+			"albumId": album_id,
 			"newMediaItems": [
 				{
 					"description": "",

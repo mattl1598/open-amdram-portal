@@ -30,7 +30,7 @@ const FlexSlider = {
 
 	changeOrder: function() {
 		// change current position
-		if(this.current == this.num_items)
+		if(this.current === this.num_items)
 			this.current = 1;
 		else
 			this.current++;
@@ -59,12 +59,14 @@ const FlexSlider = {
 		// translate from 0 to -100%
 		// we need transitionend to fire for this translation, so add transition CSS
 		document.querySelector("#slider-container").classList.add('slider-container-transition');
-		document.querySelector("#slider-container").style.transform = 'translateX(-100%)';
+		let width = 0 - document.querySelector(".slider-item[style*='order: 3;']").offsetWidth
+		console.log(width)
+		document.querySelector("#slider-container").style.transform = `translateX(calc(${width}px - 4rem))`;
 	}
 };
 
 FlexSlider.init();
 
-window.setInterval(function(){
-  document.querySelector("#slider-container-outer").click()
-}, 5000);
+// window.setInterval(function(){
+//   document.querySelector("#slider-container-outer").click()
+// }, 5000);
