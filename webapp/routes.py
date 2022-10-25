@@ -112,6 +112,7 @@ def inject_nav():
 		"site_logo": KeyValue.query.filter_by(key="site_logo").first(),
 		"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
 		"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value,
+		"tickets-hero-photo": KeyValue.query.filter_by(key="tickets-hero-photo").first(),
 		"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
 	}
 
@@ -154,7 +155,7 @@ def frontpage():
 		if size[0] > size[1]:
 			photos.append(i)
 
-		if len(photos) == 5:
+		if len(photos) == (5-int(KeyValue.query.filter_by(key="tickets-active").first().value)):
 			break
 
 	post = Post.query\

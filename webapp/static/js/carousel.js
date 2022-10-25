@@ -60,7 +60,6 @@ const FlexSlider = {
 		// we need transitionend to fire for this translation, so add transition CSS
 		document.querySelector("#slider-container").classList.add('slider-container-transition');
 		let width = 0 - document.querySelector(".slider-item[style*='order: 3;']").offsetWidth
-		console.log(width)
 		document.querySelector("#slider-container").style.transform = `translateX(calc(${width}px - 4rem))`;
 	}
 };

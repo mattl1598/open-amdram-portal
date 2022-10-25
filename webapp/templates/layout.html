@@ -50,19 +50,41 @@
 {% if frontpage is defined %}
 	<div class="carousel" id="slider-container-outer">
 		<div id="slider-container" class="slider-container-transition">
+			{% set hero_count = namespace(value=0) %}
 			{% for photo in photos %}
-				<div class="slider-item" data-position="{{ loop.index }}"
-				     style="background-image: url('/photo/{{ photo.photo_url }}');">
-{#					<div>#}
-{#						<h2>Our Last Show: <br>#}
-{#							{{ latest_show.title }}</h2>#}
-{#					</div>#}
-					<img id="photo{{ loop.index }}"
-					     src="/photo/{{ photo.photo_url }}"
-					     alt="Photo"
+				{% set hero_count.value = hero_count.value + 1 %}
+				<div class="slider-item link" data-position="{{ hero_count.value }}"
+				     style="background-image: url('/photo/{{ photo.photo_url }}');"
 					>
+					<div class="item-layout">
+						<div>
+							<h2>Our Last Show:<br>
+								<a href="{{ web_config.get("last_show")[1] }}">{{ latest_show.title }}<br>(See More Photos)</a></h2>
+						</div>
+						<img id="photo{{ hero_count.value }}"
+						     src="/photo/{{ photo.photo_url }}"
+						     alt="Photo"
+						>
+					</div>
 				</div>
 			{% endfor %}
+			{% if web_config.get("tickets-active") == "1" %}
+				{% set hero_count.value = hero_count.value + 1 %}
+				<div class="slider-item link" data-position="{{ hero_count.value }}"
+				     style="background-image: url('{{ web_config.get('tickets-hero-photo').value }}');"
+					>
+					<div class="item-layout">
+						<div>
+							<h2>Our Next Show:<br>{{ post.show_title }}<br>
+								<a href="{{ web_config.get("tickets-link") }}">Buy Tickets Now</a></h2>
+						</div>
+						<img id="tickets-hero-photo"
+						     src="{{ web_config.get('tickets-hero-photo').value }}"
+						     alt="Photo"
+						>
+					</div>
+				</div>
+			{% endif %}
 		</div>
 	</div>
 {% endif %}

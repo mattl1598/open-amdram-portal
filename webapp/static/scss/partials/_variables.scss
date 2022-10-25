@@ -52,10 +52,10 @@ $light: (
 		}
 	}
 	@media all and (prefers-color-scheme: dark) {
-		html.auto &, html.light & {
+		html.auto &, html.dark & {
 			#{$element}: #{$extra_bits} call(get-function($adjust), colour($dark, $colour), $arg);
 		}
-		html.dark & {
+		html.light & {
 			#{$element}: #{$extra_bits} call(get-function($adjust), colour($light, $colour), $arg);
 		}
 	}
