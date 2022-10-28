@@ -4,7 +4,7 @@
 @import "partials/form_element";
 
 a {
-	text-decoration: none;
+	//text-decoration: none;
 	@include theme(color, text);
 }
 
@@ -18,5 +18,9 @@ a.post {
 		text-overflow: ellipsis;
 		max-width: 50%;
 		max-height: 2ch;
+	}
+
+	img {
+		display: none;
 	}
 }

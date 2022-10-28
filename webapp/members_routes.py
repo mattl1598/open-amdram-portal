@@ -96,6 +96,7 @@ def m_show(id):
 
 	posts = Post.query \
 		.filter_by(show_id=id) \
+		.filter(Post.type != "public") \
 		.order_by(Post.date.desc()) \
 		.all()
 

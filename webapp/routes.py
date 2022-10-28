@@ -138,6 +138,15 @@ def inject_nav():
 	)
 
 
+@app.after_request
+def after_request(response):
+	db.session.commit()
+	if request.endpoint not in ["css", "js", "get_photo", "favicon"]:
+		print(request.endpoint)
+		print(request.referrer)
+	return response
+
+
 @app.route("/", methods=["GET"])
 def frontpage():
 	latest_show = Show.query\
@@ -219,7 +228,7 @@ def auditions():
 		)\
 		.first()
 
-	print(post)
+	# print(post)
 
 	return render_template(
 		"auditions.html",
