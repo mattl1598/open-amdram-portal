@@ -264,10 +264,15 @@ def search():
 				BlogPost.content.ilike(ilike_arg)
 			)
 		).all()
+
+		member_searches = [
+			*[Member.firstname.ilike(x) for x in arg.split(" ")],
+			*[Member.lastname.ilike(x) for x in arg.split(" ")]
+		]
+
 		members = Member.query.filter(
 			or_(
-				Member.firstname.ilike(ilike_arg),
-				Member.lastname.ilike(ilike_arg)
+				*member_searches
 			)
 		).all()
 
