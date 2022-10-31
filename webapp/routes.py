@@ -710,3 +710,10 @@ def accessibility():
 	session.modified = True
 
 	return redirect(request.referrer)
+
+
+@app.route("/tempest")
+def tempest_redirect():
+	return redirect("/past-shows/L2hhNXIZPeXgGyY/the-tempest")
+	# TODO: change this to allow configuring custom redirects through admin settings
+
