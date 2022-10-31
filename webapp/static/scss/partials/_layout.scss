@@ -618,19 +618,21 @@ div#mobile-nav {
 		height: 100%;
 		width: 100%;
 		display: flex;
-		flex-direction: row;
 		justify-content: space-around;
 		align-items: center;
 
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-
-		&.overflow {
-			backdrop-filter: blur(0px);
-			-webkit-backdrop-filter: blur(0px);
-
+		@media (any-hover: hover) {
+			flex-direction: row;
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+		}
+		@media (any-hover: none) {
+			//flex-direction: column-reverse;
+			div:not(.img-container) {
+				backdrop-filter: blur(0.5rem);
+				-webkit-backdrop-filter: blur(0.5rem);
+			}
 			img {
-				width: 20%;
 				opacity: 0;
 			}
 		}
