@@ -58,13 +58,17 @@
 					>
 					<div class="item-layout">
 						<div>
-							<h2>Our Last Show:<br>
-								<a href="{{ web_config.get("last_show")[1] }}">{{ latest_show.title }}<br>(See More Photos)</a></h2>
+							<h2><span>Our Last Show:<br></span>
+								<a href="{{ web_config.get("last_show")[1] }}">
+									{{ latest_show.title }}<br>
+									<span>(More	Photos)</span>
+								</a>
+							</h2>
 						</div>
-						<img id="photo{{ hero_count.value }}"
-						     src="/photo/{{ photo.photo_url }}"
-						     alt="Photo"
-						>
+						<div class="img-container"><img id="photo{{ hero_count.value }}"
+						        src="/photo/{{ photo.photo_url }}"
+						        alt="Photo"
+						></div>
 					</div>
 				</div>
 			{% endfor %}

@@ -550,9 +550,16 @@ div#mobile-nav {
 
 #slider-container-outer {
 	//overflow: hidden;
-	width: 70%;
+	@media (any-hover: hover) {
+		width: 70%;
+		padding: 1rem 0;
+	}
+	@media (any-hover: none) {
+		width: calc(100% - 2rem);
+		//margin: 0 2rem;
+		padding-top: 0.5rem;
+	}
 	margin: auto;
-	padding: 1rem 0;
 }
 
 #slider-container {
@@ -568,7 +575,19 @@ div#mobile-nav {
 }
 
 .slider-item {
-	max-width: 70%;
+	@media (any-hover: hover) {
+		//min-width: 40%;
+		//max-width: 70%;
+		width: 70%;
+		margin: 0 2rem;
+	}
+	@media (any-hover: none) {
+		width: 100%;
+		margin: 0 2rem;
+	}
+
+
+	//max-width: 70%;
 	flex-shrink: 0;
 	flex-grow:1;
 	min-height: 30vh;
@@ -583,6 +602,8 @@ div#mobile-nav {
 	border: 1rem solid;
 	@include theme(border-color, bg4);
 
+	overflow: hidden;
+
 	/* Center and scale the image nicely */
 	background-position: center center;
 	background-repeat: no-repeat;
@@ -592,7 +613,6 @@ div#mobile-nav {
 	//@include theme(background-color, bg4);
 
 	object-fit: contain;
-	margin: 0 2rem;
 
 	div.item-layout {
 		height: 100%;
@@ -605,10 +625,21 @@ div#mobile-nav {
 		backdrop-filter: blur(10px);
 		-webkit-backdrop-filter: blur(10px);
 
+		&.overflow {
+			backdrop-filter: blur(0px);
+			-webkit-backdrop-filter: blur(0px);
+
+			img {
+				width: 20%;
+				opacity: 0;
+			}
+		}
+
 		border-radius: .5rem;
 
-
-		div {
+		div:not(.img-container) {
+			flex-basis: 0;
+			flex-grow: 0;
 			@include theme(color, text);
 			background-color: #7f7f7fBB;
 			@include theme-adjust(background-color, bg2, rgba, 0.5);
@@ -616,22 +647,32 @@ div#mobile-nav {
 			padding: 1rem;
 			border-radius: .5rem;
 
+			margin: 0 0.5rem;
+			white-space: nowrap;
+
 			h1, h2, h3, h4 {
 				margin: 0;
 			}
 		}
 
-		img {
-			//max-height: 100%;
-			//max-width: 100%;
+		.img-container {
+		    display: flex;
+			justify-content: end;
+			//display: inline-block;
+			direction: rtl;
+			flex-basis: 0;
+			flex-grow: 10;
+			width: 70%;
 			height: calc(100% - 0rem);
-			//width: calc(100% - 0rem);
-			//height: calc(50% - 0rem);
-			//width: calc(50% - 0rem);
 			object-fit: contain;
 			z-index: 100;
-			//padding: 1rem;
+		}
 
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			z-index: 100;
 		}
 	}
 }
