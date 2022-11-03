@@ -5,7 +5,7 @@
 		<div class="fancy_input">
 			<select id="show" name="show">
 				{% for show in shows %}
-					<option value="{{ show.id }}">{{ show.title }}({{ show.date.year }})</option>
+					<option value="{{ show.id }}">{{ show.title }} ({{ show.date.year }})</option>
 				{% endfor %}
 			</select>
 			<label for="show">Show</label>

@@ -346,7 +346,7 @@ def choose_album():
 
 		shows = Show.query \
 			.order_by(Show.date.desc()) \
-			.with_entities(Show.id, Show.title) \
+			.with_entities(Show.id, Show.title, Show.date) \
 			.all()
 
 		return render_template(
