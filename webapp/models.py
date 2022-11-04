@@ -182,3 +182,4 @@ class AnalyticsLog(db.Model, NewIdGetter):
 	request_origin = db.Column(db.Text)
 	request_destination = db.Column(db.Text)
 	user_agent = db.Column(db.Text)
+	code = db.Column(db.Integer)

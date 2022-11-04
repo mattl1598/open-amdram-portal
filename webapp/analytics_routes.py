@@ -42,7 +42,8 @@ def after_request(response):
 			session_email=email,
 			request_origin=request.referrer,
 			request_destination=request.url,
-			user_agent=request.user_agent.string
+			user_agent=request.user_agent.string,
+			code=response.status_code
 		)
 		db.session.add(new_log)
 		db.session.commit()
