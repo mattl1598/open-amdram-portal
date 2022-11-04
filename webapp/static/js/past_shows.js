@@ -74,4 +74,41 @@ function sortTable(id, n, arrow_id) {
 	headings = document.querySelectorAll("tr#header th span")
 	headings.forEach(element => element.classList.remove(...element.classList))
 	document.querySelector("#"+arrow_id).classList.add(dir)
+
+	const params = new URLSearchParams(window.location.search)
+	let q_col = params.get('col')
+	let q_dir = params.get('dir')
+	let qs;
+	if (q_col === `${n}` && q_dir === "0") {
+		qs = `?col=${n}&dir=1`
+	} else {
+		qs = `?col=${n}&dir=0`
+	}
+
+	history.pushState(null, '', window.location.pathname + qs)
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+	let arrow_ids = {
+		0: "season_arrow",
+		2: "show_arrow",
+		4: "genre_arrow",
+		5: "photos_arrow"
+	}
+	const params = new URLSearchParams(window.location.search)
+	let col = params.get('col')
+	let dir = params.get('dir')
+
+	if (col !== null && dir !== null) {
+		sortTable("past_shows", col, arrow_ids[col])
+		if (dir === "1") {
+			sortTable("past_shows", col, arrow_ids[col])
+		}
+	} else {
+		col = 0
+		sortTable("past_shows", col, arrow_ids[col])
+		sortTable("past_shows", col, arrow_ids[col])
+	}
+
+}, false)
+

@@ -58,12 +58,12 @@ def manage_media(**kwargs):
 	if request.method == "POST" or kwargs.get("mammoth") == "true":
 		b_in = io.BytesIO()
 		if kwargs.get("mammoth") == "true":
-			print("mammoth")
+			# print("mammoth")
 			filename = kwargs.get("image_name").replace(' ', '_')
 			b_in = kwargs.get("image")
 		else:
 			file = request.files.get('fileElem')
-			print(file.content_type)
+			# print(file.content_type)
 			filename = file.filename.replace(' ', '_')
 			file.save(b_in)
 		if filename.rsplit('.', 1)[1] != "webp":
@@ -125,7 +125,7 @@ def manage_media(**kwargs):
 			headers=headers,
 			data=json.dumps(data)
 		)
-		pprint(x.json())
+		# pprint(x.json())
 
 		new_item = StaticMedia(
 			id=StaticMedia.get_new_id(),
@@ -345,7 +345,7 @@ def choose_album():
 			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={next_token}").json()
 
 		shows = Show.query \
-			.order_by(Show.date.desc()) \
+			.order_by(Show.date.asc()) \
 			.with_entities(Show.id, Show.title, Show.date) \
 			.all()
 
@@ -359,7 +359,6 @@ def choose_album():
 
 	else:
 		refresh_token = request.form.get("refresh_token")
-		print(refresh_token)
 		url = "https://oauth2.googleapis.com/token"
 		data = {
 			"refresh_token": refresh_token,
@@ -367,7 +366,6 @@ def choose_album():
 			"client_secret": client_secret,
 			"grant_type": "refresh_token"
 		}
-		pprint(data)
 		x = requests.post(url=url, data=data)
 		access_token = x.json().get("access_token")
 

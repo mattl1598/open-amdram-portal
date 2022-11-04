@@ -12,11 +12,12 @@ from corha import corha
 from flask import flash, make_response, redirect, render_template, send_file, session, url_for, \
 	request  # , abort, session
 from flask_login import logout_user, current_user, login_required  # , login_user
-from sqlalchemy import not_, or_
+from sqlalchemy import func, not_, or_
 from werkzeug.security import check_password_hash
 
 from webapp import app, db
-from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, User, MemberShowLink as MSL
+from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
+	MemberShowLink as MSL
 from webapp.photos_routes import manage_media
 
 
@@ -352,10 +353,16 @@ def file_delete(file_id, filename):
 @login_required
 def manage_shows():
 	shows = Show.query.order_by(Show.date.desc()).all()
+	photo_counts = ShowPhotos.query\
+		.with_entities(ShowPhotos.show_id, func.count(ShowPhotos.show_id)) \
+		.group_by(ShowPhotos.show_id).all()
+	# print(photo_counts)
+
 	return render_template(
 		"past_shows.html",
 		manage_shows=True,
 		shows=shows,
+		photo_counts=dict(photo_counts),
 		css="past_shows.css",
 		js="past_shows.js"
 	)

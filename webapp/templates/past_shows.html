@@ -32,6 +32,9 @@
 			<th onclick="sortTable('past_shows', 2, 'show_arrow')">Show <span id="show_arrow">▼</span></th>
 			<th onclick="sortTable('past_shows', 0, 'season_arrow')">Season <span id="season_arrow" class="asc">▼</span></th>
 			<th onclick="sortTable('past_shows', 4, 'genre_arrow')">Genre <span id="genre_arrow">▼</span></th>
+			{% if manage_shows is defined %}
+				<th onclick="sortTable('past_shows', 5, 'photos_arrow')">Photos <span id="photos_arrow">▼</span></th>
+			{% endif %}
 		</tr>
 
 		{% for show in shows %}
@@ -40,20 +43,17 @@
 			{% else %}
 				{% set url = "/past-shows/" + show.id %}
 			{% endif %}
-			<tr class="link" id="{{ show.id }}" onclick="location.href='{{ url }}'"
+			<tr class="link" id="{{ show.id }}" onauxclick="newTab('{{ url }}')" onclick="location.href='{{ url }}'"
 				data-searchable="{{ show.title }} {{ show.season }} {{ show.date.year }} {{ show.genre }} {{ show.author }} {{ show.subtitle }}">
 				<td>{{ '%04d' % loop.index0 }}</td>
 				<td><img class="programme" src="{{ show.programme }}" alt="{{ show.title }} programme cover"></td>
 				<td class="title"><h3>{{ show.title }}</h3></td>
 				<td class="season">{{ show.season }} {{ show.date.year }}</td>
 				<td class="genre">{{ show.genre }}</td>
+				{% if manage_shows is defined %}
+					<td class="photos">{{ '%03d' % photo_counts.setdefault(show.id, 0) }}</td>
+				{% endif %}
 			</tr>
 		{% endfor %}
 	</table>
-	<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			sortTable('past_shows', 0, "season_arrow")
-			sortTable('past_shows', 0, "season_arrow")
-		}, false)
-	</script>
 {% endblock %}

@@ -171,3 +171,14 @@ class StaticMedia(db.Model, NewIdGetter):
 	filename = db.Column(db.Text)
 	item_type = db.Column(db.String(30))
 	item_dim = db.Column(db.Text)
+
+
+class AnalyticsLog(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	server = db.Column(db.Text)
+	session_id = db.Column(db.Text)
+	session_email = db.Column(db.Text)
+	request_origin = db.Column(db.Text)
+	request_destination = db.Column(db.Text)
+	user_agent = db.Column(db.Text)
