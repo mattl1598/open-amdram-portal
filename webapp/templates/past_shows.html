@@ -39,9 +39,9 @@
 
 		{% for show in shows %}
 			{% if manage_shows is defined %}
-				{% set url = "/members/edit-show/" + show.id %}
+				{% set url = "/".join(["/members/edit-show", show.id, "-".join(show.title.split(" "))]) %}
 			{% else %}
-				{% set url = "/past-shows/" + show.id %}
+				{% set url = "/".join(["/past-shows", show.id, "-".join(show.title.split(" "))]) %}
 			{% endif %}
 			<tr class="link" id="{{ show.id }}" onauxclick="newTab('{{ url }}')" onclick="location.href='{{ url }}'"
 				data-searchable="{{ show.title }} {{ show.season }} {{ show.date.year }} {{ show.genre }} {{ show.author }} {{ show.subtitle }}">

@@ -58,10 +58,7 @@ class MemberRenderer:
 				self.has_diff = True
 
 	def get_link(self):
-		if self.has_user:
-			return "/past-shows/u/" + self.id
-		else:
-			return "/past-shows/m/" + self.id
+		return "/".join(["/past-shows", ["m", "u"][self.has_user], self.id, "-".join([self.firstname, self.lastname])])
 
 
 @app.context_processor
