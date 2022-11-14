@@ -3,6 +3,14 @@
 @import "partials/variables";
 @import "partials/form_element";
 
+div.fancy-input {
+	margin-top: 1rem;
+}
+
+summary {
+	cursor: pointer;
+}
+
 .existing_members {
 	display: flex;
 	flex-wrap: wrap;

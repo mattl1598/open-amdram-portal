@@ -541,33 +541,51 @@ def edit_show(show_id):
 @login_required
 def add_show_member():
 	if request.method == "GET":
-		members = Member.query.all()
+		members = Member.query.all()[::-1]
 		return render_template(
 			"members/add_show_member.html",
+			title="Add New Members",
 			members=members,
 			css="add_new_members.css"
 		)
 	elif request.method == "POST":
+		existing = [(i.firstname, i.lastname) for i in Member.query.all()]
 		if "bulk" in request.form.keys():
 			new_members = list(map(lambda x: x.split(" "), request.form["bulk"].split("\r\n")))
+			pprint(new_members)
 			for member in new_members:
-				new_member = Member(
-					id=Member.get_new_id(),
-					firstname=member[0],
-					lastname=member[1]
-				)
-				db.session.add(new_member)
+				if member != [''] and (member[0], member[1]) not in existing:
+					new_member = Member(
+						id=Member.get_new_id(),
+						firstname=member[0],
+						lastname=member[1]
+					)
+					db.session.add(new_member)
+		elif "bulk-roles" in request.form.keys():
+			new_roles = list(map(lambda x: x.split("\t"), request.form["bulk-roles"].split("\r\n")))
+			pprint(new_roles)
+			for role in new_roles:
+				if len(role) == 5:
+					new_link = MSL(
+						id=MSL.get_new_id(),
+						show_id=role[0],
+						cast_or_crew=role[1],
+						role_name=role[2],
+						member_id=role[3],
+						order_val=int(role[4] or 0)
+					)
+					print(new_link)
+					db.session.add(new_link)
 		else:
 			used_ids = [value[0] for value in Member.query.with_entities(Member.id).all()]
 			new_id = corha.rand_string(request.form["firstname"], 16, used_ids)
-
-			new_member = Member(
-				id=new_id,
-				firstname=request.form['firstname'],
-				lastname=request.form['lastname']
-			)
-
-			db.session.add(new_member)
+			if (request.form['firstname'], request.form['lastname']) not in existing:
+				new_member = Member(
+					id=new_id,
+					firstname=request.form['firstname'],
+					lastname=request.form['lastname']
+				)
+				db.session.add(new_member)
 
 		db.session.commit()
 

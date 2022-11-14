@@ -18,7 +18,7 @@ from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross
+from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross, noda
 
 
 class NavItem:
@@ -73,7 +73,8 @@ def inject_nav():
 		"eye": eye,
 		"trash": trash,
 		"x": cross,
-		"drama": drama
+		"drama": drama,
+		"noda": noda
 	}
 
 	nav = [

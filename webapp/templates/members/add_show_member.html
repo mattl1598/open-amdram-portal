@@ -1,22 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-	<div class="existing_members">
-		{% for member in members %}
-			<div class="member_name">{{ member.firstname }} {{ member.lastname }}</div>
-		{% endfor %}
-	</div>
-	<hr>
+	<h2>{{ title }}</h2>
 	<form action="/members/add-show-member" method="POST">
-		<label for="firstname">Firstname</label><input type="text" name="firstname" id="firstname"><br>
-		<label for="lastname">Lastname</label><input type="text" name="lastname" id="lastname"><br>
+		<div class="fancy-input">
+			<input type="text" name="firstname" id="firstname" placeholder=" "><label for="firstname">Firstname</label>
+		</div>
+		<div class="fancy-input">
+			<input type="text" name="lastname" id="lastname" placeholder=" "><label for="lastname">Lastname</label>
+		</div>
 		<button type="submit">Submit</button>
 	</form>
 	<br>
 	<form action="/members/add-show-member" method="POST">
 		<div class="fancy-input">
-			<textarea name="bulk" id="bulk"></textarea>
+			<textarea name="bulk" id="bulk" placeholder=" " required></textarea>
 			<label for="bulk">Bulk Add Members</label>
 		</div>
 		<button type="submit">Submit</button>
 	</form>
+	<hr>
+	<details>
+		<summary>Existing Members</summary>
+		<div class="existing_members">
+			{% for member in members %}
+				<div class="member_name">{{ member.firstname }} {{ member.lastname }}</div>
+			{% endfor %}
+		</div>
+	</details>
+	<hr>
+	<form action="/members/add-show-member" method="POST">
+		<div class="fancy-input">
+			<textarea name="bulk-roles" id="bulk-roles" placeholder=" " required></textarea>
+			<label for="bulk-roles">Bulk Update Show Rolls (All Shows)</label>
+		</div>
+		<button type="submit">Submit</button>
+	</form>
+
 {% endblock %}

@@ -39,7 +39,7 @@
 
 		{% for show in shows %}
 			{% if manage_shows is defined %}
-				{% set url = "/".join(["/members/edit-show", show.id, "-".join(show.title.split(" "))]) %}
+				{% set url = "/".join(["/members/edit-show", show.id]) %}
 			{% else %}
 				{% set url = "/".join(["/past-shows", show.id, "-".join(show.title.split(" "))]) %}
 			{% endif %}

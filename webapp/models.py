@@ -90,13 +90,17 @@ class Member(db.Model, NewIdGetter):
 		return f"Member('{self.id}', '{self.firstname}', '{self.lastname}', '{self.associated_user}')"
 
 
-class MemberShowLink(db.Model):
+class MemberShowLink(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
 	cast_or_crew = db.Column(db.String(16))
 	role_name = db.Column(db.Text)
 	member_id = db.Column(db.String(16), db.ForeignKey('member.id'))
 	order_val = db.Column(db.Integer)
+
+	def __repr__(self):
+		return f"MSL('{self.id}', '{self.show_id}', '" \
+			f"{self.cast_or_crew}', '{self.role_name}', '{self.member_id}', {self.order_val})"
 
 
 class BlogPost(db.Model):

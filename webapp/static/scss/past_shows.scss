@@ -68,6 +68,7 @@ table {
 	tr td:nth-child(1) {
 		display: none;
 	}
+
 	border-collapse: collapse;
 
 	tr {
@@ -80,7 +81,16 @@ table {
 	}
 }
 
+@include mobile {
+	body {
+		overflow-x: scroll;
+	}
+}
+
 table.table_mode {
+	width: 100%;
+	height: auto;
+
 	img.programme {
 		height: 9ch;
 		width: 9ch;
@@ -89,6 +99,10 @@ table.table_mode {
 	}
 	td {
 		padding: 0 1ch;
+		@include mobile {
+			padding-top: 0.5rem;
+			padding-bottom: 0.5rem;
+		}
 	}
 
 	tr:nth-child(2n) {
@@ -138,10 +152,11 @@ table.cards_mode{
 
 	tr {
 		@include not-mobile {
-			flex: 0 0 21%;
+			flex: 1 0 21%;
+			max-width: 24%;
 		}
 		@include mobile {
-			flex: 0 1 26%;
+			flex: 1 0 26%;
 			max-width: 32%;
 		}
 		border-radius: 3ch;

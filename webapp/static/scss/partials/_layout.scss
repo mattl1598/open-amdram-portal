@@ -113,6 +113,7 @@ div.main-section {
 
 	display: flex;
 	gap: 3ch;
+	//width: 100%;
 
 	@include not-mobile {
 		padding: 3ch 3ch;
@@ -161,9 +162,13 @@ div.main-section {
 		@include mobile {
 			flex-direction: column;
 			justify-content: space-between;
-			align-content: center;
+			align-items: center;
 			flex-wrap: wrap;
 			width: 100%;
+
+			//position: fixed;
+			//right: 0;
+			float: left;
 
 			div {
 				flex-grow: 2;
@@ -384,10 +389,17 @@ span.form_error {
 div.title-bar {
 	&#title-tape-measure {
 		height: 0;
+		width: 100vw;
+		overflow: hidden;
+	}
+
+	&#title-bar {
+		width: 100%;
 	}
 
 	position: sticky;
 	top: 0;
+	left: 0;
 	z-index: 9999;
 	display: flex;
 	flex-direction: row;
@@ -707,4 +719,54 @@ div.footer {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-evenly;
+	align-items: center;
+
+	@include mobile {
+		flex-direction: column-reverse;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+
+
+		div.accessibility {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-items: center;
+			gap: 0.5rem;
+
+			.accessibility-title {
+
+			}
+
+		}
+	}
+
+	.settings {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.noda {
+		span {
+			height: 0;
+		}
+		svg {
+			font-size: inherit;
+			width: 14ch;
+			//height: 100%;
+			//fill: white; //maybe
+			@include theme(fill, text);
+		}
+	}
+
+	@include mobile {
+		> div:not(:first-child) {
+			border-bottom: 0.1rem solid;
+			padding-bottom: 0.5rem;
+			@include theme(border-bottom-color, bg4)
+		}
+	}
+
 }

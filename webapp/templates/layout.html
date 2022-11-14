@@ -198,25 +198,34 @@
 </div>
 
 <div class="footer">
+	<div class="noda">
+		<a href="https://noda.org.uk">
+			<svg viewbox="0 0 50 26">{{ icons["noda"] | safe }}</svg>
+		</a>
+	</div>
+
 	<div>
-		<strong>Powered By:</strong>
+		<strong>Website Powered By:</strong>
 		<div><a href="https://github.com/mattl1598/open-amdram-portal">Open AmDram Portal - Opensource</a></div>
 	</div>
 	<div class="accessibility">
-		<strong>Accessibility</strong>
-		<span>
-			<select name="theme" id="theme" onchange="window.location.assign('/accessibility?theme='+this.value)" selected="font_single">
-				<option value="auto" {{ "selected" if session.get("theme", "auto") == "auto" }}>Theme: Auto</option>
-				<option value="light" {{ "selected" if session.get("theme", "auto") == "light" }}>Theme: Light</option>
-				<option value="dark" {{ "selected" if session.get("theme", "auto") == "dark" }}>Theme: Dark</option>
-			</select>
-		</span>
-		<span>
-			<label for="">Font Size</label>
-			<button id="font_single" type=button onclick="window.location.assign('/accessibility?fontsize=font_single')">1x</button>
-			<button id="font_double" type=button onclick="window.location.assign('/accessibility?fontsize=font_double')">1.5x</button>
-			<button id="font_triple" type=button onclick="window.location.assign('/accessibility?fontsize=font_triple')">2x</button>
-		</span>
+		<strong class="accessibility-title">Accessibility</strong>
+		<div class="settings">
+			<span>
+				Theme:
+				<select name="theme" id="theme" onchange="window.location.assign('/accessibility?theme='+this.value)" selected="font_single">
+					<option value="auto" {{ "selected" if session.get("theme", "auto") == "auto" }}>Auto</option>
+					<option value="light" {{ "selected" if session.get("theme", "auto") == "light" }}>Light</option>
+					<option value="dark" {{ "selected" if session.get("theme", "auto") == "dark" }}>Dark</option>
+				</select>
+			</span>
+			<span>
+				<label for="">Font Size</label>
+				<button id="font_single" type=button onclick="window.location.assign('/accessibility?fontsize=font_single')">1x</button>
+				<button id="font_double" type=button onclick="window.location.assign('/accessibility?fontsize=font_double')">1.5x</button>
+				<button id="font_triple" type=button onclick="window.location.assign('/accessibility?fontsize=font_triple')">2x</button>
+			</span>
+		</div>
 	</div>
 </div>
 </body>
