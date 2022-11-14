@@ -129,6 +129,7 @@ def inject_nav():
 	session.permanent = True
 
 	return dict(
+		app=app,
 		nav=nav,
 		socials=socials,
 		web_config=web_config,

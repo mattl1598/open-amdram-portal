@@ -6,11 +6,19 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sass import compile
 import corha
-# from git import Repo
 import os
+import subprocess
 
 app = Flask(__name__)
-# print()
+
+output = subprocess.run([
+				'git', '-C', os.getcwd(),
+				'rev-parse', '--short', 'HEAD'
+			], capture_output=True)
+print(commit := output.stdout.decode('UTF-8').strip('\r\n'))
+output = subprocess.run(['git', 'describe', '--tags'], capture_output=True)
+print(tag := output.stdout.decode('UTF-8').strip('\r\n'))
+
 # repo = Repo(os.getcwd())
 # print(repo)
 
@@ -20,6 +28,8 @@ login_manager.login_view = 'login'
 
 app.envs = corha.credentials_loader(".env")
 
+app.config['commit'] = commit
+app.config['tag'] = tag
 app.config['SECRET_KEY'] = app.envs.secret_key
 app.config['FLASK_ENV'] = "development"
 app.config['SQLALCHEMY_DATABASE_URI'] = app.envs.postgresql

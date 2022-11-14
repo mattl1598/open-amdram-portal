@@ -207,6 +207,7 @@
 	<div>
 		<strong>Website Powered By:</strong>
 		<div><a href="https://github.com/mattl1598/open-amdram-portal">Open AmDram Portal - Opensource</a></div>
+		<div>{{ app.config.get("tag") or app.config.get("commit") }}</div>
 	</div>
 	<div class="accessibility">
 		<strong class="accessibility-title">Accessibility</strong>
