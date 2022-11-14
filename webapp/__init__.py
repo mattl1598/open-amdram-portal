@@ -6,13 +6,13 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sass import compile
 import corha
-from git import Repo
+# from git import Repo
 import os
 
 app = Flask(__name__)
 # print()
-repo = Repo(os.getcwd())
-print(repo)
+# repo = Repo(os.getcwd())
+# print(repo)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
