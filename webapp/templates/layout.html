@@ -21,7 +21,8 @@
 </head>
 
 <body id="body" class="{{ session.get("fontsize", "font_single") }}">
-<div class="title-bar">
+{% for x in ["title-tape-measure", "title-bar"] %}
+<div id="{{ x }}" class="title-bar">
 	<div class="title">
 		<a href="/" class="tooltip">
 			{% if web_config.get("site_logo") is not none %}
@@ -46,6 +47,9 @@
 		</a>
 	</div>
 </div>
+{% endfor %}
+
+<script>setMobile()</script>
 
 {% if frontpage is defined %}
 	<div class="carousel" id="slider-container-outer">

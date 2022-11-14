@@ -10,17 +10,27 @@
 .past_shows_title {
 	display: flex;
 	flex-direction: row;
+	//align-items: center;
 	justify-content: space-between;
 	margin: 1.5ch 0;
+	flex-wrap: wrap;
+	gap: 0.7rem;
 
 	h2 {
 		margin: 0;
 	}
 
+	.quick-search {
+		margin: 0 1%;
+		padding: 0.5rem 0.5rem 0;
+		flex-grow: 10;
+		min-width: 80%;
+	}
+
 	.cards_switch {
 		display: flex;
 		gap: 1ch;
-
+		align-items: center;
 		padding: 0.3ch;
 
 		.switch {
@@ -47,7 +57,8 @@
 
 
 table {
-	width:100%;
+	max-width: 100%;
+	overflow: hidden;
 
 	h3 {
 		margin: 0;
@@ -126,10 +137,10 @@ table.cards_mode{
 	}
 
 	tr {
-		@media (any-hover: hover) {
+		@include not-mobile {
 			flex: 0 0 21%;
 		}
-		@media (any-hover: none) {
+		@include mobile {
 			flex: 0 1 26%;
 			max-width: 32%;
 		}

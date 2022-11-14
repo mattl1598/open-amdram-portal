@@ -27,7 +27,7 @@
 }
 
 div.main_section {
-	@media (any-hover: hover) {
+	@include not-mobile {
 		padding: 3ch 0;
 	}
 }

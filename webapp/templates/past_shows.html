@@ -8,13 +8,6 @@
 			<h2>Past Shows</h2>
 		{% endif %}
 
-		<span>
-			<div class="fancy-input">
-				<input type="text" name="quick-search" id="quick-search" placeholder=" " oninput="quickSearch(this)">
-				<label for="quick-search">Quick Search</label>
-			</div>
-		</span>
-
 		<label class="cards_switch">
 			Table
 			<div class="switch">
@@ -23,6 +16,13 @@
 			</div>
 			Cards
 		</label>
+
+		<span class="quick-search">
+			<div class="fancy-input">
+				<input type="text" name="quick-search" id="quick-search" placeholder=" " oninput="quickSearch(this)">
+				<label for="quick-search">Quick Search</label>
+			</div>
+		</span>
 	</div>
 
 	<table id="past_shows" class="cards_mode">

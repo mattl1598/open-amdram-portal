@@ -2,7 +2,7 @@
 
 div.fancy-input {
 	position: relative;
-	width: 90%;
+	width: 100%;
 
 	select, input, textarea {
 		margin: 0.01ch;
@@ -17,6 +17,10 @@ div.fancy-input {
 		outline: 0;
 		box-sizing: border-box;
 		border-radius: 7px;
+
+		@media (min-resolution: 1.5dppx) {
+			font-size: 150%;
+		}
 
 		&[type=submit] {
 			width: 50%;
@@ -81,7 +85,7 @@ div.fancy-input {
 
 		&.showme {
 			@include theme(color, text);
-			font-size: 70%;
+			//font-size: 70%;
 			padding-left: 1.2ch;
 			padding-top: 0;
 			z-index: 2;

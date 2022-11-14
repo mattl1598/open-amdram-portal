@@ -11,5 +11,12 @@
 		<label for="lastname">Lastname</label><input type="text" name="lastname" id="lastname"><br>
 		<button type="submit">Submit</button>
 	</form>
-
+	<br>
+	<form action="/members/add-show-member" method="POST">
+		<div class="fancy-input">
+			<textarea name="bulk" id="bulk"></textarea>
+			<label for="bulk">Bulk Add Members</label>
+		</div>
+		<button type="submit">Submit</button>
+	</form>
 {% endblock %}

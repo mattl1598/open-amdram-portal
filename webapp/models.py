@@ -78,7 +78,7 @@ class User(UserMixin, db.Model, NewIdGetter):
 		return check_password_hash(self.password_hash, password)
 
 
-class Member(db.Model):
+class Member(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
 	lastname = db.Column(db.String(30))

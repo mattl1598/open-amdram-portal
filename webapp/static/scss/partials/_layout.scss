@@ -1,6 +1,10 @@
 @import "variables";
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+.mobile {
+	$m: &;
+}
+
 body {
 	&.font_single {
 		font-size: 100%;
@@ -41,12 +45,14 @@ html,body
     overflow-x: hidden;
 }
 
-@media (any-hover: hover) {
+@include not-mobile {
 
 }
-@media (any-hover: none) {
-	html {
-		font-size: 200%;
+@include mobile {
+	@media (min-resolution: 1.5dppx) {
+		body {
+			font-size: 200%;
+		}
 	}
 }
 
@@ -92,7 +98,7 @@ div.main-outer {
 	flex-direction: row;
 	justify-content: flex-start;
 
-	width: 100vw;
+	width: 100%;
 	min-height: 90vh;
 	position: relative;
 	right: 0;
@@ -108,13 +114,13 @@ div.main-section {
 	display: flex;
 	gap: 3ch;
 
-	@media (any-hover: hover) {
+	@include not-mobile {
 		padding: 3ch 3ch;
 		flex-direction: row;
 		justify-content: center;
 		align-items: flex-start;
 	}
-	@media (any-hover: none) {
+	@include mobile {
 		padding: 1ch 1ch;
 		flex-direction: column;
 		justify-content: flex-start;
@@ -123,7 +129,7 @@ div.main-section {
 
 	div.content {
 
-		@media (any-hover: hover) {
+		@include not-mobile {
 			&:not(.embedded) {
 				min-width: 40%;
 				max-width: 60%;
@@ -131,9 +137,8 @@ div.main-section {
 			&.embedded {
 				width: 100%;
 			}
-
 		}
-		@media (any-hover: none) {
+		@include mobile {
 			width: 100%;
 		}
 
@@ -149,11 +154,11 @@ div.main-section {
 		gap: 1ch;
 		display: flex;
 
-		@media (any-hover: hover) {
+		@include not-mobile {
 			flex-direction: column;
 			max-width: 25%;
 		}
-		@media (any-hover: none) {
+		@include mobile {
 			flex-direction: column;
 			justify-content: space-between;
 			align-content: center;
@@ -377,6 +382,10 @@ span.form_error {
 
 
 div.title-bar {
+	&#title-tape-measure {
+		height: 0;
+	}
+
 	position: sticky;
 	top: 0;
 	z-index: 9999;
@@ -390,122 +399,123 @@ div.title-bar {
 
 	@include theme(color, text);
 	@include theme(background-color, bg1);
+}
+div.nav {
+	list-style-type: none;
 
-	div.nav {
-		list-style-type: none;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	color: inherit;
 
-		display: flex;
-		flex-direction: row;
-		align-items: stretch;
+	a {
 		color: inherit;
-
-		a {
-			color: inherit;
-			text-decoration: none;
-			border-left: 1px solid dimgrey;
-			white-space: nowrap;
-			@include theme(background-color, bg1);
-			//border-bottom: 1px solid dimgrey;
-
-			&.active {
-				@include theme(background-color, accent1);
-				@include theme(color, inv_text);
-			}
-
-			&:hover {
-				@include theme(background-color, accent1);
-				@include theme(color, inv_text);
-			}
-
-			h3 {
-				font-weight: normal;
-				padding: 0 2ch;
-			}
-
-			&.search {
-				display: flex;
-				flex-direction: row;
-				align-items: stretch;
-			}
-
-			&.hamburger {
-				@media (any-hover: none) {
-					display: flex;
-				}
-				@media (any-hover: hover) {
-					display: none;
-				}
-
-				flex-direction: row;
-				align-items: stretch;
-				svg {
-					display: block;
-					fill: none;
-					@include theme(stroke, text);
-					stroke-width: 7%;
-				}
-			}
-
-			&:not(.hamburger) {
-				@media (any-hover: none) {
-					display: none;
-				}
-			}
-
-			svg {
-				width: 5ch;
-				padding: 0 1ch;
-				margin: auto 0;
-				@include theme(fill, text);
-			}
-		}
-	}
-
-	div.title {
-		//margin: 1ch;
-		padding-left: 1ch;
-		@include theme(color, text);
+		text-decoration: none;
+		border-left: 1px solid dimgrey;
 		white-space: nowrap;
+		@include theme(background-color, bg1);
+		//border-bottom: 1px solid dimgrey;
 
-		a {
-			text-decoration: none;
-			@include theme(color, text);
-			@include theme(fill, text);
+		&.active {
+			@include theme(background-color, accent1);
+			@include theme(color, inv_text);
+		}
+
+		&:hover {
+			@include theme(background-color, accent1);
+			@include theme(color, inv_text);
+		}
+
+		h3 {
+			font-weight: normal;
+			padding: 0 1rem;
+		}
+
+		&.search {
 			display: flex;
 			flex-direction: row;
-			justify-content: flex-start;
-			align-items: center;
+			align-items: stretch;
+		}
 
+		&.hamburger {
+			//@include not-mobile(#title-bar) {
+			//	display: none;
+			//}
+			@include mobile(#title-bar) {
+				display: flex;
+			}
+			display: none;
+
+			flex-direction: row;
+			align-items: stretch;
 			svg {
-				display: inline-block;
-				width: 3em;
-				//fill: inherit;
-				padding-right: 1ch;
+				display: block;
+				fill: none;
+				@include theme(stroke, text);
+				stroke-width: 7%;
 			}
+		}
 
-			h1 {
-				display: inline-block;
-				margin-block-start: 0.33em;
-    			margin-block-end: 0.33em;
-				color: inherit;
-				font-weight: normal;
+		&:not(.hamburger) {
+			@include mobile(#title-bar) {
+				display: none;
 			}
+		}
 
-			&:hover {
-				@include theme(color, accent1);
-				@include theme(fill, accent1);
-			}
+		svg {
+			width: 5ch;
+			padding: 0 1ch;
+			margin: auto 0;
+			@include theme(fill, text);
+		}
+	}
+}
+
+div.title {
+	//margin: 1ch;
+	padding-left: 1ch;
+	@include theme(color, text);
+	white-space: nowrap;
+
+	a {
+		text-decoration: none;
+		@include theme(color, text);
+		@include theme(fill, text);
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		align-items: center;
+
+		svg {
+			display: inline-block;
+			width: 3em;
+			//fill: inherit;
+			padding-right: 1ch;
+		}
+
+		h1 {
+			display: inline-block;
+			margin-block-start: 0.33em;
+            margin-block-end: 0.33em;
+			color: inherit;
+			font-weight: normal;
+		}
+
+		&:hover {
+			@include theme(color, accent1);
+			@include theme(fill, accent1);
 		}
 	}
 }
 
 div#mobile-nav {
-	@media (any-hover: none) {
+	@include mobile {
 		display: flex;
 	}
-	@media (any-hover: hover) {
+	@include not-mobile {
 		display: none;
 	}
+
 	flex-direction: column;
 	align-items: stretch;
 	list-style-type: none;
@@ -550,11 +560,11 @@ div#mobile-nav {
 
 #slider-container-outer {
 	//overflow: hidden;
-	@media (any-hover: hover) {
+	@include not-mobile {
 		width: 70%;
 		padding: 1rem 0;
 	}
-	@media (any-hover: none) {
+	@include mobile {
 		width: calc(100% - 2rem);
 		//margin: 0 2rem;
 		padding-top: 0.5rem;
@@ -575,13 +585,13 @@ div#mobile-nav {
 }
 
 .slider-item {
-	@media (any-hover: hover) {
+	@include not-mobile {
 		//min-width: 40%;
 		//max-width: 70%;
 		width: 70%;
 		margin: 0 2rem;
 	}
-	@media (any-hover: none) {
+	@include mobile {
 		width: 100%;
 		margin: 0 2rem;
 	}
@@ -621,12 +631,12 @@ div#mobile-nav {
 		justify-content: space-around;
 		align-items: center;
 
-		@media (any-hover: hover) {
+		@include not-mobile {
 			flex-direction: row;
 			backdrop-filter: blur(10px);
 			-webkit-backdrop-filter: blur(10px);
 		}
-		@media (any-hover: none) {
+		@include mobile {
 			//flex-direction: column-reverse;
 			div:not(.img-container) {
 				backdrop-filter: blur(0.5rem);

@@ -1,4 +1,5 @@
 import io
+import re
 import string
 from datetime import datetime
 from pprint import pprint
@@ -12,7 +13,7 @@ import csv
 from flask import abort, make_response, redirect, render_template, Response, send_file, send_from_directory, url_for, \
 	request, session
 from flask_login import login_required, login_user, current_user  # , login_required, logout_user
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
@@ -423,6 +424,7 @@ def past_show_page(show_id, test):
 			crew=crew,
 			photos=photos,
 			videos=videos,
+			title=show.title,
 			css="past_show_page.css",
 			js="past_show_page.js"
 		)
@@ -435,6 +437,7 @@ def past_show_page(show_id, test):
 			crew=crew,
 			photos=photos,
 			videos=videos,
+			title=show.title,
 			css="past_show_page.css",
 			js="past_show_page.js"
 		)
@@ -690,6 +693,20 @@ def emergency_user():
 
 @app.errorhandler(HTTPException)
 def page_not_found(e):
+
+	if int(str(e)[:3]) == 404:
+		if (page := re.search("^/((new-year)|(spring)|(autumn))-\d{4}", request.path)) is not None:
+			aim = page.group()[1:].rsplit("-", 1)
+			show = Show.query\
+				.filter_by(season=aim[0].replace("-", " ").title())\
+				.filter(
+					and_(
+						Show.date > datetime.fromisocalendar(int(aim[1]), 1, 1),
+						Show.date < datetime.fromisocalendar(int(aim[1])+1, 1, 1)
+					)
+				).first()
+			if show is not None:
+				return redirect(f"/past-shows/{show.id}/{show.title.lower().replace(' ', '-')}")
 	print(int(str(e)[:3]))
 	return render_template('error.html', error=e, css="frontpage.css"), int(str(e)[:3])
 

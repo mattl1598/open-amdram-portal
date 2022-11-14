@@ -43,6 +43,7 @@ div.cast_crew {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-around;
+	flex-wrap: wrap;
 	gap: 2ch;
 
 	table {
@@ -63,7 +64,12 @@ div.cast_crew {
 	}
 
 	div {
-		min-width: 50%;
+		@include not-mobile() {
+			min-width: 50%;
+		}
+		@include mobile {
+			min-width: 90%;
+		}
 	}
 }
 
@@ -71,19 +77,31 @@ div.gallery-container {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	justify-content: space-around;
+	flex-wrap: wrap;
 
 	@include theme(background, bg0);
 	width: 100%;
 	//max-height: 60vh;
 
+	div.gallery-images {
+		width: 100%;
+	}
+
+	div.counter {
+		padding: 0.2rem 1rem;
+	}
+
 	div.arrow {
 		z-index:20;
 		font-size: 200%;
 		font-weight: bold;
-		padding: 2ch 1ch;
+		padding: 0.2rem 1rem;
 		@include theme(background, bg2);
 		cursor: pointer;
 		user-select: none;
+		flex-grow: 10;
+		text-align: center;
 	}
 }
 
@@ -109,10 +127,10 @@ div.gallery-images {
 		align-items: center;
 		justify-content: center;
 
-		@media (any-hover: hover) {
+		@include not-mobile {
 			flex-direction: row;
 		}
-		@media (any-hover: none) {
+		@include mobile {
 			flex-direction: column;
 		}
 

@@ -1,4 +1,6 @@
 import io
+from pprint import pprint
+
 import dotmap
 import json
 
@@ -546,16 +548,27 @@ def add_show_member():
 			css="add_new_members.css"
 		)
 	elif request.method == "POST":
-		used_ids = [value[0] for value in Member.query.with_entities(Member.id).all()]
-		new_id = corha.rand_string(request.form["firstname"], 16, used_ids)
+		if "bulk" in request.form.keys():
+			new_members = list(map(lambda x: x.split("\t"), request.form["bulk"].split("\r\n")))
+			for member in new_members:
+				new_member = Member(
+					id=Member.get_new_id(),
+					firstname=member[0],
+					lastname=member[1]
+				)
+				db.session.add(new_member)
+		else:
+			used_ids = [value[0] for value in Member.query.with_entities(Member.id).all()]
+			new_id = corha.rand_string(request.form["firstname"], 16, used_ids)
 
-		new_member = Member(
-			id=new_id,
-			firstname=request.form['firstname'],
-			lastname=request.form['lastname']
-		)
+			new_member = Member(
+				id=new_id,
+				firstname=request.form['firstname'],
+				lastname=request.form['lastname']
+			)
 
-		db.session.add(new_member)
+			db.session.add(new_member)
+
 		db.session.commit()
 
 		return redirect(url_for("add_show_member"))

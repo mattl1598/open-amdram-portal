@@ -73,3 +73,27 @@ $light: (
 
 	@return $response;
 }
+
+@mixin has-ancestor($ancestor: "") {
+	@at-root {
+		#{$ancestor} #{&} {
+	        @content;
+		}
+	}
+}
+
+@mixin mobile($ancestor: "") {
+	@at-root {
+		html#html.mobile #{$ancestor} #{&} {
+	        @content;
+		}
+	}
+}
+
+@mixin not-mobile($ancestor: "") {
+	@at-root {
+		html#html:not(.mobile) #{$ancestor} #{&} {
+	        @content;
+		}
+	}
+}
