@@ -8,15 +8,16 @@ from sass import compile
 import corha
 import os
 import subprocess
+import platform
 
 app = Flask(__name__)
-
+git = ["git", "/usr/bin/git"][platform.system() == "Linux"]
 output = subprocess.run([
-				'git', '-C', os.getcwd(),
+				git, '-C', os.getcwd(),
 				'rev-parse', '--short', 'HEAD'
 			], capture_output=True)
 print(commit := output.stdout.decode('UTF-8').strip('\r\n'))
-output = subprocess.run(['git', 'describe', '--tags'], capture_output=True)
+output = subprocess.run([git, 'describe', '--tags'], capture_output=True)
 print(tag := output.stdout.decode('UTF-8').strip('\r\n'))
 
 # repo = Repo(os.getcwd())
