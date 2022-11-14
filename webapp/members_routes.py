@@ -549,7 +549,7 @@ def add_show_member():
 		)
 	elif request.method == "POST":
 		if "bulk" in request.form.keys():
-			new_members = list(map(lambda x: x.split("\t"), request.form["bulk"].split("\r\n")))
+			new_members = list(map(lambda x: x.split(" "), request.form["bulk"].split("\r\n")))
 			for member in new_members:
 				new_member = Member(
 					id=Member.get_new_id(),
