@@ -122,9 +122,9 @@ def inject_nav():
 	if (db_latest_show := Show.query.filter(Show.date < datetime.now()).order_by(Show.date.desc()).first()) is not None:
 		web_config["last_show"] = (db_latest_show.title, f"/past-shows/{db_latest_show.id}",)
 
-	m_shows = Show.query\
-		.order_by(Show.date.desc())\
-		.limit(4)\
+	m_shows = Show.query \
+		.order_by(Show.date.desc()) \
+		.limit(4) \
 		.all()
 
 	session.permanent = True
@@ -141,13 +141,13 @@ def inject_nav():
 
 @app.route("/", methods=["GET"])
 def frontpage():
-	latest_show = Show.query\
-		.filter(Show.date < datetime.now())\
-		.order_by(Show.date.desc())\
+	latest_show = Show.query \
+		.filter(Show.date < datetime.now()) \
+		.order_by(Show.date.desc()) \
 		.first()
 
-	all_photos = ShowPhotos.query\
-		.filter_by(show_id=latest_show.id)\
+	all_photos = ShowPhotos.query \
+		.filter_by(show_id=latest_show.id) \
 		.all()
 
 	photos = []
@@ -156,22 +156,22 @@ def frontpage():
 		if size[0] > size[1]:
 			photos.append(i)
 
-		if len(photos) == (5-int(KeyValue.query.filter_by(key="tickets-active").first().value)):
+		if len(photos) == (5 - int(KeyValue.query.filter_by(key="tickets-active").first().value)):
 			break
 
-	post = Post.query\
-		.filter(or_(Post.type == "public", Post.type == "auditions"))\
-		.join(Show, Post.show_id == Show.id)\
-		.filter(Show.date > datetime.now())\
-		.order_by(Show.date.asc())\
-		.order_by(Post.date.desc())\
+	post = Post.query \
+		.filter(or_(Post.type == "public", Post.type == "auditions")) \
+		.join(Show, Post.show_id == Show.id) \
+		.filter(Show.date > datetime.now()) \
+		.order_by(Show.date.asc()) \
+		.order_by(Post.date.desc()) \
 		.with_entities(
-			Post.date,
-			Post.title,
-			Post.content,
-			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
-		)\
+		Post.date,
+		Post.title,
+		Post.content,
+		Show.title.label("show_title"),
+		Show.subtitle.label("show_subtitle")
+	) \
 		.first()
 
 	if post is None:
@@ -179,9 +179,9 @@ def frontpage():
 			.filter(Show.date > datetime.now()) \
 			.order_by(Show.date.asc()) \
 			.with_entities(
-				Show.title.label("show_title"),
-				Show.subtitle.label("show_subtitle")
-			)\
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		) \
 			.first()
 
 	return render_template(
@@ -205,19 +205,19 @@ def links():
 
 @app.route("/auditions", methods=["GET"])
 def auditions():
-	post = Post.query\
-		.filter_by(type="auditions")\
-		.join(Show, Post.show_id == Show.id)\
-		.filter(Show.date > datetime.now())\
-		.order_by(Show.date.asc())\
-		.order_by(Post.date.desc())\
+	post = Post.query \
+		.filter_by(type="auditions") \
+		.join(Show, Post.show_id == Show.id) \
+		.filter(Show.date > datetime.now()) \
+		.order_by(Show.date.asc()) \
+		.order_by(Post.date.desc()) \
 		.with_entities(
-			Post.date,
-			Post.title,
-			Post.content,
-			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
-		)\
+		Post.date,
+		Post.title,
+		Post.content,
+		Show.title.label("show_title"),
+		Show.subtitle.label("show_subtitle")
+	) \
 		.first()
 
 	# print(post)
@@ -260,9 +260,9 @@ def search():
 			)
 		)
 
-	for result in Post.query\
-			.filter(Post.date < datetime.now())\
-			.filter_by(type="blog")\
+	for result in Post.query \
+			.filter(Post.date < datetime.now()) \
+			.filter_by(type="blog") \
 			.order_by(Post.date).all():
 		searchable = " ".join([
 			result.title or "",
@@ -277,10 +277,10 @@ def search():
 				"Blog"
 			)
 		)
-	for result in Post.query\
-					.filter(Post.date < datetime.now())\
-					.filter(or_(Post.type == "public", Post.type == "auditions"))\
-					.order_by(Post.date.desc()).all():
+	for result in Post.query \
+			.filter(Post.date < datetime.now()) \
+			.filter(or_(Post.type == "public", Post.type == "auditions")) \
+			.order_by(Post.date.desc()).all():
 		searchable = " ".join([
 			result.title or "",
 			result.type or "",
@@ -314,6 +314,30 @@ def search():
 					member
 				)
 			)
+
+	for result in [*users.values(), *members]:
+		if type(result) == type([]):
+			renderer = result[0]
+			searchable = " ".join([
+				f"{i.as_firstname} {i.as_lastname}"
+				if i.has_diff else
+				f"{i.firstname} {i.lastname}"
+				for i in result
+			])
+		else:
+			renderer = result
+			searchable = " ".join([
+				result.firstname,
+				result.lastname
+			])
+		results.append(
+			Result(
+				renderer.get_link(),
+				f"{renderer.firstname} {renderer.lastname}",
+				searchable,
+				"Member"
+			)
+		)
 
 	# results = {
 	# 	"Shows": [],
@@ -354,12 +378,12 @@ def search():
 	#
 	#
 
-		#  = BlogPost.query.filter(
-		# 	or_(
-		# 		BlogPost.title.ilike(ilike_arg),
-		# 		BlogPost.content.ilike(ilike_arg)
-		# 	)
-		# ).all()
+	#  = BlogPost.query.filter(
+	# 	or_(
+	# 		BlogPost.title.ilike(ilike_arg),
+	# 		BlogPost.content.ilike(ilike_arg)
+	# 	)
+	# ).all()
 	else:
 		arg = ""
 	return render_template(
@@ -444,14 +468,14 @@ def past_show_page(show_id, test):
 		.filter_by(show_id=show_id, cast_or_crew="cast") \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-			MSL.show_id,
-			MSL.cast_or_crew,
-			MSL.role_name,
-			Member.id,
-			Member.firstname,
-			Member.lastname,
-			Member.associated_user
-		) \
+		MSL.show_id,
+		MSL.cast_or_crew,
+		MSL.role_name,
+		Member.id,
+		Member.firstname,
+		Member.lastname,
+		Member.associated_user
+	) \
 		.order_by(MSL.order_val) \
 		.all()
 	cast = {}
@@ -463,14 +487,14 @@ def past_show_page(show_id, test):
 		.filter_by(show_id=show_id, cast_or_crew="crew") \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-			MSL.show_id,
-			MSL.cast_or_crew,
-			MSL.role_name,
-			Member.id,
-			Member.firstname,
-			Member.lastname,
-			Member.associated_user
-		) \
+		MSL.show_id,
+		MSL.cast_or_crew,
+		MSL.role_name,
+		Member.id,
+		Member.firstname,
+		Member.lastname,
+		Member.associated_user
+	) \
 		.order_by(MSL.order_val) \
 		.all()
 	crew = {}
@@ -530,14 +554,14 @@ def u(user_id, test):
 		.filter(MSL.member_id.in_(user_members)) \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-			MSL.show_id,
-			MSL.cast_or_crew,
-			MSL.role_name,
-			Member.id,
-			Member.firstname,
-			Member.lastname,
-			Member.associated_user
-		) \
+		MSL.show_id,
+		MSL.cast_or_crew,
+		MSL.role_name,
+		Member.id,
+		Member.firstname,
+		Member.lastname,
+		Member.associated_user
+	) \
 		.all()
 
 	user = User.query.filter_by(id=user_id).first()
@@ -572,14 +596,14 @@ def m(member_id, test):
 		.filter(MSL.member_id == member_id) \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-			MSL.show_id,
-			MSL.cast_or_crew,
-			MSL.role_name,
-			Member.id,
-			Member.firstname,
-			Member.lastname,
-			Member.associated_user
-		) \
+		MSL.show_id,
+		MSL.cast_or_crew,
+		MSL.role_name,
+		Member.id,
+		Member.firstname,
+		Member.lastname,
+		Member.associated_user
+	) \
 		.all()
 
 	# user = User.query.filter_by(id=user_id).first()
@@ -634,10 +658,10 @@ def csv_download():
 		elif table == "roles":
 			valid = True
 			model = MSL
-			data = model.query\
-				.order_by(MSL.show_id.asc())\
-				.order_by(MSL.cast_or_crew.asc())\
-				.order_by(MSL.order_val.asc())\
+			data = model.query \
+				.order_by(MSL.show_id.asc()) \
+				.order_by(MSL.cast_or_crew.asc()) \
+				.order_by(MSL.order_val.asc()) \
 				.all()
 
 		if valid:
@@ -758,18 +782,17 @@ def emergency_user():
 
 @app.errorhandler(HTTPException)
 def page_not_found(e):
-
 	if int(str(e)[:3]) == 404:
 		if (page := re.search("^/((new-year)|(spring)|(autumn))-\d{4}", request.path)) is not None:
 			aim = page.group()[1:].rsplit("-", 1)
-			show = Show.query\
-				.filter_by(season=aim[0].replace("-", " ").title())\
+			show = Show.query \
+				.filter_by(season=aim[0].replace("-", " ").title()) \
 				.filter(
-					and_(
-						Show.date > datetime.fromisocalendar(int(aim[1]), 1, 1),
-						Show.date < datetime.fromisocalendar(int(aim[1])+1, 1, 1)
-					)
-				).first()
+				and_(
+					Show.date > datetime.fromisocalendar(int(aim[1]), 1, 1),
+					Show.date < datetime.fromisocalendar(int(aim[1]) + 1, 1, 1)
+				)
+			).first()
 			if show is not None:
 				return redirect(f"/past-shows/{show.id}/{show.title.lower().replace(' ', '-')}")
 	print(int(str(e)[:3]))
@@ -793,5 +816,4 @@ def accessibility():
 @app.route("/tempest")
 def tempest_redirect():
 	return redirect("/past-shows/L2hhNXIZPeXgGyY/the-tempest")
-	# TODO: change this to allow configuring custom redirects through admin settings
-
+# TODO: change this to allow configuring custom redirects through admin settings

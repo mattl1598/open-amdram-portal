@@ -12,7 +12,7 @@
 		{% set icon_set = {"Show": icons["drama"], "Blog": icons["blog_icon"], "Post": icons["note"]} %}
 {#		<hr>#}
 		{% for result in results %}
-			<a class="result hide" href="{{ result.link }}" data-searchable="{{ result.searchable }}">
+			<a class="result hide" href="{{ result.link }}" data-searchable="{{ result.searchable }}" order="100000">
 				<span class="icon"><svg viewbox="0 0 50 50">{{ icon_set[result.type] | safe }}</svg></span>
 				{{ result.type }}: {{ result.title }}
 			</a>
