@@ -20,9 +20,6 @@ print(commit := output.stdout.decode('UTF-8').strip('\r\n'))
 output = subprocess.run([git, 'describe', '--tags'], capture_output=True)
 print(tag := output.stdout.decode('UTF-8').strip('\r\n'))
 
-# repo = Repo(os.getcwd())
-# print(repo)
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -54,7 +51,8 @@ compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="com
 app.jinja_env.globals.update(
 	md=markdown.markdown,
 	str=str,
-	len=len
+	len=len,
+	type=type
 )
 
 # TODO investigate circular imports in flask

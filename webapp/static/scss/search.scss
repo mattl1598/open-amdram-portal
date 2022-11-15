@@ -2,6 +2,48 @@
 @import "partials/variables";
 @import "partials/form_element";
 
+.results {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+
+	.result {
+		&.hide {
+			display: none;
+		}
+
+		display: flex;
+		flex-direction: row;
+		height: 2rem;
+		align-items: center;
+		gap: 1rem;
+
+		border: 0.1rem solid;
+		border-radius: 0.5rem;
+		&:nth-child(even) {
+			@include theme(border-color, accent1);
+		}
+		&:nth-child(odd) {
+			@include theme(border-color, accent2);
+		}
+
+		span.icon {
+			display: flex;
+			font-size: inherit;
+			flex-direction: column;
+			justify-content: center;
+
+			svg {
+				font-size: inherit;
+				width: auto;
+				height: 1.5rem;
+				fill: white;
+				@include theme(color, text);// maybe
+			}
+		}
+	}
+}
+
 .aliases:first-child {
 	list-style-type: none;
 }

@@ -18,7 +18,7 @@ from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross, noda
+from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross, noda, note
 
 
 class NavItem:
@@ -74,7 +74,8 @@ def inject_nav():
 		"trash": trash,
 		"x": cross,
 		"drama": drama,
-		"noda": noda
+		"noda": noda,
+		"note": note
 	}
 
 	nav = [
@@ -230,63 +231,128 @@ def auditions():
 
 @app.route("/search", methods=["GET"])
 def search():
-	results = {
-		"Shows": [],
-		"Blogposts": [],
-		"Members": [],
-		"Users": {},
-	}
+	class Result:
+		def __init__(self, link, title, searchable, type):
+			self.link = link
+			self.title = title
+			self.searchable = searchable
+			self.type = type
 
-	if (arg := request.args.get("search")) is not None:
-		ilike_arg = "%" + arg + "%"
-		results["Shows"] = Show.query.filter(
-			or_(
-				Show.title.ilike(ilike_arg),
-				Show.subtitle.ilike(ilike_arg),
-				Show.season.ilike(ilike_arg),
-				Show.show_type.ilike(ilike_arg),
-				Show.genre.ilike(ilike_arg),
-				Show.author.ilike(ilike_arg)
+	results = []
+
+	for result in Show.query.filter(Show.date < datetime.now()).order_by(Show.date).all():
+		searchable = " ".join([
+			result.title or "",
+			result.subtitle or "",
+			str(result.date.year),
+			result.season or "",
+			result.text_blob or "",
+			result.author or "",
+			result.show_type or "",
+			result.genre or ""
+		])
+		results.append(
+			Result(
+				f"/past-show/{result.id}/{'-'.join(result.title.split(' '))}",
+				result.title,
+				searchable,
+				"Show"
 			)
-		).all()
-		results["Blogposts"] = BlogPost.query.filter(
-			or_(
-				BlogPost.title.ilike(ilike_arg),
-				BlogPost.content.ilike(ilike_arg)
+		)
+
+	for result in Post.query\
+			.filter(Post.date < datetime.now())\
+			.filter_by(type="blog")\
+			.order_by(Post.date).all():
+		searchable = " ".join([
+			result.title or "",
+			result.type or "",
+			result.content or ""
+		])
+		results.append(
+			Result(
+				f"/blog/{result.id}",
+				result.title,
+				searchable,
+				"Blog"
 			)
-		).all()
-
-		member_searches = [
-			*[Member.firstname.ilike(x) for x in arg.split(" ")],
-			*[Member.lastname.ilike(x) for x in arg.split(" ")]
-		]
-
-		members = Member.query.filter(
-			or_(
-				*member_searches
+		)
+	for result in Post.query\
+					.filter(Post.date < datetime.now())\
+					.filter(or_(Post.type == "public", Post.type == "auditions"))\
+					.order_by(Post.date.desc()).all():
+		searchable = " ".join([
+			result.title or "",
+			result.type or "",
+			result.content or ""
+		])
+		results.append(
+			Result(
+				f"/blog/{result.id}",
+				result.title,
+				searchable,
+				"Post"
 			)
-		).all()
+		)
 
-		results["Users"] = {}
-		results["Members"] = []
-
-		for member in members:
-			if member.associated_user is not None:
-				if member.associated_user not in results["Users"].keys():
-					user = User.query.filter_by(id=member.associated_user).first()
-					for i in Member.query.filter_by(associated_user=member.associated_user).all():
-						results["Users"].setdefault(member.associated_user, []).append(
-							MemberRenderer(
-								i,
-								user
-							)
+	users = {}
+	members = []
+	for member in Member.query.all():
+		if member.associated_user is not None:
+			if member.associated_user not in users.keys():
+				user = User.query.filter_by(id=member.associated_user).first()
+				for i in Member.query.filter_by(associated_user=member.associated_user).all():
+					users.setdefault(member.associated_user, []).append(
+						MemberRenderer(
+							i,
+							user
 						)
-			else:
-				results["Members"].append(
-					MemberRenderer(
-						member
 					)
+		else:
+			members.append(
+				MemberRenderer(
+					member
 				)
+			)
+
+	# results = {
+	# 	"Shows": [],
+	# 	"Blogposts": [],
+	# 	"Members": [],
+	# 	"Users": {},
+	# }
+	#
+	# if (arg := request.args.get("search")) is not None:
+	# 	ilike_arg = "%" + arg + "%"
+	# 	results["Shows"] = Show.query.filter(
+	# 		or_(
+	# 			Show.title.ilike(ilike_arg),
+	# 			Show.subtitle.ilike(ilike_arg),
+	# 			Show.season.ilike(ilike_arg),
+	# 			Show.show_type.ilike(ilike_arg),
+	# 			Show.genre.ilike(ilike_arg),
+	# 			Show.author.ilike(ilike_arg)
+	# 		)
+	# 	).all()
+	# 	results["Blogposts"] = BlogPost.query.filter(
+	# 		or_(
+	# 			BlogPost.title.ilike(ilike_arg),
+	# 			BlogPost.content.ilike(ilike_arg)
+	# 		)
+	# 	).all()
+	#
+	# 	member_searches = [
+	# 		*[Member.firstname.ilike(x) for x in arg.split(" ")],
+	# 		*[Member.lastname.ilike(x) for x in arg.split(" ")]
+	# 	]
+	#
+	# 	members = Member.query.filter(
+	# 		or_(
+	# 			*member_searches
+	# 		)
+	# 	).all()
+	#
+	#
 
 		#  = BlogPost.query.filter(
 		# 	or_(
@@ -298,8 +364,8 @@ def search():
 		arg = ""
 	return render_template(
 		"search.html",
-		arg=arg,
 		results=results,
+		js="quicksearch.js",
 		css="search.css"
 	)
 
@@ -357,7 +423,7 @@ def past_shows():
 		"past_shows.html",
 		shows=shows,
 		css="past_shows.css",
-		js="past_shows.js"
+		js=["past_shows.js", "quicksearch.js"]
 	)
 
 

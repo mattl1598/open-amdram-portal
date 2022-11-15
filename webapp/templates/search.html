@@ -2,43 +2,50 @@
 {% block content %}
 	<h2>Search</h2>
 
-	<form action="/search" method="get">
-		<div class="fancy-input">
-			<input id="search" name="search" type="text" placeholder=" " value="{{ arg }}">
-			<label for="search">Search</label>
-		</div>
-	</form>
+	<div class="fancy-input">
+		<input id="search" oninput="quickSearch(this, '#results a.result', true)" name="search" type="text" placeholder=" " value="{{ arg }}">
+		<label for="search">Search</label>
+	</div>
 
-	<div class="results">
+	<div id="results" class="results">
 		<h3>Results</h3>
-		<hr>
-		<h4>Shows</h4>
-		{% for entry in results["Shows"] %}
-			<a href="/past-shows/{{ entry.id }}">{{ entry.title }}</a><br>
-		{% endfor %}
-		<hr>
-		<h4>Blogposts</h4>
-		{% for entry in results["Blogposts"] %}
-			<a href="/blog/{{ entry.id }}">{{ entry.title }}</a><br>
-		{% endfor %}
-		<hr>
-		<h4>Members</h4>
-		{% for key, value in results["Users"].items() %}
-			<a href="{{ value[0].get_link() }}">
-				{{ value[0].firstname }} {{ value[0].lastname }}
-				<ul class="aliases">
-					<li>Sometimes as:</li>
-					{% for name in value %}
-						{% if name.has_diff %}
-							<li>{{ name.as_firstname }} {{ name.as_lastname }}</li>
-						{% endif %}
-					{% endfor %}
-				</ul>
+		{% set icon_set = {"Show": icons["drama"], "Blog": icons["blog_icon"], "Post": icons["note"]} %}
+{#		<hr>#}
+		{% for result in results %}
+			<a class="result hide" href="{{ result.link }}" data-searchable="{{ result.searchable }}">
+				<span class="icon"><svg viewbox="0 0 50 50">{{ icon_set[result.type] | safe }}</svg></span>
+				{{ result.type }}: {{ result.title }}
 			</a>
 		{% endfor %}
 
-		{% for member in results["Members"] %}
-			<a href="{{ member.get_link() }}">{{ member.firstname }} {{ member.lastname }}</a><br>
-		{% endfor %}
+
+{#		<h4>Shows</h4>#}
+{#		{% for entry in results["Shows"] %}#}
+{#			<a href="/past-shows/{{ entry.id }}">{{ entry.title }}</a><br>#}
+{#		{% endfor %}#}
+{#		<hr>#}
+{#		<h4>Blogposts</h4>#}
+{#		{% for entry in results["Blogposts"] %}#}
+{#			<a href="/blog/{{ entry.id }}">{{ entry.title }}</a><br>#}
+{#		{% endfor %}#}
+{#		<hr>#}
+{#		<h4>Members</h4>#}
+{#		{% for key, value in results["Users"].items() %}#}
+{#			<a href="{{ value[0].get_link() }}">#}
+{#				{{ value[0].firstname }} {{ value[0].lastname }}#}
+{#				<ul class="aliases">#}
+{#					<li>Sometimes as:</li>#}
+{#					{% for name in value %}#}
+{#						{% if name.has_diff %}#}
+{#							<li>{{ name.as_firstname }} {{ name.as_lastname }}</li>#}
+{#						{% endif %}#}
+{#					{% endfor %}#}
+{#				</ul>#}
+{#			</a>#}
+{#		{% endfor %}#}
+{##}
+{#		{% for member in results["Members"] %}#}
+{#			<a href="{{ member.get_link() }}">{{ member.firstname }} {{ member.lastname }}</a><br>#}
+{#		{% endfor %}#}
 	</div>
 {% endblock %}

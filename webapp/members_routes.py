@@ -366,7 +366,7 @@ def manage_shows():
 		shows=shows,
 		photo_counts=dict(photo_counts),
 		css="past_shows.css",
-		js="past_shows.js"
+		js=["past_shows.js", "quicksearch.js"]
 	)
 
 
@@ -551,8 +551,9 @@ def add_show_member():
 	elif request.method == "POST":
 		existing = [(i.firstname, i.lastname) for i in Member.query.all()]
 		if "bulk" in request.form.keys():
-			new_members = list(map(lambda x: x.split(" "), request.form["bulk"].split("\r\n")))
-			pprint(new_members)
+			new_members = list(map(lambda x: x.split("\t"), request.form["bulk"].split("\r\n")))
+			# pprint(new_members)
+			valid = 0
 			for member in new_members:
 				if member != [''] and (member[0], member[1]) not in existing:
 					new_member = Member(
@@ -561,21 +562,27 @@ def add_show_member():
 						lastname=member[1]
 					)
 					db.session.add(new_member)
+					valid += 1
+			flash(f"{len(new_members)} names submitted, {valid} members added.")
 		elif "bulk-roles" in request.form.keys():
+			existing = [(i.show_id, i.cast_or_crew, i.role_name, i.member_id) for i in MSL.query.all()]
 			new_roles = list(map(lambda x: x.split("\t"), request.form["bulk-roles"].split("\r\n")))
-			pprint(new_roles)
+			# pprint(new_roles)
+			valid = 0
 			for role in new_roles:
-				if len(role) == 5:
+				if len(role) == 5 and (role[0], role[1].lower(), role[2], role[3]) not in existing:
 					new_link = MSL(
 						id=MSL.get_new_id(),
 						show_id=role[0],
-						cast_or_crew=role[1],
+						cast_or_crew=role[1].lower(),
 						role_name=role[2],
 						member_id=role[3],
 						order_val=int(role[4] or 0)
 					)
-					print(new_link)
+					# print(new_link)
 					db.session.add(new_link)
+					valid += 1
+			flash(f"{len(new_roles)} roles submitted, {valid} roles added.")
 		else:
 			used_ids = [value[0] for value in Member.query.with_entities(Member.id).all()]
 			new_id = corha.rand_string(request.form["firstname"], 16, used_ids)
