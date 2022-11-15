@@ -316,7 +316,7 @@ def search():
 			)
 
 	for result in [*users.values(), *members]:
-		if type(result) == type([]):
+		if isinstance(result, list):
 			renderer = result[0]
 			searchable = " ".join([
 				f"{i.as_firstname} {i.as_lastname}"
@@ -338,54 +338,6 @@ def search():
 				"Member"
 			)
 		)
-
-	# results = {
-	# 	"Shows": [],
-	# 	"Blogposts": [],
-	# 	"Members": [],
-	# 	"Users": {},
-	# }
-	#
-	# if (arg := request.args.get("search")) is not None:
-	# 	ilike_arg = "%" + arg + "%"
-	# 	results["Shows"] = Show.query.filter(
-	# 		or_(
-	# 			Show.title.ilike(ilike_arg),
-	# 			Show.subtitle.ilike(ilike_arg),
-	# 			Show.season.ilike(ilike_arg),
-	# 			Show.show_type.ilike(ilike_arg),
-	# 			Show.genre.ilike(ilike_arg),
-	# 			Show.author.ilike(ilike_arg)
-	# 		)
-	# 	).all()
-	# 	results["Blogposts"] = BlogPost.query.filter(
-	# 		or_(
-	# 			BlogPost.title.ilike(ilike_arg),
-	# 			BlogPost.content.ilike(ilike_arg)
-	# 		)
-	# 	).all()
-	#
-	# 	member_searches = [
-	# 		*[Member.firstname.ilike(x) for x in arg.split(" ")],
-	# 		*[Member.lastname.ilike(x) for x in arg.split(" ")]
-	# 	]
-	#
-	# 	members = Member.query.filter(
-	# 		or_(
-	# 			*member_searches
-	# 		)
-	# 	).all()
-	#
-	#
-
-	#  = BlogPost.query.filter(
-	# 	or_(
-	# 		BlogPost.title.ilike(ilike_arg),
-	# 		BlogPost.content.ilike(ilike_arg)
-	# 	)
-	# ).all()
-	else:
-		arg = ""
 	return render_template(
 		"search.html",
 		results=results,
