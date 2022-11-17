@@ -18,7 +18,7 @@ from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
 from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
-from webapp.svgs import blog_icon, drama, eye, fb_icon, ig_icon, other_icon, magnify, trash, tw_icon, cross, noda, note
+from webapp.svgs import *
 
 
 class NavItem:
@@ -75,7 +75,12 @@ def inject_nav():
 		"x": cross,
 		"drama": drama,
 		"noda": noda,
-		"note": note
+		"note": note,
+		"person": person,
+		"admin": admin,
+		"dashboard": dash,
+		"help": help_icon,
+		"logout": logout_icon
 	}
 
 	nav = [
@@ -398,6 +403,7 @@ def past_shows():
 	return render_template(
 		"past_shows.html",
 		shows=shows,
+		manage_shows=False,
 		css="past_shows.css",
 		js=["past_shows.js", "quicksearch.js"]
 	)

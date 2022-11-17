@@ -15,8 +15,29 @@
 	}
 
 	h3 {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 0.4rem;
+
 		margin-block-start: 0.5em;
 		margin-block-end: 0.5em;
+	}
+
+	span.icon {
+		display: flex;
+		font-size: inherit;
+		flex-direction: column;
+		justify-content: center;
+
+		svg {
+			font-size: inherit;
+			width: auto;
+			height: 1.5rem;
+			fill: white;
+			@include theme(color, text);// maybe
+		}
 	}
 
 	a {
@@ -32,14 +53,14 @@ div.main_section {
 	}
 }
 
-div.content {
+div.content.m {
 	min-width: 60% !important;
 	max-width: 90% !important;
 }
-
-.sidebar {
-	display: none !important;
-}
+//
+//.sidebar {
+//	display: none !important;
+//}
 
 div.editor-toolbar {
 	background-color: white;

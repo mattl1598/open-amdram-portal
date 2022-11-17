@@ -4,9 +4,16 @@
 @import "partials/variables";
 @import "partials/form_element";
 
+.flex-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: stretch;
+}
+
 .create-post {
 	margin-top: 1%;
-	min-width: 80%;
+	//min-width: 80%;
+	//width: 100%;
 	padding: 1.5%;
 	border: 3px solid;
 	@include theme(border-color, accent1);

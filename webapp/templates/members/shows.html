@@ -1,0 +1,18 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h2>Shows:</h2>
+	{% for show in shows[0:10] %}
+		<a href="/members/show/{{ show[5] }}" class="show">
+			<div><img src="{{ show[3] }}" alt=""></div>
+			<div class="details">
+				<span class="title">{{ show[0] }}</span>
+				<span>{{ show[1] }} {{ show[2] }}</span>
+				<span>{{ show[4] }}</span>
+			</div>
+		</a>
+	{% endfor %}
+	<h3>Older Shows:</h3>
+	{% for show in shows[10:] %}
+		<a href="/members/show/{{ show[5] }}">{{ show[0] }}</a><br>
+	{% endfor %}
+{% endblock %}

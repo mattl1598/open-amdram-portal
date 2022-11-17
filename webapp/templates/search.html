@@ -9,7 +9,7 @@
 
 	<div id="results" class="results">
 		<h3>Results</h3>
-		{% set icon_set = {"Show": icons["drama"], "Blog": icons["blog_icon"], "Post": icons["note"]} %}
+		{% set icon_set = {"Show": icons["drama"], "Blog": icons["blog_icon"], "Post": icons["note"], "Member": icons["person"]} %}
 {#		<hr>#}
 		{% for result in results %}
 			<a class="result hide" href="{{ result.link }}" data-searchable="{{ result.searchable }}" order="100000">

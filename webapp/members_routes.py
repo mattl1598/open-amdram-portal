@@ -90,6 +90,41 @@ def member_post(id):
 	)
 
 
+@app.route("/members/shows")
+@login_required
+def m_shows():
+	shows = []
+	for show in Show.query.order_by(Show.date.desc()).all():
+		dir_prod = [f"{link.firstname} {link.lastname}"
+			for link in MSL.query\
+			.filter_by(show_id=show.id)\
+			.join(Member, Member.id == MSL.member_id )\
+			.filter(or_(
+					MSL.role_name == "Director",
+					MSL.role_name == "Producer"
+				))\
+			.order_by(MSL.role_name)\
+			.with_entities(MSL.role_name, Member.firstname, Member.lastname)\
+			.all()
+		]
+
+		shows.append(
+			(
+				show.title,
+				show.season,
+				show.date.year,
+				show.programme,
+				", ".join(dir_prod),
+				show.id
+			)
+		)
+	return render_template(
+		"members/shows.html",
+		shows=shows,
+		css="m_shows.css"
+	)
+
+
 @app.route("/members/show/<id>")
 @login_required
 def m_show(id):
@@ -631,6 +666,14 @@ def manage_users():
 
 		return redirect(url_for("manage_users", u=new_id))
 
+
+@app.route("/members/admin")
+@login_required
+def admin_tools():
+	return render_template(
+		"members/admin.html",
+		css="m_dashboard.css"
+	)
 
 @app.route("/members/admin_settings", methods=["GET", "POST"])
 @login_required

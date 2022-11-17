@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 	<div class="past_shows_title">
-		{% if manage_shows is defined %}
+		{% if manage_shows is defined and manage_shows %}
 			<h2>Edit Past Shows</h2>
 			<button type="button" onclick="window.location.href='/members/edit-show/new'">Add New Show</button>
 		{% else %}
@@ -32,13 +32,13 @@
 			<th onclick="sortTable('past_shows', 2, 'show_arrow')">Show <span id="show_arrow">▼</span></th>
 			<th onclick="sortTable('past_shows', 0, 'season_arrow')">Season <span id="season_arrow" class="asc">▼</span></th>
 			<th onclick="sortTable('past_shows', 4, 'genre_arrow')">Genre <span id="genre_arrow">▼</span></th>
-			{% if manage_shows is defined %}
+			{% if manage_shows is defined and manage_shows %}
 				<th onclick="sortTable('past_shows', 5, 'photos_arrow')">Photos <span id="photos_arrow">▼</span></th>
 			{% endif %}
 		</tr>
 
 		{% for show in shows %}
-			{% if manage_shows is defined %}
+			{% if manage_shows is defined and manage_shows %}
 				{% set url = "/".join(["/members/edit-show", show.id]) %}
 			{% else %}
 				{% set url = "/".join(["/past-shows", show.id, "-".join(show.title.split(" "))]) %}
@@ -50,7 +50,7 @@
 				<td class="title"><h3>{{ show.title }}</h3></td>
 				<td class="season">{{ show.season }} {{ show.date.year }}</td>
 				<td class="genre">{{ show.genre }}</td>
-				{% if manage_shows is defined %}
+				{% if manage_shows is defined and manage_shows %}
 					<td class="photos">{{ '%03d' % photo_counts.setdefault(show.id, 0) }}</td>
 				{% endif %}
 			</tr>
