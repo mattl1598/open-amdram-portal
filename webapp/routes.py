@@ -404,6 +404,7 @@ def past_shows():
 		"past_shows.html",
 		shows=shows,
 		manage_shows=False,
+		no_portal=True,
 		css="past_shows.css",
 		js=["past_shows.js", "quicksearch.js"]
 	)

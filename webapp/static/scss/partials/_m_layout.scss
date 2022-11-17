@@ -57,10 +57,10 @@ div.content.m {
 	min-width: 60% !important;
 	max-width: 90% !important;
 }
-//
-//.sidebar {
-//	display: none !important;
-//}
+
+.sidebar:not(.m) {
+	display: none !important;
+}
 
 div.editor-toolbar {
 	background-color: white;

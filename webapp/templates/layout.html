@@ -105,7 +105,8 @@
 
 
 <div class="main-outer">
-	{% set test = current_user.is_authenticated and ((manage_shows is defined and manage_shows) or manage_shows is not defined) %}
+	{% set test = current_user.is_authenticated and no_portal is not defined %}
+	<!-- {{ test }} -->
 	{% if test %}
         <div class="portal-nav">
             <a href="/members/dashboard">
@@ -181,8 +182,7 @@
 			{% endblock %}
 		</div>
 
-		{% if not test %}
-		<div class="sidebar">
+		<div class="sidebar {{ "m" if no_portal }}">
 			{# tickets #}
 			{% if web_config.get("tickets-active") == "1" %}
 				<div class="tickets">
@@ -227,7 +227,6 @@
 				</div>
 			{% endif %}
 		</div>
-		{% endif %}
 	</div>
 </div>
 
