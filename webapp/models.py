@@ -30,6 +30,10 @@ class Files(db.Model):
 	show_id = db.Column(db.String(16))
 	name = db.Column(db.String(40))
 	content = db.Column(db.LargeBinary)
+	date = db.Column(db.DateTime, default=datetime.utcnow())
+
+	def get_type(self):
+		return "Files"
 
 
 class Post(db.Model, NewIdGetter):
@@ -41,6 +45,9 @@ class Post(db.Model, NewIdGetter):
 	content = db.Column(db.Text)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	views = db.Column(db.Integer, default=0)
+
+	def get_type(self):
+		return "Post"
 
 
 class User(UserMixin, db.Model, NewIdGetter):

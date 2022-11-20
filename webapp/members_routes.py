@@ -9,12 +9,13 @@ import requests
 from PIL import Image
 from PIL.ExifTags import TAGS
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from corha import corha
 
 from flask import flash, make_response, redirect, render_template, send_file, session, url_for, \
 	request  # , abort, session
 from flask_login import logout_user, current_user, login_required  # , login_user
-from sqlalchemy import func, not_, or_
+from sqlalchemy import func, not_, or_, sql
 from werkzeug.security import check_password_hash
 
 from webapp import app, db
@@ -42,8 +43,62 @@ def force_password_change():
 @app.route("/members/dashboard")
 @login_required
 def dashboard():
+	class DashboardPost:
+		date = datetime
+		icon_set = {
+			"doc": '<path d="M29 4H12A4 4 0 0 0 8 8V42A4 4 0 0 0 12 46H38A4 4 0 0 0 42 42V17L29 4M32 42H29L25 27 21 42H18L14 '
+						'23H17L20 37 24 23H26L30 37 33 23H36L32 42M27 19V7L39 19H27Z"/>',
+			"pdf": '<path d="M26.25 25.625H22.083V32.292H26.458C27.708 32.292 28.333 31.875 28.958 31.25 29.583 30.625 '
+					'29.792 30 29.792 28.958 29.792 27.917 29.583 27.292 28.958 26.667 28.333 26.042 27.5 25.625 26.25 '
+					'25.625M29.167 4.167H12.5A4.167 4.167 0 0 0 8.333 8.333V41.667A4.167 4.167 0 0 0 12.5 '
+					'45.833H37.5A4.167 4.167 0 0 0 41.667 41.667V16.667L29.167 4.167M31.667 33.333C30.417 34.375 29.375 '
+					'34.792 26.667 34.792H22.083V41.667H18.75V22.917H26.667C29.375 22.917 30.625 23.542 31.667 24.583 '
+					'32.917 25.833 33.333 27.083 33.333 28.958 33.333 30.833 32.917 32.292 31.667 33.333M27.083 '
+					'18.75V7.292L38.542 18.75H27.083Z"/>',
+			"xlsx": '<path d="m29 4h-17a4 4 0 0 0-4 4v33a4 4 0 0 0 4 4h25a4 4 0 0 0 4-4v-25l-12-12m4 37h-4l-4-7-4 '
+					'7h-4l6-9-6-9h4l4 7 4-7h4l-6 9 6 9m-6-23v-11l11 11h-11z"/>',
+			"file": '<path d="M27 19V7L39 19M12 4C10 4 8 6 8 8V42A4 4 0 0 0 12 46H37A4 4 0 0 0 42 42V17L29 4H12Z"/>',
+			"post": '<path d="M42 17 25 27 8 17V13L25 23 42 13M42 8H8C6 8 4 10 4 13V38A4 4 0 0 0 8 42H42A4 4 0 0 0 46 '
+					'38V13C46 10 44 8 42 8Z"/>',
+			"msg": '<path d="M27 23H23V10H27M27 31H23V27H27M42 4H8C6 4 4 6 4 8V46L12 38H42C44 38 46 36 46 33V8C46 6 44 '
+					'4 42 4Z"/> '
+		}
+
+		def __init__(self, id, title, date, show_title, type, text):
+			self.id = id
+			self.title = title
+			self.date = date
+			if type == "file":
+				self.link = f"/members/{type}/{id}/{title}"
+			else:
+				self.link = f"/members/{type}/{id}"
+			self.show_title = show_title
+			self.type = type
+
+			if self.type == 'file':
+				ext = self.title.lower().rsplit(".", 1)[1]
+				self.icon = self.icon_set["file"]
+				for key in self.icon_set.keys():
+					if key in ext:
+						self.icon = self.icon_set[key]
+						break
+
+				self.text = f"{ext.upper()} file"
+			else:
+				self.icon = self.icon_set["msg"]
+				self.text = text
+
+		def __repr__(self):
+			return f"DashboardPost('{self.id}', '{self.title}', '{self.date}', '{self.link}', '{self.show_title}', '{self.type}')"
+
 	posts = Post.query \
-		.filter(or_(Post.type == "private", Post.type == "auditions")) \
+		.filter(
+			or_(
+				Post.type == "private",
+				Post.type == "auditions"
+			),
+			Post.date > datetime.utcnow() - relativedelta(months=2)
+		) \
 		.join(Show, Post.show_id == Show.id) \
 		.order_by(Post.date.desc()) \
 		.with_entities(
@@ -52,14 +107,36 @@ def dashboard():
 			Post.title,
 			Post.content,
 			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
+			Show.subtitle.label("show_subtitle"),
+			sql.expression.literal_column("'post'").label("type")
 		) \
-		.limit(10) \
 		.all()
+
+	files = Files.query \
+		.filter(Files.date > datetime.utcnow() - relativedelta(months=2)) \
+		.join(Show, Files.show_id == Show.id) \
+		.order_by(Files.date.desc()) \
+		.with_entities(
+			Files.id,
+			Files.name.label("title"),
+			Files.date,
+			sql.expression.literal_column("'file'").label("content"),
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle"),
+			sql.expression.literal_column("'file'").label("type")
+		) \
+		.all()
+
+	# http://192.168.1.125:5000/members/file/ZLHTu8tqWNz3Nsp/SP%20Sept%2022%20v3.docx
+	dash_posts = sorted(
+		[DashboardPost(i.id, i.title, i.date, i.show_title, i.type, i.content) for i in [*posts, *files]],
+		key=lambda x: x.date,
+		reverse=True
+	)
 
 	return render_template(
 		"members/dashboard.html",
-		posts=posts,
+		posts=dash_posts,
 		css="m_dashboard.css"
 	)
 
@@ -96,17 +173,17 @@ def m_shows():
 	shows = []
 	for show in Show.query.order_by(Show.date.desc()).all():
 		dir_prod = [f"{link.firstname} {link.lastname}"
-			for link in MSL.query\
-			.filter_by(show_id=show.id)\
-			.join(Member, Member.id == MSL.member_id )\
-			.filter(or_(
-					MSL.role_name == "Director",
-					MSL.role_name == "Producer"
-				))\
-			.order_by(MSL.role_name)\
-			.with_entities(MSL.role_name, Member.firstname, Member.lastname)\
-			.all()
-		]
+					for link in MSL.query
+						.filter_by(show_id=show.id)
+						.join(Member, Member.id == MSL.member_id)
+						.filter(or_(
+							MSL.role_name == "Director",
+							MSL.role_name == "Producer"
+						))
+						.order_by(MSL.role_name)
+						.with_entities(MSL.role_name, Member.firstname, Member.lastname) \
+						.all()
+					]
 
 		shows.append(
 			(
@@ -142,13 +219,13 @@ def m_show(id):
 		.filter_by(show_id=id) \
 		.all()
 
-	raw_producers = MSL.query\
+	raw_producers = MSL.query \
 		.filter_by(show_id=id, cast_or_crew="crew") \
 		.filter(
 			MSL.role_name.in_(["Director", "Producer"])
-		).join(Member, MSL.member_id == Member.id)\
-		.with_entities(Member.associated_user)\
-		.filter(not_(Member.associated_user is None))\
+		).join(Member, MSL.member_id == Member.id) \
+		.with_entities(Member.associated_user) \
+		.filter(not_(Member.associated_user is None)) \
 		.all()
 
 	producers = [value[0] for value in raw_producers]
@@ -256,7 +333,6 @@ def upload_blog():
 		request.files.get('fileElem'),
 		convert_image=mammoth.images.img_element(convert_image)
 	)
-
 
 	# modify markdown to match GitHub style
 
@@ -390,7 +466,7 @@ def file_delete(file_id, filename):
 @login_required
 def manage_shows():
 	shows = Show.query.order_by(Show.date.desc()).all()
-	photo_counts = ShowPhotos.query\
+	photo_counts = ShowPhotos.query \
 		.with_entities(ShowPhotos.show_id, func.count(ShowPhotos.show_id)) \
 		.group_by(ShowPhotos.show_id).all()
 	# print(photo_counts)
@@ -416,10 +492,10 @@ def edit_show(show_id):
 			raw_msl = MSL.query \
 				.filter_by(show_id=show_id) \
 				.with_entities(
-					MSL.cast_or_crew,
-					MSL.role_name,
-					MSL.member_id
-				) \
+				MSL.cast_or_crew,
+				MSL.role_name,
+				MSL.member_id
+			) \
 				.order_by(MSL.order_val) \
 				.all()
 			for member in raw_msl:
@@ -559,12 +635,12 @@ def edit_show(show_id):
 				for role in to_remove:
 					MSL.query \
 						.filter_by(
-							show_id=show_id,
-							cast_or_crew=msl_type,
-							role_name=role[0],
-							member_id=role[1],
-							order_val=role[2]
-						) \
+						show_id=show_id,
+						cast_or_crew=msl_type,
+						role_name=role[0],
+						member_id=role[1],
+						order_val=role[2]
+					) \
 						.delete()
 
 			db.session.commit()
@@ -639,12 +715,12 @@ def manage_users():
 	if request.method == "GET":
 		user = None
 		if "u" in request.args.keys():
-			user = User.query\
-				.filter_by(id=request.args.get("u"))\
+			user = User.query \
+				.filter_by(id=request.args.get("u")) \
 				.with_entities(
-					User.id,
-					User.email
-				)\
+				User.id,
+				User.email
+			) \
 				.first_or_404()
 		return render_template(
 			"members/manage_users.html",
@@ -674,6 +750,7 @@ def admin_tools():
 		"members/admin.html",
 		css="m_dashboard.css"
 	)
+
 
 @app.route("/members/admin_settings", methods=["GET", "POST"])
 @login_required

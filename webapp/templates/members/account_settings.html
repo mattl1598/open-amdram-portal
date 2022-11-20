@@ -33,7 +33,9 @@
 				</label>
 			</div>
 			<br>
-			<input type="submit" name="submit" value="Change Password">
+			<div class="fancy-input">
+				<input type="submit" name="submit" value="Change Password">
+			</div>
 			{% if request.args.get('e') == "success" %}
 				<span class="form_success"> - Password was changed successfully.</span>
 			{% endif %}

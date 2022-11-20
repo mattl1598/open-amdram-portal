@@ -98,7 +98,8 @@ div.main-outer {
 	flex-direction: row;
 	justify-content: flex-start;
 
-	width: 100%;
+	width: 100vw;
+	max-width: 100vw;
 	min-height: 90vh;
 	position: relative;
 	right: 0;
@@ -109,11 +110,13 @@ div.portal-nav {
 }
 
 div.main-section {
-	flex-grow: 1;
+	flex-grow: 10;
+	//flex-shrink: 10;
 
 	display: flex;
 	gap: 3ch;
 	//width: 100%;
+	//max-width: 100%;
 
 	@include not-mobile {
 		padding: 3ch 3ch;
@@ -520,6 +523,76 @@ div.title {
 	}
 }
 
+.portal-nav {
+	@include mobile {
+		&.ham {
+			display: flex;
+		}
+		&.side {
+			display: none;
+		}
+	}
+	@include not-mobile {
+		&.ham {
+			display: none;
+		}
+		&.side {
+			display: none;
+		}
+	}
+
+	span.icon {
+		display: inline-flex;
+		font-size: inherit;
+		flex-direction: column;
+		justify-content: center;
+
+		svg {
+			font-size: inherit;
+			fill: white;
+			@include theme(color, text);
+			height: 3ex;
+			width: auto;
+
+		}
+	}
+
+	&.ham {
+		flex-direction: column;
+		align-items: stretch;
+		//list-style-type: none;
+		gap: 1ch;
+
+		a {
+			text-align: center;
+			color: inherit;
+			text-decoration: none;
+			@include theme(background-color, bg3);
+
+			&.active {
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
+			}
+
+			&:hover {
+				@include theme(background-color, accent1);
+				@include theme(color, inv_text);
+			}
+
+			h3 {
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: center;
+				gap: 0.4rem;
+
+				font-weight: normal;
+				padding: 0 2ch;
+			}
+		}
+	}
+}
+
 div#mobile-nav {
 	@include mobile {
 		display: flex;
@@ -702,9 +775,9 @@ div#mobile-nav {
 }
 
 #body.noscroll {
-	min-height: 145vh;
-	height: 145vh;
-	max-height: 145vh;
+	min-height: 154vh;
+	height: 154vh;
+	max-height: 154vh;
 	overflow-y: hidden !important;
 }
 

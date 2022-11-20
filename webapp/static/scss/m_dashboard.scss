@@ -1,5 +1,5 @@
-@import "partials/m_layout";
 @import "partials/layout";
+@import "partials/m_layout";
 @import "partials/variables";
 @import "partials/form_element";
 
@@ -8,17 +8,100 @@ a {
 	@include theme(color, text);
 }
 
+div.posts {
+	display: flex;
+	flex-direction: column;
+	gap: 1.7ex;
+}
+
 a.post {
-	h1,h2,h3 {
-		margin-block-start: 0.5em;
-		margin-block-end: 0.1em;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	text-decoration: none;
+
+	&.heading {
+		pointer-events: none;
 	}
 
-	p {
-		text-overflow: ellipsis;
-		max-width: 50%;
-		max-height: 2ch;
+	span.date {
+		flex-grow: 0;
+		flex-shrink: 0;
+
+		width: 7ch;
+		min-width: 7ch;
+		max-width: 7ch;
+		text-align: right;
 	}
+
+	span.icon {
+		flex-grow: 0;
+		flex-shrink: 0;
+
+		display: inline-flex;
+		font-size: inherit;
+		flex-direction: column;
+		justify-content: center;
+		height: 8ex;
+		width: 8ex;
+
+		overflow: visible;
+
+		svg {
+			font-size: inherit;
+			fill: white;
+			@include theme(color, text);
+			height: auto;
+			width: auto;
+			padding: 1ex;
+
+			overflow: visible;
+		}
+	}
+
+	div.text {
+		display: flex;
+		flex-direction: column;
+		//max-width: 50ch;
+
+		@include not-mobile {
+		}
+
+		flex-grow: 0;
+		//flex-shrink: 10;
+		//white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		//padding-right: 2rem;
+
+		span {
+			h1,h2,h3,h4 {
+				flex-grow: 0;
+				margin: 0;
+				//margin-block-start: 0.5em;
+				//margin-block-end: 0.1em;
+				margin-block-start: 0;
+				margin-block-end: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				padding-right: 4rem;
+			}
+
+			span {
+				display: -webkit-box;
+				overflow: hidden;
+				-webkit-line-clamp: 1;
+				-webkit-box-orient: vertical;
+			}
+		}
+	}
+
+	//p {
+	//	text-overflow: ellipsis;
+	//	max-width: 50%;
+	//	max-height: 2ch;
+	//}
 
 	img {
 		display: none;

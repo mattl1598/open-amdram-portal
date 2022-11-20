@@ -28,6 +28,7 @@ pyasn1-modules==0.2.8
 pycparser==2.21
 pyotp==2.6.0
 pyparsing==3.0.8
+python-dateutil
 requests==2.27.1
 rsa==4.8
 six==1.16.0

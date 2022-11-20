@@ -3,6 +3,14 @@
 div.fancy-input {
 	position: relative;
 	width: 100%;
+	display: flex;
+
+	@include mobile {
+		margin-top: 2.5rem;
+	}
+	@include not-mobile {
+		margin-top: 0.7rem;
+	}
 
 	select, input, textarea {
 		margin: 0.01ch;
@@ -23,8 +31,11 @@ div.fancy-input {
 		}
 
 		&[type=submit] {
+			margin: auto;
 			width: 50%;
 			cursor: pointer;
+			border-width: 0.3rem;
+			font-size: 115%;
 		}
 
 		&[type=date]:invalid {
@@ -56,13 +67,28 @@ div.fancy-input {
 		&:not([type=text]):valid + label,
 		&[type=text]:not(:placeholder-shown) + label {
 			@include theme(color, text);
-			font-size: 70%;
-			padding-left: 1.2ch;
-			padding-top: 0;
+			font-size: 100%;
+			padding-top: 0 !important;
 			z-index: 2;
 			text-transform: uppercase;
 			bottom: 100%;
 			margin-top: -2ch;
+		}
+	}
+
+	@include mobile {
+		&:focus + label,
+		&:not([type=text]):valid + label,
+		&[type=text]:not(:placeholder-shown) + label {
+			font-size: 140%;
+		}
+	}
+	@include not-mobile {
+		&:focus + label,
+		&:not([type=text]):valid + label,
+		&[type=text]:not(:placeholder-shown) + label {
+			padding-left: 1.2ch;
+			font-size: 90%;
 		}
 	}
 
@@ -77,11 +103,21 @@ div.fancy-input {
 				padding 0.2s;
 		position: absolute;
 		color: #999;
-		padding-left: 1.5ch;
-		padding-top: 1.4ch;
+		//padding-left: 1.5ch;
 		top: 0;
 		text-align: center;
 		margin: auto;
+
+		@include mobile {
+			padding-top: 0.6ch;
+			padding-left: 0.6ch;
+			font-size: 150%;
+		}
+		@include not-mobile {
+			padding-top: 1.4ch;
+			padding-left: 1.4ch;
+			font-size: 100%;
+		}
 
 		&.showme {
 			@include theme(color, text);
