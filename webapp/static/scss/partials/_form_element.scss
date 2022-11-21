@@ -6,17 +6,23 @@ div.fancy-input {
 	display: flex;
 
 	@include mobile {
-		margin-top: 2.5rem;
+		&:not(.no-margin){
+			margin-top: 2.5rem;
+		}
+		&.no-margin {
+			margin-top: 0.7rem;
+		}
 	}
 	@include not-mobile {
 		margin-top: 0.7rem;
 	}
 
-	select, input, textarea {
+	select, input, textarea, a {
+		@include theme(background, bg3);
+		@include theme(color, text);
 		margin: 0.01ch;
 		width: 100%;
 		border: 2px solid grey;
-		background: none;
 		position: relative;
 		top: 0;
 		left: 0;
@@ -30,7 +36,7 @@ div.fancy-input {
 			font-size: 150%;
 		}
 
-		&[type=submit] {
+		&[type=submit], &.button {
 			margin: auto;
 			width: 50%;
 			cursor: pointer;
@@ -59,7 +65,6 @@ div.fancy-input {
 		&:focus,
 		&:not([type=text]):valid,
 		&[type=text]:not(:placeholder-shown) {
-			background: white;
 			@include theme(border-color, accent2);
 		}
 

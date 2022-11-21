@@ -3,44 +3,99 @@
 	<h1>{{ show.title }}</h1>
 
 	{% if current_user in editors %}
-		<div class="manage">
-			<h2>Manage Show</h2>
-			<h3>Add Files</h3>
+		<details>
+			<summary>Manage Show (Click to show)</summary>
+			<div class="manage">
 			<form action="/members/upload_file/{{ show.id }}" method=post enctype=multipart/form-data>
-				<input type=file name=file>
-	            <input type=submit value=Upload>
+				<h3>Add Files</h3>
+				<div class="fancy-input no-margin">
+					<input type=file name=file>
+				</div>
+				<div class="fancy-input no-margin">
+					<input type=submit value=Upload>
+				</div>
 			</form>
-			<br>
-			<h3>Create a New Post</h3>
-			<button type="button" onclick="window.location.href='/members/new_post/{{ show.id }}'">Create New Post</button>
-			<hr>
+			<div class="form">
+				<h3>New Announcement</h3>
+				<div class="fancy-input no-margin">
+					<a class="button" href="/members/new_post/{{ show.id }}">
+						Create New Post
+					</a>
+				</div>
+			</div>
 		</div>
+		</details>
 	{% endif %}
-	
+
+	<h2>Files</h2>
 	<div class="files">
-		<h2>Files</h2>
 		{% for file in files %}
-			<a href="/members/file/{{ file.id }}/{{ file.name }}" download>{{ file.name }}</a>
-			{% if current_user in editors %}<a href="/members/file_delete/{{ file.id }}/{{ file.name }}" onclick="return confirm('Are you sure?')">Delete</a>{% endif %}
+			<div class="file">
+				<a class="icon" href="{{ file.link }}" download>
+					<svg class="icon" viewbox="0 0 50 50">
+						{{ file.icon | safe }}
+					</svg>
+				</a>
+				<a class="filetext" href="{{ file.link }}">
+					{{ file.title }}
+				</a>
+				{% if current_user in editors %}
+					<a class="filetext" href="/members/file_delete/{{ file.id }}/{{ file.name }}"
+					   onclick="return confirm('Are you sure?')">
+						Delete
+					</a>
+				{% endif %}
+			</div>
 			<br>
 		{% endfor %}
 		{% if len(files) == 0 %}
 			Nothing to see here.
 		{% endif %}
-		<hr>
 	</div>
 
 	<div class="posts">
-		<h2>Announcements</h2>
+{#		<h2>Announcements</h2>#}
+{#		{% for post in posts %}#}
+{#			<a class="post" href="/members/post/{{ post.id }}">#}
+{#				<h2>{{ post.title }}</h2>#}
+{#				{{ post.date.strftime("%d %b %Y") }}#}
+{#				<p>{{ md(post.content) | safe }}</p>#}
+{#			</a>#}
+{#			{% if not loop.last %}#}
+{#				<hr>#}
+{#			{% endif %}#}
+{#		{% endfor %}#}
+		<a class="post heading" href="">
+			<span class="date"></span>
+			<span class="icon">
+				<svg class="icon" viewbox="0 0 50 50">
+					<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
+					<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+				</svg>
+			</span>
+			<div>
+				<span class="title"><h2>Announcements</h2></span>
+			</div>
+		</a>
 		{% for post in posts %}
-			<a class="post" href="/members/post/{{ post.id }}">
-				<h2>{{ post.title }}</h2>
-				{{ post.date.strftime("%d %b %Y") }}
-				<p>{{ md(post.content) | safe }}</p>
-			</a>
-			{% if not loop.last %}
-				<hr>
-			{% endif %}
+			<div class="post showpage">
+				<span class="date">{{ post.date.strftime("%d %b") }}<br>{{ post.date.strftime("%Y") }}</span>
+				<span class="icon">
+					<svg class="icon" viewbox="0 0 50 50">
+						{{ post.icon | safe }}
+						<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+					</svg>
+					{% if not loop.last %}
+						<svg class="line" preserveAspectRatio="none" viewbox="0 0 50 50">
+							<path shape-rendering="crispEdges" d="m24.5 50 0-50 1 0 0 50-1 0z"></path>
+						</svg>
+					{% endif %}
+				</span>
+				<div class="text">
+					<a href="{{ post.link }}" class="title"><h3>{{ post.title }}</h3></a>
+					<div class="fulltext">{{ md(post.text) | safe }}</div>
+				</div>
+			</div>
 		{% endfor %}
 		{% if len(posts) == 0 %}
 			Nothing to see here.

@@ -6,7 +6,105 @@
 a {
 	//text-decoration: none;
 	@include theme(color, text);
+
+	&.button {
+		@include theme(border-color, accent1);
+		white-space: nowrap;
+		text-align: center;
+	}
 }
+
+summary {
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 120%;
+}
+
+div.manage {
+	display: flex;
+	gap: 1rem;
+
+	@include mobile {
+		flex-direction: column;
+	}
+	@include not-mobile {
+		flex-direction: row;
+
+		div.form, form {
+			flex-grow: 1;
+			max-width: 50%;
+		}
+	}
+
+	div.form, form {
+		padding-top: 1rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+
+		h3 {
+			margin: 0;
+		}
+	}
+}
+
+div.files {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	max-width: 100%;
+	flex-wrap: wrap;
+}
+
+div.file {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 10rem;
+	padding: 0.3rem 0.15rem;
+	border: 0.2rem solid;
+	border-radius: 1rem;
+	@include theme(background, bg3);
+
+	&:nth-child(even) {
+		@include theme(border-color, accent1);
+	}
+	&:nth-child(odd) {
+		@include theme(border-color, accent2);
+	}
+
+	a.filetext {
+		text-align: center;
+	}
+
+	a.icon {
+		flex-grow: 1;
+		flex-shrink: 1;
+		align-self: stretch;
+
+		display: flex;
+		font-size: inherit;
+		flex-direction: column;
+		justify-content: center;
+		max-height: 7rem;
+		min-height: 3rem;
+		width: 10rem;
+
+		overflow: visible;
+		object-fit: contain;
+
+		svg.icon {
+			@include theme(fill, text);
+			@include theme(color, text);
+			height: 100%;
+			width: auto;
+
+			overflow: hidden;
+		}
+	}
+}
+
 
 div.posts {
 	display: flex;
@@ -14,7 +112,7 @@ div.posts {
 	gap: 1.7ex;
 }
 
-a.post {
+.post {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -24,7 +122,30 @@ a.post {
 		pointer-events: none;
 	}
 
+	&.showpage {
+		align-items: flex-start;
+
+		span.date {
+			padding-top: .5ex;
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-end;
+			align-self: flex-start;
+		}
+		span.icon {
+			align-items: flex-start;
+			justify-content: flex-start;
+		}
+	}
+	&:not(.showpage) {
+		img {
+			display: none;
+		}
+	}
+
 	span.date {
+		align-self: stretch;
 		flex-grow: 0;
 		flex-shrink: 0;
 
@@ -37,23 +158,34 @@ a.post {
 	span.icon {
 		flex-grow: 0;
 		flex-shrink: 0;
+		align-self: stretch;
 
-		display: inline-flex;
+		display: flex;
 		font-size: inherit;
 		flex-direction: column;
 		justify-content: center;
-		height: 8ex;
 		width: 8ex;
 
 		overflow: visible;
 
-		svg {
+		svg.icon {
 			font-size: inherit;
-			fill: white;
+			@include theme(fill, text);
 			@include theme(color, text);
-			height: auto;
-			width: auto;
-			padding: 1ex;
+			padding: 0 1ex;
+			height: 6ex;
+			width: 6ex;
+
+			overflow: visible;
+		}
+
+		svg.line {
+			flex-grow: 1000;
+			font-size: inherit;
+			@include theme(fill, text);
+			@include theme(color, text);
+			height: 100%;
+			width: 100%;
 
 			overflow: visible;
 		}
@@ -62,24 +194,19 @@ a.post {
 	div.text {
 		display: flex;
 		flex-direction: column;
-		//max-width: 50ch;
-
-		@include not-mobile {
-		}
 
 		flex-grow: 0;
-		//flex-shrink: 10;
-		//white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		//padding-right: 2rem;
 
-		span {
+		div.fulltext {
+			padding-right: 2rem;
+		}
+
+		* {
 			h1,h2,h3,h4 {
 				flex-grow: 0;
 				margin: 0;
-				//margin-block-start: 0.5em;
-				//margin-block-end: 0.1em;
 				margin-block-start: 0;
 				margin-block-end: 0;
 				white-space: nowrap;
@@ -94,16 +221,7 @@ a.post {
 				-webkit-line-clamp: 1;
 				-webkit-box-orient: vertical;
 			}
+
 		}
-	}
-
-	//p {
-	//	text-overflow: ellipsis;
-	//	max-width: 50%;
-	//	max-height: 2ch;
-	//}
-
-	img {
-		display: none;
 	}
 }

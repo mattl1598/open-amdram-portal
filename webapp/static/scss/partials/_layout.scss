@@ -98,7 +98,7 @@ div.main-outer {
 	flex-direction: row;
 	justify-content: flex-start;
 
-	width: 100vw;
+	width: 100%;
 	max-width: 100vw;
 	min-height: 90vh;
 	position: relative;
@@ -132,7 +132,6 @@ div.main-section {
 	}
 
 	div.content {
-
 		@include not-mobile {
 			&:not(.embedded) {
 				min-width: 40%;
@@ -145,7 +144,6 @@ div.main-section {
 		@include mobile {
 			width: 100%;
 		}
-
 
 		min-height: 20%;
 		@include theme(background-color, bg1);
@@ -392,7 +390,7 @@ span.form_error {
 div.title-bar {
 	&#title-tape-measure {
 		height: 0;
-		width: 100vw;
+		width: 100%;
 		overflow: hidden;
 	}
 
@@ -810,7 +808,7 @@ div.footer {
 			gap: 0.5rem;
 
 			.accessibility-title {
-
+				text-align: right;
 			}
 
 		}

@@ -1,4 +1,5 @@
 import io
+from itertools import chain
 from pprint import pprint
 
 import dotmap
@@ -33,6 +34,55 @@ class BlankShow:
 	gallery_link = ""
 
 
+class MemberPost:
+	date = datetime
+	icon_set = {
+		"doc": '<path d="M29 4H12A4 4 0 0 0 8 8V42A4 4 0 0 0 12 46H38A4 4 0 0 0 42 42V17L29 4M32 42H29L25 27 21 42H18L14 '
+					'23H17L20 37 24 23H26L30 37 33 23H36L32 42M27 19V7L39 19H27Z"/>',
+		"pdf": '<path d="M26.25 25.625H22.083V32.292H26.458C27.708 32.292 28.333 31.875 28.958 31.25 29.583 30.625 '
+				'29.792 30 29.792 28.958 29.792 27.917 29.583 27.292 28.958 26.667 28.333 26.042 27.5 25.625 26.25 '
+				'25.625M29.167 4.167H12.5A4.167 4.167 0 0 0 8.333 8.333V41.667A4.167 4.167 0 0 0 12.5 '
+				'45.833H37.5A4.167 4.167 0 0 0 41.667 41.667V16.667L29.167 4.167M31.667 33.333C30.417 34.375 29.375 '
+				'34.792 26.667 34.792H22.083V41.667H18.75V22.917H26.667C29.375 22.917 30.625 23.542 31.667 24.583 '
+				'32.917 25.833 33.333 27.083 33.333 28.958 33.333 30.833 32.917 32.292 31.667 33.333M27.083 '
+				'18.75V7.292L38.542 18.75H27.083Z"/>',
+		"xlsx": '<path d="m29 4h-17a4 4 0 0 0-4 4v33a4 4 0 0 0 4 4h25a4 4 0 0 0 4-4v-25l-12-12m4 37h-4l-4-7-4 '
+				'7h-4l6-9-6-9h4l4 7 4-7h4l-6 9 6 9m-6-23v-11l11 11h-11z"/>',
+		"file": '<path d="M27 19V7L39 19M12 4C10 4 8 6 8 8V42A4 4 0 0 0 12 46H37A4 4 0 0 0 42 42V17L29 4H12Z"/>',
+		"post": '<path d="M42 17 25 27 8 17V13L25 23 42 13M42 8H8C6 8 4 10 4 13V38A4 4 0 0 0 8 42H42A4 4 0 0 0 46 '
+				'38V13C46 10 44 8 42 8Z"/>',
+		"msg": '<path d="M27 23H23V10H27M27 31H23V27H27M42 4H8C6 4 4 6 4 8V46L12 38H42C44 38 46 36 46 33V8C46 6 44 '
+				'4 42 4Z"/> '
+	}
+
+	def __init__(self, id="", title="", date=datetime.utcnow(), show_title="", type="", text=""):
+		self.id = id
+		self.title = title
+		self.date = date
+		if type == "file":
+			self.link = f"/members/{type}/{id}/{title}"
+		else:
+			self.link = f"/members/{type}/{id}"
+		self.show_title = show_title
+		self.type = type
+
+		if self.type == 'file':
+			ext = self.title.lower().rsplit(".", 1)[1]
+			self.icon = self.icon_set["file"]
+			for key in self.icon_set.keys():
+				if key in ext:
+					self.icon = self.icon_set[key]
+					break
+
+			self.text = f"{ext.upper()} file"
+		else:
+			self.icon = self.icon_set["msg"]
+			self.text = text
+
+	def __repr__(self):
+		return f"DashboardPost('{self.id}', '{self.title}', '{self.date}', '{self.link}', '{self.show_title}', '{self.type}')"
+
+
 @app.before_request
 def force_password_change():
 	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
@@ -43,54 +93,6 @@ def force_password_change():
 @app.route("/members/dashboard")
 @login_required
 def dashboard():
-	class DashboardPost:
-		date = datetime
-		icon_set = {
-			"doc": '<path d="M29 4H12A4 4 0 0 0 8 8V42A4 4 0 0 0 12 46H38A4 4 0 0 0 42 42V17L29 4M32 42H29L25 27 21 42H18L14 '
-						'23H17L20 37 24 23H26L30 37 33 23H36L32 42M27 19V7L39 19H27Z"/>',
-			"pdf": '<path d="M26.25 25.625H22.083V32.292H26.458C27.708 32.292 28.333 31.875 28.958 31.25 29.583 30.625 '
-					'29.792 30 29.792 28.958 29.792 27.917 29.583 27.292 28.958 26.667 28.333 26.042 27.5 25.625 26.25 '
-					'25.625M29.167 4.167H12.5A4.167 4.167 0 0 0 8.333 8.333V41.667A4.167 4.167 0 0 0 12.5 '
-					'45.833H37.5A4.167 4.167 0 0 0 41.667 41.667V16.667L29.167 4.167M31.667 33.333C30.417 34.375 29.375 '
-					'34.792 26.667 34.792H22.083V41.667H18.75V22.917H26.667C29.375 22.917 30.625 23.542 31.667 24.583 '
-					'32.917 25.833 33.333 27.083 33.333 28.958 33.333 30.833 32.917 32.292 31.667 33.333M27.083 '
-					'18.75V7.292L38.542 18.75H27.083Z"/>',
-			"xlsx": '<path d="m29 4h-17a4 4 0 0 0-4 4v33a4 4 0 0 0 4 4h25a4 4 0 0 0 4-4v-25l-12-12m4 37h-4l-4-7-4 '
-					'7h-4l6-9-6-9h4l4 7 4-7h4l-6 9 6 9m-6-23v-11l11 11h-11z"/>',
-			"file": '<path d="M27 19V7L39 19M12 4C10 4 8 6 8 8V42A4 4 0 0 0 12 46H37A4 4 0 0 0 42 42V17L29 4H12Z"/>',
-			"post": '<path d="M42 17 25 27 8 17V13L25 23 42 13M42 8H8C6 8 4 10 4 13V38A4 4 0 0 0 8 42H42A4 4 0 0 0 46 '
-					'38V13C46 10 44 8 42 8Z"/>',
-			"msg": '<path d="M27 23H23V10H27M27 31H23V27H27M42 4H8C6 4 4 6 4 8V46L12 38H42C44 38 46 36 46 33V8C46 6 44 '
-					'4 42 4Z"/> '
-		}
-
-		def __init__(self, id, title, date, show_title, type, text):
-			self.id = id
-			self.title = title
-			self.date = date
-			if type == "file":
-				self.link = f"/members/{type}/{id}/{title}"
-			else:
-				self.link = f"/members/{type}/{id}"
-			self.show_title = show_title
-			self.type = type
-
-			if self.type == 'file':
-				ext = self.title.lower().rsplit(".", 1)[1]
-				self.icon = self.icon_set["file"]
-				for key in self.icon_set.keys():
-					if key in ext:
-						self.icon = self.icon_set[key]
-						break
-
-				self.text = f"{ext.upper()} file"
-			else:
-				self.icon = self.icon_set["msg"]
-				self.text = text
-
-		def __repr__(self):
-			return f"DashboardPost('{self.id}', '{self.title}', '{self.date}', '{self.link}', '{self.show_title}', '{self.type}')"
-
 	posts = Post.query \
 		.filter(
 			or_(
@@ -127,9 +129,8 @@ def dashboard():
 		) \
 		.all()
 
-	# http://192.168.1.125:5000/members/file/ZLHTu8tqWNz3Nsp/SP%20Sept%2022%20v3.docx
 	dash_posts = sorted(
-		[DashboardPost(i.id, i.title, i.date, i.show_title, i.type, i.content) for i in [*posts, *files]],
+		[MemberPost(i.id, i.title, i.date, i.show_title, i.type, i.content) for i in [*posts, *files]],
 		key=lambda x: x.date,
 		reverse=True
 	)
@@ -209,13 +210,13 @@ def m_show(id):
 		.filter_by(id=id) \
 		.first_or_404()
 
-	posts = Post.query \
+	db_posts = Post.query \
 		.filter_by(show_id=id) \
 		.filter(Post.type != "public") \
 		.order_by(Post.date.desc()) \
 		.all()
 
-	files = Files.query \
+	db_files = Files.query \
 		.filter_by(show_id=id) \
 		.all()
 
@@ -236,6 +237,25 @@ def m_show(id):
 			User.id.in_(producers)
 		)
 	).all()
+
+	posts = [
+			MemberPost(
+				id=i.id,
+				title=i.title,
+				date=i.date,
+				type="post",
+				text=i.content
+			) for i in db_posts
+		]
+
+	files = [
+			MemberPost(
+				id=i.id,
+				title=i.name,
+				date=i.date,
+				type="file"
+			) for i in db_files
+		]
 
 	return render_template(
 		"members/show.html",
