@@ -442,13 +442,16 @@ def blog_editor():
 
 
 @app.route("/members/file/<id>/<filename>", methods=["GET"])
-@login_required
 def file_direct(id, filename):
 	file = Files.query \
 		.filter_by(id=id, name=filename) \
 		.first_or_404()
 
-	return send_file(io.BytesIO(file.content), download_name=file.name)
+	if current_user.is_authenticated or file.show_id == "members_public":
+		return send_file(io.BytesIO(file.content), download_name=file.name)
+	else:
+		flash("Please log in to access this resource.")
+		return redirect(url_for("members"))
 
 
 @app.route("/members/upload_file/<show_id>", methods=["POST"])
