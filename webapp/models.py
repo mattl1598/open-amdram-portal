@@ -28,7 +28,7 @@ class KeyValue(db.Model):
 class Files(db.Model):
 	id = db.Column(db.String(16), primary_key=True)
 	show_id = db.Column(db.String(16))
-	name = db.Column(db.String(40))
+	name = db.Column(db.String(100))
 	content = db.Column(db.LargeBinary)
 	date = db.Column(db.DateTime, default=datetime.utcnow())
 

@@ -17,7 +17,9 @@ from sqlalchemy import or_, and_
 from werkzeug.exceptions import HTTPException
 
 from webapp import app, db
-from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL
+from webapp.members_routes import MemberPost
+from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
+	MemberShowLink as MSL
 from webapp.svgs import *
 
 
@@ -671,8 +673,25 @@ def members():
 					return redirect(url_for('dashboard'))
 			else:
 				return redirect(url_for("members"))
-		else:
-			return render_template("members.html", css="members.css")
+		elif request.method == "GET":
+			files = [
+				MemberPost(
+					id=i.id,
+					title=i.name,
+					date=i.date,
+					type="file"
+				) for i in Files.query
+					.filter_by(show_id="members_public")
+					.all()
+			]
+
+			return render_template(
+				"members.html",
+				files=files,
+				no_portal=True,
+				css=["m_dashboard.css", "members.css"]
+				# css="members.css"
+			)
 
 
 @app.route("/members/otp", methods=["GET", "POST"])

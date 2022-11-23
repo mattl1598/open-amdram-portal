@@ -1,17 +1,53 @@
 {% extends "layout.html" %}
 {% block content %}
-	<h2 class="title">Members</h2>
-	<form action="/members" method="post">
-		<div class="fancy-input">
-			<input id="email" name="email" type="text" placeholder=" " required>
-			<label for="email">Email</label>
+	<div class="login_form">
+		<h2 class="title">Members</h2>
+		<form action="/members" method="post">
+			<div class="fancy-input">
+				<input id="email" name="email" type="text" placeholder=" " required>
+				<label for="email">Email</label>
+			</div>
+			<div class="fancy-input">
+				<input id="password" name="password" type="password" required>
+				<label for="password">Password</label>
+			</div>
+			<div class="fancy-input">
+				<input type="submit" value="Login">
+			</div>
+		</form>
+	</div>
+	{% if len(files) %}
+		<div class="posts">
+			<a class="post heading" href="">
+{#				<span class="date"></span>#}
+				<span class="icon">
+					<svg class="icon" viewbox="0 0 50 50">
+						<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
+						<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+					</svg>
+				</span>
+				<div>
+					<span class="title"><h2>Members Documents</h2></span>
+				</div>
+			</a>
+			{% for post in files %}
+				<a class="post" href="{{ post.link }}">
+{#					<span class="date">{{ post.date.strftime("%d %b") }}<br>{{ post.date.strftime("%Y") }}</span>#}
+					<span class="icon">
+						<svg class="icon" viewbox="0 0 50 50">
+							{{ post.icon | safe }}
+							<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+						</svg>
+					</span>
+					<div class="text">
+						{% if post.show_title %}
+							<span class="show"><h4>{{ post.show_title }}</h4></span>
+						{% endif %}
+						<span class="title"><h3>{{ post.title }}</h3></span>
+						<span class="text"><span>{{ post.text }}</span></span>
+					</div>
+				</a>
+			{% endfor %}
 		</div>
-		<div class="fancy-input">
-			<input id="password" name="password" type="password" required>
-			<label for="password">Password</label>
-		</div>
-		<div class="fancy-input">
-			<input type="submit" value="Login">
-		</div>
-	</form>
+	{% endif %}
 {% endblock %}
