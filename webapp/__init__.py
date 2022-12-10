@@ -58,6 +58,9 @@ def create_app():
 			# print(app.available_sounds)
 			break
 
+		if not hasattr(app, "available_sounds"):
+			app.available_sounds = []
+
 		app.config['g_client_id'] = app.envs.g_client_id
 		app.config['g_client_secret'] = app.envs.g_client_secret
 
