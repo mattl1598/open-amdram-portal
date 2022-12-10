@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
+    environment: PYTEST
 
     steps:
     - uses: actions/checkout@v3
