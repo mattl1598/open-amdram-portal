@@ -14,5 +14,6 @@ psycopg2-binary
 pyotp
 pytest
 python-dateutil
+requests
 tld
 urllib3
