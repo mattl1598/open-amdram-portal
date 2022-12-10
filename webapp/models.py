@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 from corha import corha
-from webapp import db
-from webapp import login_manager
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import LoginManager, UserMixin
+
+db = SQLAlchemy()
+login_manager = LoginManager()
 
 
 class NewIdGetter:

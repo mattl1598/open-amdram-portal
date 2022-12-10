@@ -8,12 +8,15 @@ from pprint import pprint
 
 import requests
 from corha import corha
-from flask import abort, redirect, render_template, url_for, request, session, jsonify  # , make_response, send_file
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session, \
+	jsonify  # , make_response, send_file
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.datastructures import FileStorage
 
-from webapp import app, db
-from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia  # , User, Member, MemberShowLink as MSL
+# from webapp import app, db
+from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db  # , User, Member, MemberShowLink as MSL
+from flask import current_app as app
+bp = Blueprint("photos_routes", __name__)
 
 
 def get_albums():
@@ -52,8 +55,8 @@ def update_access_token():
 		session.modified = True
 
 
+@bp.route("/members/manage_media", methods=["POST", "GET"])
 @login_required
-@app.route("/members/manage_media", methods=["POST", "GET"])
 def manage_media(**kwargs):
 	if request.method == "POST" or kwargs.get("mammoth") == "true":
 		b_in = io.BytesIO()
@@ -222,9 +225,9 @@ def manage_media(**kwargs):
 		)
 
 
-@app.route("/photo/<id>")
-@app.route("/video/<id>")
-@app.route("/media/<id>/<filename>")
+@bp.route("/photo/<id>")
+@bp.route("/video/<id>")
+@bp.route("/media/<id>/<filename>")
 def get_photo(id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
 
@@ -233,29 +236,35 @@ def get_photo(id, **kwargs):
 	if route in ["photo", "video"]:
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{id}?access_token={session.get('access_token')}"
 		x = requests.get(url=url).json()
-		if route == "photo":
-			# return redirect(
-			# 	f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}"
-			# )
-			return redirect(
-				f"{x.get('baseUrl')}=w1000-h1000"
-			)
-		elif route == "video":
-			return redirect(f"{x.get('baseUrl')}=dv")
+		if x.get('baseUrl') is not None:
+			if route == "photo":
+				# return redirect(
+				# 	f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}"
+				# )
+				return redirect(
+					f"{x.get('baseUrl')}=w1000-h1000"
+				)
+			elif route == "video":
+				return redirect(f"{x.get('baseUrl')}=dv")
+		else:
+			abort(404)
 	elif route == "media":
-		print(request.referrer)
 		item = StaticMedia.query.filter_by(id=id, filename=kwargs["filename"]).first_or_404()
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
 			f"access_token={session.get('access_token')}"
 		x = requests.get(url=url).json()
-		return redirect(
-			f"{x.get('baseUrl')}=d"
-		)
+		if x.get('baseUrl') is not None:
+			return redirect(
+				f"{x.get('baseUrl')}=d"
+			)
+		else:
+			abort(404)
 	else:
 		abort(404)
 
 
-@app.route("/members/set_show_photos/oauth")
+@bp.route("/members/set_show_photos/oauth")
+@login_required
 def oauth():
 	if "localhost" in request.url_root:
 		redirect_url = request.url_root + "members/set_show_photos/form"
@@ -284,7 +293,8 @@ def oauth():
 		return redirect(redirect_url)
 
 
-@app.route("/members/set_show_photos/form", methods=["GET", "POST"])
+@bp.route("/members/set_show_photos/form", methods=["GET", "POST"])
+@login_required
 def choose_album():
 	client_id = app.config['g_client_id']
 	client_secret = app.config['g_client_secret']

@@ -1,0 +1,170 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+	<script>
+		const formatting = (value, ctx) => {
+                let sum = 0;
+                let dataArr = ctx.chart.data.datasets[0].data;
+                dataArr.map(data => {
+                    sum += data;
+                });
+                let percentage = (value*100 / sum).toFixed(2)+"%";
+                return percentage;
+            }
+	</script>
+	<h1>Analytics</h1>
+{##}
+{#	<span>Test1: {{ test1 }}</span><br>#}
+{#	<span>Test2: {{ test2 }}</span>#}
+
+	<div class="pies">
+		<div class="pie">
+			<h3>Origins</h3>
+			<canvas id="origins" height="auto"></canvas>
+			<script>
+				let origins = document.getElementById('origins');
+
+				new Chart(origins, {
+					type: 'bar',
+					data: {
+						labels: {{ list(external_origins.keys()) | safe }},
+						datasets: [{
+							data: {{ list(external_origins.values()) | safe }},
+							borderWidth: 1,
+							backgroundColor: {{ origins_colours | safe }}
+						}]
+					}, options: {
+						indexAxis: 'y',
+						aspectRatio: 1,
+						plugins: {
+							legend: {
+								display: false
+							}
+						}
+					}
+				});
+			</script>
+		</div>
+
+		<div class="pie">
+			<h3>Devices</h3>
+			<canvas id="device_type"></canvas>
+			<script>
+				let device_type = document.getElementById('device_type');
+
+				new Chart(device_type, {
+					type: 'doughnut',
+					data: {
+						labels: {{ list(device_type.keys()) | safe }},
+						datasets: [{
+							label: 'Requests',
+							data: {{ list(device_type.values()) | safe }},
+							borderWidth: 1
+						}]
+					},
+					options: {
+						tooltips: {
+					      // use the label callback function to customize the tooltip text
+					      callbacks: {
+					        label: (item) => item.label + "%"
+					      }
+					    }
+					}
+				});
+			</script>
+		</div>
+
+
+		<div class="pie">
+			<h3>Device OS</h3>
+			<canvas id="os"></canvas>
+			<script>
+				let os = document.getElementById('os');
+
+				new Chart(os, {
+					type: 'doughnut',
+					data: {
+						labels: {{ list(os.keys()) | safe }},
+						datasets: [{
+							label: 'Requests',
+							data: {{ list(os.values()) | safe }},
+							borderWidth: 1
+						}]
+					},
+					options: {
+
+					}
+				});
+			</script>
+		</div>
+	</div>
+
+	<canvas id="requests_datelog"></canvas>
+	<script>
+	  let requests_datelog = document.getElementById('requests_datelog');
+
+	  new Chart(requests_datelog, {
+	    type: 'line',
+	    data: {
+	      datasets: [{
+	        label: 'Requests',
+	        data: {{ requests_datelog | safe }},
+	        borderWidth: 1
+	      }]
+	    },
+		options: {
+		    elements: {
+		        point:{
+		            radius: 0
+		        }
+		    },
+			plugins: {
+				legend: {
+					display: false
+				}
+			}
+		}
+	  });
+	</script>
+
+	<canvas id="session_lengths"></canvas>
+	<script>
+	  let session_lengths = document.getElementById('session_lengths');
+
+	  new Chart(session_lengths, {
+	    type: 'line',
+	    data: {
+	      datasets: [{
+	        label: 'Requests',
+	        data: {{ session_lengths | safe }},
+	        borderWidth: 1
+	      }]
+	    }, options: {
+		    elements: {
+		        point:{
+		            radius: 0
+		        }
+		    },
+			plugins: {
+				legend: {
+					display: false
+				}
+			}, scales: {
+		      x: {
+		        display: true,
+		      },
+		      y: {
+				display: true,
+		        beginAtZero: true,
+	            ticks: {
+	                precision: 0
+	            }
+		      }
+		    }
+		}
+	  });
+	</script>
+
+
+{% endblock %}

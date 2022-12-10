@@ -1,28 +1,39 @@
+import collections
+import csv
 import io
+import re
 from itertools import chain
+from math import floor
 from pprint import pprint
 
+import distinctipy as distinctipy
 import dotmap
 import json
 
 import mammoth as mammoth
 import requests
+import tld as tld
 from PIL import Image
 from PIL.ExifTags import TAGS
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from corha import corha
 
-from flask import flash, make_response, redirect, render_template, send_file, session, url_for, \
+from flask import abort, Blueprint, flash, make_response, redirect, render_template, send_file, session, url_for, \
 	request  # , abort, session
 from flask_login import logout_user, current_user, login_required  # , login_user
-from sqlalchemy import func, not_, or_, sql
+from sqlalchemy import and_, cast, extract, func, Integer, not_, or_, sql, TIMESTAMP
 from werkzeug.security import check_password_hash
 
-from webapp import app, db
+# from webapp import app, db
+from flask import current_app as app
 from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
-	MemberShowLink as MSL
+	MemberShowLink as MSL, AnalyticsLog, db
 from webapp.photos_routes import manage_media
+
+
+from flask import current_app as app
+bp = Blueprint("members_routes", __name__)
 
 
 class BlankShow:
@@ -83,16 +94,17 @@ class MemberPost:
 		return f"DashboardPost('{self.id}', '{self.title}', '{self.date}', '{self.link}', '{self.show_title}', '{self.type}')"
 
 
-@app.before_request
+@bp.before_request
 def force_password_change():
 	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
 		if current_user.is_authenticated and session.get('set_password'):
-			return redirect(url_for("account_settings", pwd="set"))
+			return redirect(url_for("member_routes.account_settings", pwd="set"))
 
 
-@app.route("/members/dashboard")
+@bp.route("/members/dashboard")
 @login_required
 def dashboard():
+	"""member,author,admin"""
 	posts = Post.query \
 		.filter(
 			or_(
@@ -142,9 +154,10 @@ def dashboard():
 	)
 
 
-@app.route("/members/post/<id>")
+@bp.route("/members/post/<id>")
 @login_required
 def member_post(id):
+	"""member,author,admin"""
 	post = Post.query \
 		.filter_by(id=id) \
 		.join(User, Post.author == User.id) \
@@ -168,9 +181,10 @@ def member_post(id):
 	)
 
 
-@app.route("/members/shows")
+@bp.route("/members/shows")
 @login_required
 def m_shows():
+	"""member,author,admin"""
 	shows = []
 	for show in Show.query.order_by(Show.date.desc()).all():
 		dir_prod = [f"{link.firstname} {link.lastname}"
@@ -203,9 +217,10 @@ def m_shows():
 	)
 
 
-@app.route("/members/show/<id>")
+@bp.route("/members/show/<id>")
 @login_required
 def m_show(id):
+	"""member,author,admin"""
 	show = Show.query \
 		.filter_by(id=id) \
 		.first_or_404()
@@ -267,9 +282,11 @@ def m_show(id):
 	)
 
 
-@app.route("/members/new_post/<show_id>", methods=["GET", "POST"])
+@bp.route("/members/new_post/<show_id>", methods=["GET", "POST"])
 @login_required
 def new_post(show_id):
+	"""member,author,admin"""
+	Show.query.filter_by(id=show_id).first_or_404()
 	if request.method == "GET":
 		return render_template(
 			"members/new_post.html",
@@ -296,10 +313,13 @@ def new_post(show_id):
 		return redirect(f"/members/show/{show_id}")
 
 
-@app.route("/members/manage-blog")
+@bp.route("/members/manage-blog")
 @login_required
 def manage_blog():
+	"""author,admin"""
 	if current_user.is_authenticated:
+		if current_user.role not in ["author", "admin"]:
+			abort(403)
 		posts = []
 		if current_user.role == "author":
 			# posts = BlogPost.query.filter_by(author=current_user.id).order_by(BlogPost.date.desc()).all()
@@ -314,12 +334,13 @@ def manage_blog():
 			js="blog_manager.js"
 		)
 	else:
-		return redirect(url_for("login"))
+		abort(405)
 
 
-@app.post("/members/manage-blog/upload")
+@bp.post("/members/manage-blog/upload")
 @login_required
 def upload_blog():
+	"""author,admin"""
 	def convert_image(image):
 		b = io.BytesIO()
 		with image.open() as image_bytes:
@@ -392,11 +413,14 @@ def upload_blog():
 	return make_response(post.id, 200)
 
 
-@app.route("/members/manage-blog/editor", methods=["GET", "POST"])
+@bp.route("/members/manage-blog/editor", methods=["GET", "POST"])
 @login_required
 def blog_editor():
+	"""author,admin"""
+	if current_user.role not in ["author", "admin"]:
+		abort(403)
 	if request.method == "GET":
-		if "new" in request.args.keys():
+		if "new" in request.args.keys() or list(request.args.keys()) == []:
 			post = dotmap.DotMap({
 				"id": Post.get_new_id(),
 				"date": datetime.utcnow(),
@@ -438,25 +462,42 @@ def blog_editor():
 
 			db.session.commit()
 
-		return redirect(url_for("manage_blog"))
+		return redirect(url_for("members_routes.manage_blog"))
 
 
-@app.route("/members/file/<id>/<filename>", methods=["GET"])
+@bp.route("/members/file/<id>/<filename>", methods=["GET"])
 def file_direct(id, filename):
+	"""member,author,admin"""
 	file = Files.query \
 		.filter_by(id=id, name=filename) \
-		.first_or_404()
+		.first()
+
+	# Test fudging
+	class FakeFile:
+		def __init__(self, show_id, found):
+			self.show_id = show_id
+			self.found = found
+
+	if file is None:
+		file = FakeFile("", False)
+	else:
+		file.found = True
 
 	if current_user.is_authenticated or file.show_id == "members_public":
-		return send_file(io.BytesIO(file.content), download_name=file.name)
+		if file.found:
+			return send_file(io.BytesIO(file.content), download_name=file.name)
+		else:
+			abort(404)
 	else:
 		flash("Please log in to access this resource.")
-		return redirect(url_for("members"))
+		# return redirect(url_for("routes.members"))
+		abort(401)
 
 
-@app.route("/members/upload_file/<show_id>", methods=["POST"])
+@bp.route("/members/upload_file/<show_id>", methods=["POST"])
 @login_required
 def file_upload(show_id):
+	"""member,author,admin"""
 	f = request.files.get('file')
 	used_ids = [value[0] for value in Files.query.with_entities(Files.id).all()]
 	new_file = Files(
@@ -470,9 +511,10 @@ def file_upload(show_id):
 	return redirect(f"/members/show/{show_id}")
 
 
-@app.route("/members/file_delete/<file_id>/<filename>", methods=["GET"])
+@bp.route("/members/file_delete/<file_id>/<filename>", methods=["GET"])
 @login_required
 def file_delete(file_id, filename):
+	"""member,author,admin"""
 	file = Files.query \
 		.filter_by(id=file_id, name=filename) \
 		.first_or_404()
@@ -485,9 +527,53 @@ def file_delete(file_id, filename):
 	return redirect(f"/members/show/{show_id}")
 
 
-@app.route("/members/manage-shows")
+@bp.get("/members/csv")
+@login_required
+def csv_download():
+	"""admin"""
+	if current_user.role == "admin":
+		valid = False
+		table = request.args.get("table")
+		if table == "shows":
+			valid = True
+			model = Show
+			data = model.query.order_by(Show.date.desc()).all()
+		elif table == "members":
+			valid = True
+			model = Member
+			data = model.query.order_by(Member.lastname.asc()).all()
+		elif table == "roles":
+			valid = True
+			model = MSL
+			data = model.query \
+				.order_by(MSL.show_id.asc()) \
+				.order_by(MSL.cast_or_crew.asc()) \
+				.order_by(MSL.order_val.asc()) \
+				.all()
+		else:
+			abort(404)
+
+		if valid:
+			file = io.StringIO()
+			outcsv = csv.writer(file)
+			headings = [heading.name for heading in model.__mapper__.columns]
+			outcsv.writerow(headings)
+			[outcsv.writerow([getattr(curr, column.name) for column in model.__mapper__.columns]) for curr in data]
+			response = make_response(file.getvalue())
+			response.headers["Content-Disposition"] = f'attachment; filename="{table}.csv'
+			file.close()
+
+			return response
+	else:
+		abort(403)
+
+
+@bp.route("/members/manage-shows")
 @login_required
 def manage_shows():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	shows = Show.query.order_by(Show.date.desc()).all()
 	photo_counts = ShowPhotos.query \
 		.with_entities(ShowPhotos.show_id, func.count(ShowPhotos.show_id)) \
@@ -504,9 +590,12 @@ def manage_shows():
 	)
 
 
-@app.route("/members/edit-show/<show_id>", methods=["GET", "POST"])
+@bp.route("/members/edit-show/<show_id>", methods=["GET", "POST"])
 @login_required
 def edit_show(show_id):
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if request.method == "GET":
 		if show_id != "new":
 			show = Show.query.filter_by(id=show_id).first_or_404()
@@ -668,12 +757,15 @@ def edit_show(show_id):
 
 			db.session.commit()
 
-		return redirect(url_for("manage_shows"))
+		return redirect(url_for("members_routes.manage_shows"))
 
 
-@app.route("/members/add-show-member", methods=["GET", "POST"])
+@bp.route("/members/add-show-member", methods=["GET", "POST"])
 @login_required
 def add_show_member():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if request.method == "GET":
 		members = Member.query.all()[::-1]
 		return render_template(
@@ -730,11 +822,15 @@ def add_show_member():
 
 		db.session.commit()
 
-		return redirect(url_for("add_show_member"))
+		return redirect(url_for("members_routes.add_show_member"))
 
 
-@app.route("/members/manage_users", methods=["GET", "POST"])
+@bp.route("/members/manage_users", methods=["GET", "POST"])
+@login_required
 def manage_users():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if request.method == "GET":
 		user = None
 		if "u" in request.args.keys():
@@ -763,21 +859,226 @@ def manage_users():
 		db.session.add(new_user)
 		db.session.commit()
 
-		return redirect(url_for("manage_users", u=new_id))
+		return redirect(url_for("members_routes.manage_users", u=new_id))
 
 
-@app.route("/members/admin")
+
+@bp.route("/members/analytics")
+@login_required
+def analytics():
+	if request.args.get("start"):
+		starttime = datetime.strptime(request.args.get("start"))
+	else:
+		starttime = datetime.utcnow() - timedelta(days=30)
+	if request.args.get("end"):
+		endtime = datetime.strptime(request.args.get("end"))
+	else:
+		endtime = datetime.utcnow()
+
+	date_filter = and_(
+		AnalyticsLog.date > starttime,
+		AnalyticsLog.date < endtime
+	)
+
+	ip_pattern = re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
+	os_pattern = re.compile(r'Android|iPhone|iPad|Windows|Macintosh|Linux|Xbox')
+
+	# external origins analysis
+	raw_external_origins = AnalyticsLog.query\
+		.filter(
+			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('%.php%')),
+			not_(AnalyticsLog.request_destination.ilike('%.php%')),
+			not_(AnalyticsLog.user_agent.ilike('%http%')),
+			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+			not_(AnalyticsLog.code == 404),
+			not_(AnalyticsLog.request_origin.contains('silchesterplayers.org')),
+			AnalyticsLog.server.contains('silchesterplayers.org')
+		).with_entities(
+			AnalyticsLog.request_origin,
+			func.count(AnalyticsLog.request_origin)
+		).order_by(func.count(AnalyticsLog.request_origin))\
+		.group_by(AnalyticsLog.request_origin)\
+		.all()
+
+	external_origins = {
+	}
+
+	for result in raw_external_origins:
+		if ip_pattern.search(result[0]):
+			external_origins["other_ips"] += result[1]
+			stripped = "other_ips"
+			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+		elif "android-app://" in result[0]:
+			stripped = "http://" + ".".join(re.sub(r'android-app://', "", result[0]).split("/", 1)[0].split(".")[::-1])
+
+			stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
+			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+		else:
+			stripped = "http://" + re.sub(r'http://|https://|www.', "", result[0]).split("/", 1)[0]
+
+			stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
+			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+	external_origins = collections.OrderedDict(sorted(external_origins.items(), key=lambda x:x[1])[::-1])
+
+
+	# user agent analysis
+	user_agents = AnalyticsLog.query \
+		.filter(
+			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('%.php%')),
+			not_(AnalyticsLog.request_destination.ilike('%.php%')),
+			not_(AnalyticsLog.user_agent.ilike('%http%')),
+			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+			not_(AnalyticsLog.code == 404),
+			AnalyticsLog.server.contains('silchesterplayers.org')
+		).with_entities(
+			AnalyticsLog.user_agent,
+			func.count(AnalyticsLog.user_agent)
+		).order_by(func.count(AnalyticsLog.user_agent))\
+		.group_by(AnalyticsLog.user_agent)\
+		.all()
+
+	os = {}
+	device_type = {}
+	other_os = []
+
+	for agent, count in user_agents:
+		match = os_pattern.findall(agent)
+
+		# If a match is found, return the operating system name
+		if match:
+			os[match[-1]] = os.setdefault(match[-1], 0) + count
+			if match[-1] in ["Android", "iPhone", "iPad"]:
+				device_type["Mobile"] = device_type.setdefault("Mobile", 0) + count
+			elif match[-1] in ["Windows", "Macintosh", "Linux"]:
+				device_type["Desktop"] = device_type.setdefault("Desktop", 0) + count
+			else:
+				device_type["Other"] = device_type.setdefault("Other", 0) + count
+		else:
+			os["Other"] = os.setdefault("Other", 0) + count
+			other_os.append(agent)
+
+
+	# user agent analysis
+	aggregate = request.args.get("time")
+
+	labels = []
+	if aggregate == 'hours':
+		# do nothing
+		start, end = starttime.replace(minute=0, second=0, microsecond=0), endtime
+		delta = timedelta(hours=1)
+		form = "%Y-%m-%d-%H"
+
+		query = func.date_part('hour', AnalyticsLog.date)
+		outs=[
+			extract("YEAR", func.date(AnalyticsLog.date)),
+			extract("MONTH", func.date(AnalyticsLog.date)),
+			extract("DAY", func.date(AnalyticsLog.date)),
+			query
+		]
+	elif aggregate == 'days' or aggregate is None:
+		# group by date
+		start, end = starttime.replace(hour=0, minute=0, second=0, microsecond=0), endtime
+		delta = timedelta(days=1)
+		form = "%Y-%m-%d"
+
+		query = func.date(AnalyticsLog.date)
+		outs=[
+			extract("YEAR", func.date(AnalyticsLog.date)),
+			extract("MONTH", func.date(AnalyticsLog.date)),
+			extract("DAY", func.date(AnalyticsLog.date))
+		]
+	elif aggregate == 'months':
+		# group by month
+		start, end = starttime.replace(day=1, hour=0, minute=0, second=0, microsecond=0), endtime
+		delta = timedelta(days=1)
+		form = "%Y-%m"
+
+		query = func.date_part('month', AnalyticsLog.date)
+		outs=[
+			extract("YEAR", func.date(AnalyticsLog.date)),
+			extract("MONTH", func.date(AnalyticsLog.date))
+		]
+	else:
+		raise ValueError('invalid aggregation')
+
+	while start < end:
+		labels.append(start.strftime(form))
+		start += delta
+
+	requests_datelog = AnalyticsLog.query\
+		.filter(
+			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('%.php%')),
+			not_(AnalyticsLog.request_destination.ilike('%.php%')),
+			not_(AnalyticsLog.user_agent.ilike('%http%')),
+			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+			not_(AnalyticsLog.code == 404),
+			AnalyticsLog.server.contains('silchesterplayers.org')
+		).with_entities(
+			func.count(query),
+			*outs
+		).order_by(func.date(AnalyticsLog.date), query)\
+		.group_by(func.date(AnalyticsLog.date), query)\
+		.all()
+
+
+	test1 = {"-".join([str(int(j)).zfill(2) for j in i[1:]]): {"x": "-".join([str(int(j)).zfill(2) for j in i[1:]]), "y": i[0]} for i in requests_datelog}
+	test2 = collections.OrderedDict(sorted({x: test1.setdefault(x, {"x": x, "y": 0}) for x in labels}.items()))
+
+	session_lengths = dict(collections.Counter([i[0] for i in AnalyticsLog.query\
+		.filter(
+			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('%.php%')),
+			not_(AnalyticsLog.request_destination.ilike('%.php%')),
+			not_(AnalyticsLog.user_agent.ilike('%http%')),
+			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+			not_(AnalyticsLog.code == 404),
+			AnalyticsLog.server.contains('silchesterplayers.org')
+		).group_by(AnalyticsLog.session_id, )\
+		.with_entities(
+			func.count(AnalyticsLog.session_id)
+		).order_by(func.count(AnalyticsLog.session_id))\
+		.all()]))
+
+	pprint(session_lengths)
+
+	return render_template(
+		"members/analytics.html",
+		external_origins=external_origins,
+		origins_colours=['#%02x%02x%02x' % tuple(int(round(s*255)) for s in i) for i in distinctipy.get_colors(len(external_origins.keys()), pastel_factor=0.7)],
+		os=os,
+		device_type=device_type,
+		requests_datelog=list(test2.values()),
+		session_lengths=session_lengths,
+		css="m_analytics.css"
+	)
+
+
+@bp.route("/members/admin")
 @login_required
 def admin_tools():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
+
 	return render_template(
 		"members/admin.html",
 		css="m_dashboard.css"
 	)
 
 
-@app.route("/members/admin_settings", methods=["GET", "POST"])
+@bp.route("/members/admin_settings", methods=["GET", "POST"])
 @login_required
 def admin_settings():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if request.method == "GET":
 		settings_dict = {
 			i.key: i.value
@@ -797,12 +1098,13 @@ def admin_settings():
 		db.session.commit()
 		flash("Done!")
 
-		return redirect(url_for("admin_settings"))
+		return redirect(url_for("members_routes.admin_settings"))
 
 
-@app.route("/members/account_settings", methods=["GET", "POST"])
+@bp.route("/members/account_settings", methods=["GET", "POST"])
 @login_required
 def account_settings():
+	"""member,author,admin"""
 	if request.method == "GET":
 		return render_template(
 			"members/account_settings.html",
@@ -824,10 +1126,12 @@ def account_settings():
 
 		# TODO: add 2 factor setup menu
 
-		return redirect(url_for("account_settings", e=error))
+		return redirect(url_for("members_routes.account_settings", e=error))
 
 
-@app.route("/members/logout")
+@bp.route("/members/logout")
+@login_required
 def logout():
+	"""member,author,admin"""
 	logout_user()
-	return redirect(url_for("frontpage"))
+	return redirect(url_for("routes.frontpage"))

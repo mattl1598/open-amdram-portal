@@ -8,9 +8,9 @@
 	{% if current_user.role == "admin" %}
 		<h2>CSVs</h2>
 		<ul>
-			<li><a download href="/csv?table=shows">Shows CSV</a></li>
-			<li><a download href="/csv?table=members">Members CSV</a></li>
-			<li><a download href="/csv?table=roles">Roles CSV</a></li>
+			<li><a download href="/members/csv?table=shows">Shows CSV</a></li>
+			<li><a download href="/members/csv?table=members">Members CSV</a></li>
+			<li><a download href="/members/csv?table=roles">Roles CSV</a></li>
 		</ul>
 	{% endif %}
 {% endblock %}
