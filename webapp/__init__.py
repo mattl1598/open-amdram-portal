@@ -1,3 +1,4 @@
+import json
 import re
 from os import walk
 from urllib.parse import urlparse
@@ -23,7 +24,11 @@ from webapp.models import *
 def create_app():
 	app = Flask(__name__, static_folder=None)
 	with app.app_context():
-		app.envs = corha.credentials_loader(".env")
+		try:
+			app.envs = corha.credentials_loader(".env")
+		except json.decoder.JSONDecodeError:
+			with open(".env", "r") as file:
+				print(file.read())
 		git = ["git", "/usr/bin/git"][platform.system() == "Linux"]
 		output = subprocess.run([
 						git, '-C', os.getcwd(),
