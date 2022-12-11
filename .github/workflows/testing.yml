@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: PYTEST
 
     steps:
@@ -22,7 +22,7 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
-        python-version: "3.10.2"
+        python-version: "3.10"
     - name: 'Create env file'
       run: |
         echo '${{ secrets.ENV_FILE }}' > .env
