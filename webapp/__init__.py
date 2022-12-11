@@ -24,11 +24,7 @@ from webapp.models import *
 def create_app():
 	app = Flask(__name__, static_folder=None)
 	with app.app_context():
-		try:
-			app.envs = corha.credentials_loader(".env")
-		except json.decoder.JSONDecodeError:
-			with open(".env", "r") as file:
-				print(file.read())
+		app.envs = corha.credentials_loader(".env")
 		git = ["git", "/usr/bin/git"][platform.system() == "Linux"]
 		output = subprocess.run([
 						git, '-C', os.getcwd(),

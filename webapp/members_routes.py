@@ -1046,7 +1046,7 @@ def analytics():
 		).order_by(func.count(AnalyticsLog.session_id))\
 		.all()]))
 
-	pprint(session_lengths)
+	# pprint(session_lengths)
 
 	return render_template(
 		"members/analytics.html",

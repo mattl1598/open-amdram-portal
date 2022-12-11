@@ -47,6 +47,40 @@ def client(app):
 	return app.test_client()
 
 
+@pytest.fixture(scope="session")
+def member_client(app):
+	new_client = app.test_client()
+	new_client.post("/members", data={
+		"email": "test@example.com",
+		"password": "test"
+	})
+	yield new_client
+
+	new_client.get("/members/logout")
+
+@pytest.fixture(scope="session")
+def author_client(app):
+	new_client = app.test_client()
+	new_client.post("/members", data={
+		"email": "testauthor@example.com",
+		"password": "test"
+	})
+	yield new_client
+
+	new_client.get("/members/logout")
+
+@pytest.fixture(scope="session")
+def admin_client(app):
+	new_client = app.test_client()
+	new_client.post("/members", data={
+		"email": "testadmin@example.com",
+		"password": "test"
+	})
+	yield new_client
+
+	new_client.get("/members/logout")
+
+
 @pytest.fixture()
 def runner(app):
 	return app.test_cli_runner()

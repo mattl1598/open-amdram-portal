@@ -674,3 +674,10 @@ def tempest_redirect():
 def test():
 	pprint([x.rule for x in app.url_map.iter_rules()])
 	return "test"
+
+@bp.route("/user")
+def test_user():
+	if current_user.is_authenticated:
+		return current_user.email
+	else:
+		return "Anon"
