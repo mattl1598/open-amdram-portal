@@ -552,13 +552,13 @@ def members(*args):
 			if user is not None and user.verify_password(request.form['password']):
 				if user.otp_secret != "" and user.otp_secret is not None:
 					session['email'] = request.form['email']
-					return redirect(url_for("otp"))
+					return redirect(url_for("routes.otp"))
 				else:
 					session['set_password'] = request.form.get('password') == user.id
 					login_user(user)
 					return redirect(url_for('members_routes.dashboard'))
 			else:
-				return redirect(url_for("members"))
+				return redirect(url_for("routes.members"))
 		elif request.method == "GET":
 			files = [
 				MemberPost(
