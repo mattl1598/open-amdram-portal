@@ -2,6 +2,7 @@ corha
 distinctipy
 Flask
 Flask-Login
+flask-qrcode
 Flask-SQLAlchemy
 libsass
 lorem-text

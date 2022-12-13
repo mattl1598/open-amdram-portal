@@ -1,5 +1,5 @@
-@import "partials/m_layout";
 @import "partials/layout";
+@import "partials/m_layout";
 @import "partials/variables";
 @import "partials/form_element";
 
@@ -7,10 +7,14 @@ div.form_container {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: space-evenly;
 }
 
 form {
-	width: 70%;
+	flex-grow: 1;
+	min-width: 30ch;
+	max-width: 50%;
 	padding: 2ch;
 	border: 3px solid;
 	@include theme-adjust(border-color, accent2, darken, 0%);
@@ -18,5 +22,22 @@ form {
 
 	h2 {
 		margin-top: 0;
+	}
+
+	.qr {
+		display: flex;
+		img {
+			object-fit: contain;
+		}
+		@include mobile {
+			flex-direction: column;
+		}
+		@include not-mobile {
+			flex-direction: row;
+			img, div {
+				width: 50%;
+				padding: 0.3rem;
+			}
+		}
 	}
 }

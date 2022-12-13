@@ -38,7 +38,8 @@ div.fancy-input {
 
 		&[type=submit], &.button {
 			margin: auto;
-			width: 50%;
+			width: auto;
+			padding: 0.5rem 2rem;
 			cursor: pointer;
 			border-width: 0.3rem;
 			font-size: 115%;
@@ -69,6 +70,8 @@ div.fancy-input {
 		}
 
 		&:focus + label,
+		&:hover + label,
+		& + label:hover,
 		&:not([type=text]):valid + label,
 		&[type=text]:not(:placeholder-shown) + label {
 			@include theme(color, text);
@@ -107,11 +110,13 @@ div.fancy-input {
 				left 0.2s,
 				padding 0.2s;
 		position: absolute;
-		color: #999;
+		//color: #999;
+		@include theme(color, text);
 		//padding-left: 1.5ch;
 		top: 0;
 		text-align: center;
 		margin: auto;
+		z-index: 2;
 
 		@include mobile {
 			padding-top: 0.6ch;

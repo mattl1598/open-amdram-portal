@@ -458,6 +458,7 @@ def u(user_id, test):
 		"shows_by_person.html",
 		shows=shows,
 		show_details=show_details,
+		no_portal=True,
 		user=user,
 		js="past_shows.js",
 		css="past_shows.css"
@@ -499,6 +500,7 @@ def m(member_id, test):
 		"shows_by_person.html",
 		shows=shows,
 		show_details=show_details,
+		no_portal=True,
 		user=member,
 		js="past_shows.js",
 		css="past_shows.css"
@@ -592,7 +594,7 @@ def otp():
 		session.pop('email', None)
 		if totp.verify(request.form['otp']):
 			login_user(user)
-			return redirect(url_for("routes.frontpage"))
+			return redirect(url_for("members_routes.dashboard"))
 		else:
 			return redirect(url_for("routes.members"))
 

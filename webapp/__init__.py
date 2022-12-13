@@ -7,6 +7,7 @@ import markdown as markdown
 from flask import Flask, redirect, render_template, request, session, url_for, abort  # , session
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_qrcode import QRcode
 from sass import compile
 import corha
 import os
@@ -47,6 +48,9 @@ def create_app():
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
 		# db = SQLAlchemy(app)
+
+		qrcode = QRcode()
+		qrcode.init_app(app)
 
 		# get available sounds
 		app.sounds_path = "static/sounds/"

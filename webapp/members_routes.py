@@ -11,6 +11,7 @@ import dotmap
 import json
 
 import mammoth as mammoth
+import pyotp
 import requests
 import tld as tld
 from PIL import Image
@@ -1106,14 +1107,19 @@ def admin_settings():
 def account_settings():
 	"""member,author,admin"""
 	if request.method == "GET":
+		if not (key := current_user.otp_secret):
+			key = pyotp.random_base32()
+		totp = pyotp.totp.TOTP(key)
+		otp_qr = totp.provisioning_uri(name=current_user.email, issuer_name='Silchester Players Members')
 		return render_template(
 			"members/account_settings.html",
+			otp_qr=otp_qr,
 			css="account_settings.css"
 		)
 	else:
-		error = "success"
 		# password changing logic
 		if request.form.get("submit") == "Change Password":
+			error = "pwd_success"
 			if current_user.verify_password(request.form.get('old_password')):
 				if request.form.get('new_password') == request.form.get('confirm_new_password'):
 					current_user.password = request.form.get('new_password')
@@ -1123,8 +1129,28 @@ def account_settings():
 					error = "confirm_new_password"
 			else:
 				error = "old_password"
-
-		# TODO: add 2 factor setup menu
+		elif request.form.get("submit") == "Update Profile":
+			error = "profile_success"
+			if request.form.get('firstname'):
+				if request.form.get('lastname'):
+					current_user.firstname = request.form.get('firstname')
+					current_user.lastname = request.form.get('lastname')
+					db.session.commit()
+				else:
+					error = "empty_lastname"
+			else:
+				error = "empty_firstname"
+		elif request.form.get("submit") == "Activate 2FA":
+			error = "otp_success"
+			totp = pyotp.parse_uri(request.form.get("otp_qr"))
+			if totp.verify(request.form.get("otp_code")):
+				current_user.otp_secret = totp.secret
+				db.session.commit()
+			else:
+				if request.form.get("otp_code"):
+					error = "bad_otp_code"
+				else:
+					error = "empty_otp_code"
 
 		return redirect(url_for("members_routes.account_settings", e=error))
 
