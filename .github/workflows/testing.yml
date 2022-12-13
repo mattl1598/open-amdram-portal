@@ -26,13 +26,6 @@ jobs:
     - name: 'Create env file'
       run: |
         echo '${{ secrets.ENV_FILE }}' > .env
-    - uses: actions/cache@v3
-      id: cache
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.*') }}
-        restore-keys: | 
-          ${{ runner.os }}-pip-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
