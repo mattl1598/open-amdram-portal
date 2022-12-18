@@ -50,6 +50,7 @@ def update_access_token():
 			"grant_type": "refresh_token"
 		}
 		x = requests.post(url=url, data=data).json()
+		pprint(x)
 		session["access_token"] = x.get("access_token")
 		session["access_token_expires"] = int(x.get("expires_in")) + int(time.time())
 		session.modified = True
