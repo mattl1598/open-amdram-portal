@@ -10,7 +10,6 @@ mammoth
 Markdown
 numpy
 Pillow
-psycopg2
 psycopg2-binary
 pyotp
 pytest
