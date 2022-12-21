@@ -592,7 +592,7 @@ def otp():
 		user = User.query.filter_by(email=session['email']).first()
 		totp = pyotp.TOTP(user.otp_secret)
 		session.pop('email', None)
-		if totp.verify(request.form['otp'], for_time=datetime.utcnow()):
+		if totp.verify(request.form['otp']):
 			login_user(user)
 			return redirect(url_for("members_routes.dashboard"))
 		else:

@@ -323,7 +323,6 @@ def manage_blog():
 			abort(403)
 		posts = []
 		if current_user.role == "author":
-			# posts = BlogPost.query.filter_by(author=current_user.id).order_by(BlogPost.date.desc()).all()
 			posts = Post.query.filter_by(type="blog", author=current_user.id).order_by(Post.date.desc()).all()
 		elif current_user.role == "admin":
 			posts = Post.query.filter_by(type="blog").order_by(Post.date.desc()).all()
