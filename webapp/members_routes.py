@@ -2,9 +2,6 @@ import collections
 import csv
 import io
 import re
-from itertools import chain
-from math import floor
-from pprint import pprint
 
 import distinctipy as distinctipy
 import dotmap
@@ -12,28 +9,22 @@ import json
 
 import mammoth as mammoth
 import pyotp
-import requests
 import tld as tld
 from PIL import Image
-from PIL.ExifTags import TAGS
-from datetime import datetime, timedelta
+from datetime import timedelta  # , datetime
 from dateutil.relativedelta import relativedelta
-from corha import corha
 
 from flask import abort, Blueprint, flash, make_response, redirect, render_template, send_file, session, url_for, \
-	request  # , abort, session
-from flask_login import logout_user, current_user, login_required  # , login_user
-from sqlalchemy import and_, cast, extract, func, Integer, not_, or_, sql, TIMESTAMP
-from werkzeug.security import check_password_hash
+	request
+from flask_login import logout_user, current_user, login_required
+# noinspection PyPackageRequirements
+from sqlalchemy import and_, extract, func, not_, or_, sql
 
-# from webapp import app, db
-from flask import current_app as app
-from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
-	MemberShowLink as MSL, AnalyticsLog, db
+# noinspection PyPep8Naming
+from webapp.models import MemberShowLink as MSL
+from webapp.models import *
 from webapp.photos_routes import manage_media
 
-
-from flask import current_app as app
 bp = Blueprint("members_routes", __name__)
 
 
@@ -48,35 +39,44 @@ class BlankShow:
 
 class MemberPost:
 	date = datetime
+	# noinspection PyPep8
 	icon_set = {
-		"doc": '<path d="M29 4H12A4 4 0 0 0 8 8V42A4 4 0 0 0 12 46H38A4 4 0 0 0 42 42V17L29 4M32 42H29L25 27 21 42H18L14 '
-					'23H17L20 37 24 23H26L30 37 33 23H36L32 42M27 19V7L39 19H27Z"/>',
-		"pdf": '<path d="M26.25 25.625H22.083V32.292H26.458C27.708 32.292 28.333 31.875 28.958 31.25 29.583 30.625 '
-				'29.792 30 29.792 28.958 29.792 27.917 29.583 27.292 28.958 26.667 28.333 26.042 27.5 25.625 26.25 '
-				'25.625M29.167 4.167H12.5A4.167 4.167 0 0 0 8.333 8.333V41.667A4.167 4.167 0 0 0 12.5 '
-				'45.833H37.5A4.167 4.167 0 0 0 41.667 41.667V16.667L29.167 4.167M31.667 33.333C30.417 34.375 29.375 '
-				'34.792 26.667 34.792H22.083V41.667H18.75V22.917H26.667C29.375 22.917 30.625 23.542 31.667 24.583 '
-				'32.917 25.833 33.333 27.083 33.333 28.958 33.333 30.833 32.917 32.292 31.667 33.333M27.083 '
-				'18.75V7.292L38.542 18.75H27.083Z"/>',
-		"xlsx": '<path d="m29 4h-17a4 4 0 0 0-4 4v33a4 4 0 0 0 4 4h25a4 4 0 0 0 4-4v-25l-12-12m4 37h-4l-4-7-4 '
-				'7h-4l6-9-6-9h4l4 7 4-7h4l-6 9 6 9m-6-23v-11l11 11h-11z"/>',
-		"file": '<path d="M27 19V7L39 19M12 4C10 4 8 6 8 8V42A4 4 0 0 0 12 46H37A4 4 0 0 0 42 42V17L29 4H12Z"/>',
-		"post": '<path d="M42 17 25 27 8 17V13L25 23 42 13M42 8H8C6 8 4 10 4 13V38A4 4 0 0 0 8 42H42A4 4 0 0 0 46 '
-				'38V13C46 10 44 8 42 8Z"/>',
-		"msg": '<path d="M27 23H23V10H27M27 31H23V27H27M42 4H8C6 4 4 6 4 8V46L12 38H42C44 38 46 36 46 33V8C46 6 44 '
-				'4 42 4Z"/> '
+		"doc":
+		'<path d="M29 4H12A4 4 0 0 0 8 8V42A4 4 0 0 0 12 46H38A4 4 0 0 0 42 42V17L29 4M32 42H29L25 27 21 42H18L14 '
+		'23H17L20 37 24 23H26L30 37 33 23H36L32 42M27 19V7L39 19H27Z"/>',
+		"pdf":
+		'<path d="M26.25 25.625H22.083V32.292H26.458C27.708 32.292 28.333 31.875 28.958 31.25 29.583 30.625 '
+		'29.792 30 29.792 28.958 29.792 27.917 29.583 27.292 28.958 26.667 28.333 26.042 27.5 25.625 26.25 '
+		'25.625M29.167 4.167H12.5A4.167 4.167 0 0 0 8.333 8.333V41.667A4.167 4.167 0 0 0 12.5 '
+		'45.833H37.5A4.167 4.167 0 0 0 41.667 41.667V16.667L29.167 4.167M31.667 33.333C30.417 34.375 29.375 '
+		'34.792 26.667 34.792H22.083V41.667H18.75V22.917H26.667C29.375 22.917 30.625 23.542 31.667 24.583 '
+		'32.917 25.833 33.333 27.083 33.333 28.958 33.333 30.833 32.917 32.292 31.667 33.333M27.083 '
+		'18.75V7.292L38.542 18.75H27.083Z"/>',
+		"xlsx":
+		'<path d="m29 4h-17a4 4 0 0 0-4 4v33a4 4 0 0 0 4 4h25a4 4 0 0 0 4-4v-25l-12-12m4 37h-4l-4-7-4 '
+		'7h-4l6-9-6-9h4l4 7 4-7h4l-6 9 6 9m-6-23v-11l11 11h-11z"/>',
+		"file":
+		'<path d="M27 19V7L39 19M12 4C10 4 8 6 8 8V42A4 4 0 0 0 12 46H37A4 4 0 0 0 42 42V17L29 4H12Z"/>',
+		"post":
+		'<path d="M42 17 25 27 8 17V13L25 23 42 13M42 8H8C6 8 4 10 4 13V38A4 4 0 0 0 8 42H42A4 4 0 0 0 46 '
+		'38V13C46 10 44 8 42 8Z"/>',
+		"msg":
+		'<path d="M27 23H23V10H27M27 31H23V27H27M42 4H8C6 4 4 6 4 8V46L12 38H42C44 38 46 36 46 33V8C46 6 44 '
+		'4 42 4Z"/> '
 	}
 
-	def __init__(self, id="", title="", date=datetime.utcnow(), show_title="", type="", text=""):
-		self.id = id
+	def __init__(self, post_id="", title="", date=datetime.utcnow(), show_title="", post_type="", text="", link=""):
+		self.id = post_id
 		self.title = title
 		self.date = date
-		if type == "file":
-			self.link = f"/members/{type}/{id}/{title}"
+		if post_type == "file":
+			self.link = f"/members/{post_type}/{post_id}/{title}"
+		elif post_type == "link":
+			self.link = link
 		else:
-			self.link = f"/members/{type}/{id}"
+			self.link = f"/members/{post_type}/{post_id}"
 		self.show_title = show_title
-		self.type = type
+		self.type = post_type
 
 		if self.type == 'file':
 			ext = self.title.lower().rsplit(".", 1)[1]
@@ -102,6 +102,7 @@ def force_password_change():
 			return redirect(url_for("member_routes.account_settings", pwd="set"))
 
 
+# noinspection PyUnresolvedReferences
 @bp.route("/members/dashboard")
 @login_required
 def dashboard():
@@ -155,12 +156,13 @@ def dashboard():
 	)
 
 
-@bp.route("/members/post/<id>")
+# noinspection PyUnresolvedReferences
+@bp.route("/members/post/<post_id>")
 @login_required
-def member_post(id):
+def member_post(post_id):
 	"""member,author,admin"""
 	post = Post.query \
-		.filter_by(id=id) \
+		.filter_by(id=post_id) \
 		.join(User, Post.author == User.id) \
 		.join(Show, Post.show_id == Show.id) \
 		.with_entities(
@@ -188,18 +190,21 @@ def m_shows():
 	"""member,author,admin"""
 	shows = []
 	for show in Show.query.order_by(Show.date.desc()).all():
-		dir_prod = [f"{link.firstname} {link.lastname}"
-					for link in MSL.query
-						.filter_by(show_id=show.id)
-						.join(Member, Member.id == MSL.member_id)
-						.filter(or_(
-							MSL.role_name == "Director",
-							MSL.role_name == "Producer"
-						))
-						.order_by(MSL.role_name)
-						.with_entities(MSL.role_name, Member.firstname, Member.lastname) \
-						.all()
-					]
+		dir_prod = [
+			f"{link.firstname} {link.lastname}"
+			for link in MSL.query
+			.filter_by(show_id=show.id)
+			.join(Member, Member.id == MSL.member_id)
+			.filter(
+				or_(
+					MSL.role_name == "Director",
+					MSL.role_name == "Producer"
+				)
+			)
+			.order_by(MSL.role_name)
+			.with_entities(MSL.role_name, Member.firstname, Member.lastname)
+			.all()
+		]
 
 		shows.append(
 			(
@@ -218,26 +223,27 @@ def m_shows():
 	)
 
 
-@bp.route("/members/show/<id>")
+# noinspection PyUnresolvedReferences
+@bp.route("/members/show/<show_id>")
 @login_required
-def m_show(id):
+def m_show(show_id):
 	"""member,author,admin"""
 	show = Show.query \
-		.filter_by(id=id) \
+		.filter_by(id=show_id) \
 		.first_or_404()
 
 	db_posts = Post.query \
-		.filter_by(show_id=id) \
+		.filter_by(show_id=show_id) \
 		.filter(Post.type != "public") \
 		.order_by(Post.date.desc()) \
 		.all()
 
 	db_files = Files.query \
-		.filter_by(show_id=id) \
+		.filter_by(show_id=show_id) \
 		.all()
 
 	raw_producers = MSL.query \
-		.filter_by(show_id=id, cast_or_crew="crew") \
+		.filter_by(show_id=show_id, cast_or_crew="crew") \
 		.filter(
 			MSL.role_name.in_(["Director", "Producer"])
 		).join(Member, MSL.member_id == Member.id) \
@@ -256,20 +262,20 @@ def m_show(id):
 
 	posts = [
 			MemberPost(
-				id=i.id,
+				post_id=i.id,
 				title=i.title,
 				date=i.date,
-				type="post",
+				post_type="post",
 				text=i.content
 			) for i in db_posts
 		]
 
 	files = [
 			MemberPost(
-				id=i.id,
+				post_id=i.id,
 				title=i.name,
 				date=i.date,
-				type="file"
+				post_type="file"
 			) for i in db_files
 		]
 
@@ -345,7 +351,7 @@ def upload_blog():
 		b = io.BytesIO()
 		with image.open() as image_bytes:
 			pil_image = Image.open(image_bytes, "r", None)
-			if (exif := pil_image._getexif()) is not None:
+			if (exif := pil_image.getexif()) is not None:
 				orientation = exif.get(274)
 			else:
 				orientation = 1
@@ -465,11 +471,11 @@ def blog_editor():
 		return redirect(url_for("members_routes.manage_blog"))
 
 
-@bp.route("/members/file/<id>/<filename>", methods=["GET"])
-def file_direct(id, filename):
+@bp.route("/members/file/<file_id>/<filename>", methods=["GET"])
+def file_direct(file_id, filename):
 	"""member,author,admin"""
 	file = Files.query \
-		.filter_by(id=id, name=filename) \
+		.filter_by(id=file_id, name=filename) \
 		.first()
 
 	# Test fudging
@@ -499,9 +505,7 @@ def file_direct(id, filename):
 def file_upload(show_id):
 	"""member,author,admin"""
 	f = request.files.get('file')
-	used_ids = [value[0] for value in Files.query.with_entities(Files.id).all()]
 	new_file = Files(
-		id=corha.rand_string(f.filename, 16, used_ids),
 		show_id=show_id,
 		name=f.filename,
 		content=f.read()
@@ -532,7 +536,6 @@ def file_delete(file_id, filename):
 def csv_download():
 	"""admin"""
 	if current_user.role == "admin":
-		valid = False
 		table = request.args.get("table")
 		if table == "shows":
 			valid = True
@@ -541,10 +544,12 @@ def csv_download():
 		elif table == "members":
 			valid = True
 			model = Member
+			# noinspection PyUnresolvedReferences
 			data = model.query.order_by(Member.lastname.asc()).all()
 		elif table == "roles":
 			valid = True
 			model = MSL
+			# noinspection PyUnresolvedReferences
 			data = model.query \
 				.order_by(MSL.show_id.asc()) \
 				.order_by(MSL.cast_or_crew.asc()) \
@@ -552,12 +557,15 @@ def csv_download():
 				.all()
 		else:
 			abort(404)
+			return
 
 		if valid:
 			file = io.StringIO()
 			outcsv = csv.writer(file)
+			# noinspection PyUnresolvedReferences
 			headings = [heading.name for heading in model.__mapper__.columns]
 			outcsv.writerow(headings)
+			# noinspection PyUnresolvedReferences
 			[outcsv.writerow([getattr(curr, column.name) for column in model.__mapper__.columns]) for curr in data]
 			response = make_response(file.getvalue())
 			response.headers["Content-Disposition"] = f'attachment; filename="{table}.csv'
@@ -578,7 +586,6 @@ def manage_shows():
 	photo_counts = ShowPhotos.query \
 		.with_entities(ShowPhotos.show_id, func.count(ShowPhotos.show_id)) \
 		.group_by(ShowPhotos.show_id).all()
-	# print(photo_counts)
 
 	return render_template(
 		"past_shows.html",
@@ -604,10 +611,10 @@ def edit_show(show_id):
 			raw_msl = MSL.query \
 				.filter_by(show_id=show_id) \
 				.with_entities(
-				MSL.cast_or_crew,
-				MSL.role_name,
-				MSL.member_id
-			) \
+					MSL.cast_or_crew,
+					MSL.role_name,
+					MSL.member_id
+				) \
 				.order_by(MSL.order_val) \
 				.all()
 			for member in raw_msl:
@@ -652,11 +659,7 @@ def edit_show(show_id):
 		msl_ids = [value[0] for value in MSL.query.with_entities(MSL.id).all()]
 
 		if show_id == "new":
-			used_ids = [value[0] for value in Show.query.with_entities(Show.id).all()]
-			new_id = corha.rand_string(dic["show-title"], 16, used_ids)
-
 			new_show = Show(
-				id=new_id,
 				date=dic.get("last-perf"),
 				season=dic.get("season"),
 				show_type=dic.get("show-type"),
@@ -683,7 +686,7 @@ def edit_show(show_id):
 				for role in form_roles:
 					new_role = MSL(
 						id=(new_MSL_ID := corha.rand_string(dic["show-title"], 16, msl_ids)),
-						show_id=new_id,
+						show_id=new_show.id,
 						cast_or_crew=msl_type,
 						role_name=role[0],
 						member_id=role[1],
@@ -747,12 +750,12 @@ def edit_show(show_id):
 				for role in to_remove:
 					MSL.query \
 						.filter_by(
-						show_id=show_id,
-						cast_or_crew=msl_type,
-						role_name=role[0],
-						member_id=role[1],
-						order_val=role[2]
-					) \
+							show_id=show_id,
+							cast_or_crew=msl_type,
+							role_name=role[0],
+							member_id=role[1],
+							order_val=role[2]
+						) \
 						.delete()
 
 			db.session.commit()
@@ -837,9 +840,9 @@ def manage_users():
 			user = User.query \
 				.filter_by(id=request.args.get("u")) \
 				.with_entities(
-				User.id,
-				User.email
-			) \
+					User.id,
+					User.email
+				) \
 				.first_or_404()
 		return render_template(
 			"members/manage_users.html",
@@ -862,28 +865,29 @@ def manage_users():
 		return redirect(url_for("members_routes.manage_users", u=new_id))
 
 
-
 @bp.route("/members/analytics")
 @login_required
 def analytics():
 	if request.args.get("start"):
-		starttime = datetime.strptime(request.args.get("start"))
+		start_time = datetime.strptime(request.args.get("start"), "%Y-%m-%dT%H:%M:%S")
 	else:
-		starttime = datetime.utcnow() - timedelta(days=30)
+		start_time = datetime.utcnow() - timedelta(days=30)
 	if request.args.get("end"):
-		endtime = datetime.strptime(request.args.get("end"))
+		end_time = datetime.strptime(request.args.get("end"), "%Y-%m-%dT%H:%M:%S")
 	else:
-		endtime = datetime.utcnow()
+		end_time = datetime.utcnow()
 
 	date_filter = and_(
-		AnalyticsLog.date > starttime,
-		AnalyticsLog.date < endtime
+		AnalyticsLog.date > start_time,
+		AnalyticsLog.date < end_time
 	)
 
 	ip_pattern = re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
 	os_pattern = re.compile(r'Android|iPhone|iPad|Windows|Macintosh|Linux|Xbox')
 
 	# external origins analysis
+	# noinspection PyUnresolvedReferences
+	# noinspection Duplicates
 	raw_external_origins = AnalyticsLog.query\
 		.filter(
 			date_filter,
@@ -920,10 +924,12 @@ def analytics():
 
 			stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
 			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
-	external_origins = collections.OrderedDict(sorted(external_origins.items(), key=lambda x:x[1])[::-1])
-
+	# noinspection PyTypeChecker
+	external_origins = collections.OrderedDict(sorted(external_origins.items(), key=lambda x: x[1])[::-1])
 
 	# user agent analysis
+	# noinspection PyUnresolvedReferences
+	# noinspection Duplicates
 	user_agents = AnalyticsLog.query \
 		.filter(
 			date_filter,
@@ -961,19 +967,18 @@ def analytics():
 			os["Other"] = os.setdefault("Other", 0) + count
 			other_os.append(agent)
 
-
 	# user agent analysis
 	aggregate = request.args.get("time")
 
 	labels = []
 	if aggregate == 'hours':
 		# do nothing
-		start, end = starttime.replace(minute=0, second=0, microsecond=0), endtime
+		start, end = start_time.replace(minute=0, second=0, microsecond=0), end_time
 		delta = timedelta(hours=1)
 		form = "%Y-%m-%d-%H"
 
 		query = func.date_part('hour', AnalyticsLog.date)
-		outs=[
+		outs = [
 			extract("YEAR", func.date(AnalyticsLog.date)),
 			extract("MONTH", func.date(AnalyticsLog.date)),
 			extract("DAY", func.date(AnalyticsLog.date)),
@@ -981,24 +986,24 @@ def analytics():
 		]
 	elif aggregate == 'days' or aggregate is None:
 		# group by date
-		start, end = starttime.replace(hour=0, minute=0, second=0, microsecond=0), endtime
+		start, end = start_time.replace(hour=0, minute=0, second=0, microsecond=0), end_time
 		delta = timedelta(days=1)
 		form = "%Y-%m-%d"
 
 		query = func.date(AnalyticsLog.date)
-		outs=[
+		outs = [
 			extract("YEAR", func.date(AnalyticsLog.date)),
 			extract("MONTH", func.date(AnalyticsLog.date)),
 			extract("DAY", func.date(AnalyticsLog.date))
 		]
 	elif aggregate == 'months':
 		# group by month
-		start, end = starttime.replace(day=1, hour=0, minute=0, second=0, microsecond=0), endtime
+		start, end = start_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0), end_time
 		delta = timedelta(days=1)
 		form = "%Y-%m"
 
 		query = func.date_part('month', AnalyticsLog.date)
-		outs=[
+		outs = [
 			extract("YEAR", func.date(AnalyticsLog.date)),
 			extract("MONTH", func.date(AnalyticsLog.date))
 		]
@@ -1009,7 +1014,9 @@ def analytics():
 		labels.append(start.strftime(form))
 		start += delta
 
-	requests_datelog = AnalyticsLog.query\
+	# noinspection PyUnresolvedReferences
+	# noinspection Duplicates
+	requests_date_log = AnalyticsLog.query\
 		.filter(
 			date_filter,
 			not_(AnalyticsLog.request_origin.ilike('%.php%')),
@@ -1026,32 +1033,49 @@ def analytics():
 		.group_by(func.date(AnalyticsLog.date), query)\
 		.all()
 
-
-	test1 = {"-".join([str(int(j)).zfill(2) for j in i[1:]]): {"x": "-".join([str(int(j)).zfill(2) for j in i[1:]]), "y": i[0]} for i in requests_datelog}
+	test1 = {
+		"-".join([str(int(j)).zfill(2) for j in i[1:]])
+		:
+		{
+			"x": "-".join([str(int(j)).zfill(2) for j in i[1:]]),
+			"y": i[0]
+		}
+		for i in requests_date_log
+	}
+	# noinspection PyTypeChecker
 	test2 = collections.OrderedDict(sorted({x: test1.setdefault(x, {"x": x, "y": 0}) for x in labels}.items()))
 
-	session_lengths = dict(collections.Counter([i[0] for i in AnalyticsLog.query\
-		.filter(
-			date_filter,
-			not_(AnalyticsLog.request_origin.ilike('%.php%')),
-			not_(AnalyticsLog.request_destination.ilike('%.php%')),
-			not_(AnalyticsLog.user_agent.ilike('%http%')),
-			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
-			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
-			not_(AnalyticsLog.code == 404),
-			AnalyticsLog.server.contains('silchesterplayers.org')
-		).group_by(AnalyticsLog.session_id, )\
-		.with_entities(
-			func.count(AnalyticsLog.session_id)
-		).order_by(func.count(AnalyticsLog.session_id))\
-		.all()]))
-
-	# pprint(session_lengths)
+	# noinspection PyUnresolvedReferences
+	# noinspection Duplicates
+	session_lengths = dict(
+		collections.Counter(
+			[
+				i[0] for i in AnalyticsLog.query
+				.filter(
+					date_filter,
+					not_(AnalyticsLog.request_origin.ilike('%.php%')),
+					not_(AnalyticsLog.request_destination.ilike('%.php%')),
+					not_(AnalyticsLog.user_agent.ilike('%http%')),
+					not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+					not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+					not_(AnalyticsLog.code == 404),
+					AnalyticsLog.server.contains('silchesterplayers.org')
+				).group_by(AnalyticsLog.session_id, )
+				.with_entities(
+					func.count(AnalyticsLog.session_id)
+				).order_by(func.count(AnalyticsLog.session_id))
+				.all()
+			]
+		)
+	)
 
 	return render_template(
 		"members/analytics.html",
 		external_origins=external_origins,
-		origins_colours=['#%02x%02x%02x' % tuple(int(round(s*255)) for s in i) for i in distinctipy.get_colors(len(external_origins.keys()), pastel_factor=0.7)],
+		origins_colours=[
+			'#%02x%02x%02x' % tuple(int(round(s*255)) for s in i)
+			for i in distinctipy.get_colors(len(external_origins.keys()), pastel_factor=0.7)
+		],
 		os=os,
 		device_type=device_type,
 		requests_datelog=list(test2.values()),
@@ -1105,6 +1129,7 @@ def admin_settings():
 @login_required
 def account_settings():
 	"""member,author,admin"""
+	error = ""
 	if request.method == "GET":
 		if not (key := current_user.otp_secret):
 			key = pyotp.random_base32()
@@ -1142,6 +1167,7 @@ def account_settings():
 		elif request.form.get("submit") == "Activate 2FA":
 			error = "otp_success"
 			totp = pyotp.parse_uri(request.form.get("otp_qr"))
+			# noinspection PyUnresolvedReferences
 			if totp.verify(request.form.get("otp_code")):
 				current_user.otp_secret = totp.secret
 				db.session.commit()

@@ -5,10 +5,10 @@ function quickSearch(e, results, startEmpty=false) {
 				let extra = (startEmpty && input === "")
 				if (row.dataset.searchable.toLowerCase().includes(input) && !extra) {
 					row.classList.remove("hide")
-					row.style.order = row.dataset.searchable.toLowerCase().indexOf(input)
+					row.style.order = row.dataset.searchable.toLowerCase().indexOf(input).toString(10)
 				} else {
 					row.classList.add("hide")
-					row.style.order = 100000
+					row.style.order = (100000).toString(10)
 				}
 			}
 		}

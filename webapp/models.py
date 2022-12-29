@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from corha import corha
 from flask_sqlalchemy import SQLAlchemy
+# noinspection PyPackageRequirements
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin
 
@@ -13,6 +14,7 @@ class NewIdGetter:
 	def __init__(self, **kwargs):
 		print(kwargs)
 
+	# noinspection PyUnresolvedReferences
 	@classmethod
 	def get_new_id(cls):
 		used_ids = [value[0] for value in cls.query.with_entities(cls.id).all()]
@@ -27,14 +29,18 @@ class KeyValue(db.Model):
 		return f"KeyValue('{self.key}','{self.value}')"
 
 
-class Files(db.Model):
+class Files(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	show_id = db.Column(db.String(16))
 	name = db.Column(db.String(100))
 	content = db.Column(db.LargeBinary)
 	date = db.Column(db.DateTime, default=datetime.utcnow())
 
-	def get_type(self):
+	def __repr__(self):
+		return f"Files('{self.id}', '{self.show_id}', '{self.name}', '{self.content}', '{self.date}')"
+
+	@staticmethod
+	def get_type():
 		return "Files"
 
 
@@ -48,10 +54,12 @@ class Post(db.Model, NewIdGetter):
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	views = db.Column(db.Integer, default=0)
 
-	def get_type(self):
+	@staticmethod
+	def get_type():
 		return "Post"
 
 
+# noinspection PyRedeclaration
 class User(UserMixin, db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
@@ -150,7 +158,7 @@ def load_user(user_id):
 	return User.query.filter_by(id=str(user_id)).first()
 
 
-class Show(db.Model):
+class Show(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	season = db.Column(db.String(8))
@@ -168,13 +176,21 @@ class Show(db.Model):
 	show_photos = db.relationship('ShowPhotos', backref='show', lazy=True)
 	# files = db.relationship('Files', backref='show', lazy=True)
 
+	def __repr__(self):
+		return f"Show('{self.id}', '{self.date}', '{self.season}', '{self.show_type}', '{self.title}', " \
+				f"'{self.subtitle}', '{self.genre}', '{self.author}', '{self.programme}', '{self.text_blob}', " \
+				f"'{self.noda_review}', '{self.radio_audio}')"
 
-class ShowPhotos(db.Model):
+
+class ShowPhotos(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
 	photo_url = db.Column(db.Text)
 	photo_type = db.Column(db.String(30))
 	photo_desc = db.Column(db.Text)
+
+	def __repr__(self):
+		return f"ShowPhotos('{self.id}', '{self.show_id}', '{self.photo_url}', '{self.photo_type}', '{self.photo_desc}')"
 
 
 class StaticMedia(db.Model, NewIdGetter):

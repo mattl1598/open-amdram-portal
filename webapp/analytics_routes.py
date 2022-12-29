@@ -1,18 +1,9 @@
+from flask import Blueprint, request, session
+from flask_login import current_user
 import datetime
 
-from corha import corha
-from flask import abort, Blueprint, make_response, redirect, render_template, Response, send_file, send_from_directory, \
-	url_for, \
-	request, session
-from flask_login import login_required, login_user, current_user  # , login_required, logout_user
-from sqlalchemy import or_
-from werkzeug.exceptions import HTTPException
+from webapp.models import *
 
-
-from webapp.models import BlogImage, BlogPost, KeyValue, Member, Post, Show, ShowPhotos, User, MemberShowLink as MSL, AnalyticsLog, db
-# from webapp import app, db
-
-from flask import current_app as app
 bp = Blueprint("analytics_routes", __name__)
 
 

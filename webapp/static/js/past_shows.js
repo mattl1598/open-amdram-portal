@@ -4,7 +4,7 @@ function cssToggle(event, targetID, onClass, offClass) {
 }
 
 function sortTable(id, n, arrow_id) {
-	var table, headings, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+	let table, headings, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
 	table = document.getElementById(id);
 	switching = true;
 	// Set the sorting direction to ascending:

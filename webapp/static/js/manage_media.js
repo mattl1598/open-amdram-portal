@@ -5,9 +5,9 @@ function confirm_delete(args) {
 }
 
 function select_media(element) {
-	var data = element.querySelector("data").dataset
+	let data = element.querySelector("data").dataset
 
-	var info = document.querySelector("#info")
+	let info = document.querySelector("#info")
 	info.classList.remove("greyed")
 
 	info.querySelector("#filename").innerHTML = data.name
@@ -17,8 +17,9 @@ function select_media(element) {
 }
 
 function copy_me(id) {
-	  var copyText = document.querySelector(`#${id}`).innerHTML;
+	  let copyText = document.querySelector(`#${id}`).innerHTML;
 
 	   // Copy the text inside the text field
-	  navigator.clipboard.writeText(copyText);
+	  // noinspection JSIgnoredPromiseFromCall
+	navigator.clipboard.writeText(copyText);
 }

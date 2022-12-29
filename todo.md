@@ -51,7 +51,7 @@
 - cinema sites
 
 ### ideas
-- give the current shows director/producer the ability to create public 
+- give the current shows' director/producer the ability to create public 
   announcements on the home page
 - browser notifications for said announcements
   - morningstar financial

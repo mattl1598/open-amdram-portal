@@ -1,13 +1,11 @@
-import json
 import re
 from os import walk
 from urllib.parse import urlparse
 
 import markdown as markdown
-from flask import Flask, redirect, render_template, request, session, url_for, abort  # , session
-from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, redirect, render_template, request, session, abort  # , url_for, session
 from flask_qrcode import QRcode
+# noinspection PyPackageRequirements
 from sass import compile
 import corha
 import os
@@ -15,7 +13,9 @@ import subprocess
 import platform
 import string
 
+# noinspection PyPackageRequirements
 from sqlalchemy import and_
+# noinspection PyPackageRequirements
 from werkzeug.exceptions import HTTPException
 
 from webapp.svgs import *
@@ -175,7 +175,7 @@ def create_app():
 		@app.errorhandler(HTTPException)
 		def default_error(e):
 			if int(str(e)[:3]) == 404:
-				if (page := re.search("^/((new-year)|(spring)|(autumn))-\d{4}", request.path)) is not None:
+				if (page := re.search(r"^/((new-year)|(spring)|(autumn))-\d{4}", request.path)) is not None:
 					aim = page.group()[1:].rsplit("-", 1)
 					show = Show.query \
 						.filter_by(season=aim[0].replace("-", " ").title()) \

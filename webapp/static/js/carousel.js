@@ -8,14 +8,14 @@ const FlexSlider = {
 	init: function() {
 		// set CSS order of each item initially
 		document.querySelectorAll(".slider-item").forEach(function(element, index) {
-			element.style.order = index+1;
+			element.style.order = (index + 1).toString(10);
 		});
 
 		this.addEvents();
 	},
 
 	addEvents: function() {
-		var that = this;
+		// let that = this;
 
 		// click on move item button
 		document.querySelector("#slider-container-outer").addEventListener('click', () => {
@@ -39,13 +39,13 @@ const FlexSlider = {
 
 		// change order from current position till last
 		for(let i=this.current; i<=this.num_items; i++) {
-			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order;
+			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order.toString(10);
 			order++;
 		}
 
 		// change order from first position till current
 		for(let i=1; i<this.current; i++) {
-			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order;
+			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order.toString(10);
 			order++;
 		}
 

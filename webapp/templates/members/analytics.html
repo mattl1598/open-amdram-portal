@@ -1,16 +1,18 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
+	<!--suppress JSUnresolvedFunction -->
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+	<!--suppress JSUnusedGlobalSymbols -->
 	<script>
 		const formatting = (value, ctx) => {
                 let sum = 0;
-                let dataArr = ctx.chart.data.datasets[0].data;
+                // noinspection JSUnresolvedVariable
+			let dataArr = ctx.chart.data.datasets[0].data;
                 dataArr.map(data => {
                     sum += data;
                 });
-                let percentage = (value*100 / sum).toFixed(2)+"%";
-                return percentage;
+                return (value*100 / sum).toFixed(2)+"%";
             }
 	</script>
 	<h1>Analytics</h1>

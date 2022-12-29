@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedVariable,JSUnusedLocalSymbols
+
 document.addEventListener("DOMContentLoaded", function() {
 	const dropArea = document.getElementById(`dropArea`);
 

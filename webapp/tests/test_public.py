@@ -1,5 +1,4 @@
 import pytest
-import pprint
 
 from webapp.tests.conftest import all_routes
 
@@ -18,6 +17,4 @@ def test_public_views(route, client):
 	else:
 		codes = [200, 302]
 	response = client.get(route, headers={"Referer": '/'})
-	# if response.status_code == 302:
-	# 	print(response.data)
 	assert response.status_code in codes

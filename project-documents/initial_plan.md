@@ -128,4 +128,4 @@ Another ethical consideration for the project is including a privacy notice to
 describe what and how any personal data is being collected, used and stored. 
 I will also have to make sure that any personal data is processed according 
 to GDPR regulations and guidance from the Information Commissioner's Office
-([ico.org.uk](ico.org.uk))
+([ico.org.uk](https://ico.org.uk))

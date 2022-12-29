@@ -1,3 +1,5 @@
+// noinspection JSUnresolvedVariable
+
 function swapRows(element, role_type, dir) {
 	let startInt = parseInt(element.parentElement.id.replace(role_type, ""))
 
@@ -16,17 +18,19 @@ function swapRows(element, role_type, dir) {
 		let roleA = rowA.querySelector(`#${role_type}_roles${startInt}`).tomselect
 		let roleB = rowB.querySelector(`#${role_type}_roles${startInt+dir}`).tomselect
 
-		let scratch = roleA.getValue()
+		let scratch = roleA.getValue(0)
 
-		roleA.setValue(roleB.getValue())
+		// noinspection JSUnresolvedFunction
+		roleA.setValue(roleB.getValue(0))
+		// noinspection JSUnresolvedFunction
 		roleB.setValue(scratch)
 	}
 
 	let membersA = rowA.querySelector(`#${role_type}_members${startInt}`).tomselect
 	let membersB = rowB.querySelector(`#${role_type}_members${startInt+dir}`).tomselect
 
-	let A = [...membersA.getValue()]
-	let B = [...membersB.getValue()]
+	let A = [...membersA.getValue(0)]
+	let B = [...membersB.getValue(0)]
 
 	membersA.clear(true)
 	membersB.clear(true)
@@ -34,7 +38,9 @@ function swapRows(element, role_type, dir) {
 	console.log(A)
 	console.log(B)
 
+	// noinspection JSUnresolvedFunction
 	membersA.setValue(B)
+	// noinspection JSUnresolvedFunction
 	membersB.setValue(A)
 }
 
@@ -44,8 +50,8 @@ function addCast(prefill_role="", members=[]) {
 	let val = document.querySelector("#cast_count").value
 	val++
 	document.querySelector("#cast_count").value = val
-	var temp = document.querySelector("#cast-template")
-	var clon = temp.content.cloneNode(true)
+	let temp = document.querySelector("#cast-template")
+	let clon = temp.content.cloneNode(true)
 
 	clon.querySelector("#casttemplate").id = "cast"+val
 	clon.querySelector("#cast_rolestemplate").name = "cast_roles"+val
@@ -58,6 +64,7 @@ function addCast(prefill_role="", members=[]) {
 
 	document.querySelector("#cast-entries").appendChild(clon)
 
+	// noinspection JSUnresolvedFunction
 	new TomSelect("#cast_members"+val,{
 		maxItems: 20,
 		allowEmptyOption: true,
@@ -66,7 +73,9 @@ function addCast(prefill_role="", members=[]) {
 		hidePlaceholder:true,
 		create: true,
 		onItemAdd: function(){
+			// noinspection JSUnresolvedFunction
 			this.setTextboxValue('')
+			// noinspection JSUnresolvedFunction
 			this.refreshOptions()
 		}
 	})
@@ -76,8 +85,8 @@ function addCrew(prefill_role="", members=[]) {
 	let val = document.querySelector("#crew_count").value
 	val++
 	document.querySelector("#crew_count").value = val
-	var temp = document.querySelector("#crew-template")
-	var clon = temp.content.cloneNode(true);
+	let temp = document.querySelector("#crew-template")
+	let clon = temp.content.cloneNode(true);
 
 	clon.querySelector("#crewtemplate").id = "crew"+val
 	clon.querySelector("#crew_rolestemplate").name = "crew_roles"+val
@@ -87,6 +96,7 @@ function addCrew(prefill_role="", members=[]) {
 
 	document.querySelector("#crew-entries").appendChild(clon)
 
+	// noinspection JSUnresolvedFunction
 	new TomSelect("#crew_members"+val,{
 		maxItems: 20,
 		allowEmptyOption: true,
@@ -95,10 +105,13 @@ function addCrew(prefill_role="", members=[]) {
 		hidePlaceholder:true,
 		create: true,
 		onItemAdd: function(){
+			// noinspection JSUnresolvedFunction
 			this.setTextboxValue('');
+			// noinspection JSUnresolvedFunction
 			this.refreshOptions();
 		}
 	})
+	// noinspection JSUnresolvedFunction
 	new TomSelect("#crew_roles"+val,{
 		items:[prefill_role],
 		options: crew_roles,
@@ -110,17 +123,21 @@ function addCrew(prefill_role="", members=[]) {
 	})
 }
 
+// noinspection JSUnresolvedFunction
 document.addEventListener('DOMContentLoaded', function() {
 	for (const [key, value] of Object.entries(prefill_json)) {
 		if (key === "cast") {
+			// noinspection JSCheckFunctionSignatures
 			for (const [role, members] of Object.entries(value)) {
 				addCast(role, members)
 			}
 		} else if (key === "crew") {
+			// noinspection JSCheckFunctionSignatures
 			for (const [role, members] of Object.entries(value)) {
 				addCrew(role, members)
 			}
 		}
 	}
+	// noinspection JSUnresolvedFunction,JSUnusedLocalSymbols
 	const easyMDE = new EasyMDE({ element: document.querySelector("#wysiwyg") });
 }, false)

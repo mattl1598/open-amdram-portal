@@ -1,5 +1,6 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
+	<!--suppress HtmlUnknownTag -->
 	<h2>Edit Show</h2>
 	<form action="" id="show-form" method="post">
 		<input type="number" style="display: none;" name="cast_count" id="cast_count" value="0">
@@ -112,7 +113,8 @@
 						<label for="cast_rolestemplate" id="cast_roles_labeltemplate">Role...</label>
 					</div>
 				</span>
-				<span class="m"><select id="cast_memberstemplate" placeholder="Select Members">
+				<span class="m"><!--suppress HtmlUnknownAttribute -->
+					<select id="cast_memberstemplate" placeholder="Select Members">
 					{% for i in members %}
 						<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
 					{% endfor %}
@@ -126,7 +128,8 @@
 				<button class="swapper" type="button" onclick="swapRows(this, 'crew', -1)">▲</button>
 				<button class="swapper" type="button" onclick="swapRows(this, 'crew', 1)">▼</button>
 				<span class="r"><input type="text" placeholder="Role..." id="crew_rolestemplate"></span>
-				<span class="m"><select id="crew_memberstemplate" placeholder="Select Members">
+				<span class="m"><!--suppress HtmlUnknownAttribute -->
+					<select id="crew_memberstemplate" placeholder="Select Members">
 					{% for i in members %}
 						<option value="{{ i.id }}">{{ i.firstname }} {{ i.lastname }}</option>
 					{% endfor %}

@@ -8,13 +8,8 @@ from pprint import pprint
 
 import requests
 from corha import corha
-from flask import abort, Blueprint, redirect, render_template, url_for, request, session, \
-	jsonify  # , make_response, send_file
-# from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.datastructures import FileStorage
-
-# from webapp import app, db
-from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db  # , User, Member, MemberShowLink as MSL
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session
+from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
 from flask import current_app as app
 bp = Blueprint("photos_routes", __name__)
 
@@ -226,16 +221,16 @@ def manage_media(**kwargs):
 		)
 
 
-@bp.route("/photo/<id>")
-@bp.route("/video/<id>")
-@bp.route("/media/<id>/<filename>")
-def get_photo(id, **kwargs):
+@bp.route("/photo/<media_id>")
+@bp.route("/video/<media_id>")
+@bp.route("/media/<media_id>/<filename>")
+def get_photo(media_id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
 
 	update_access_token()
 
 	if route in ["photo", "video"]:
-		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{id}?access_token={session.get('access_token')}"
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_id}?access_token={session.get('access_token')}"
 		x = requests.get(url=url).json()
 		if x.get('baseUrl') is not None:
 			if route == "photo":
@@ -250,7 +245,7 @@ def get_photo(id, **kwargs):
 		else:
 			abort(404)
 	elif route == "media":
-		item = StaticMedia.query.filter_by(id=id, filename=kwargs["filename"]).first_or_404()
+		item = StaticMedia.query.filter_by(id=media_id, filename=kwargs["filename"]).first_or_404()
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
 			f"access_token={session.get('access_token')}"
 		x = requests.get(url=url).json()
@@ -318,10 +313,12 @@ def choose_album():
 				db_refresh.value = refresh_token
 				KeyValue.query.filter_by(key="refresh_time").first().value = int(time.time())
 			else:
+				# noinspection PyArgumentList
 				new_token = KeyValue(
 					key="refresh_token",
 					value=refresh_token
 				)
+				# noinspection PyArgumentList
 				new_time = KeyValue(
 					key="refresh_time",
 					value=int(time.time())
@@ -355,6 +352,7 @@ def choose_album():
 
 			y = requests.get(url + f"?access_token={access_token}&pageSize=50&pageToken={next_token}").json()
 
+		# noinspection PyUnresolvedReferences
 		shows = Show.query \
 			.order_by(Show.date.asc()) \
 			.with_entities(Show.id, Show.title, Show.date) \

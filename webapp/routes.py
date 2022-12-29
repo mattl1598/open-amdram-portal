@@ -1,27 +1,17 @@
-import io
-import re
 from datetime import datetime
-from pprint import pprint
-from urllib.parse import urlparse
 from lorem_text import lorem as lorem_func
-import corha
 import pyotp
-import csv
-# import json
 
-from flask import abort, Blueprint, make_response, redirect, render_template, Response, send_file, send_from_directory, \
-	url_for, \
-	request, session
-from flask_login import login_required, login_user, current_user  # , login_required, logout_user
-from sqlalchemy import or_, and_
-from werkzeug.exceptions import HTTPException
-
-# from webapp import app, db
+from flask import abort, Blueprint, make_response, redirect, \
+	render_template, Response, send_file, send_from_directory, url_for, request, session
+from flask_login import login_user, current_user
+# noinspection PyPackageRequirements
+from sqlalchemy import or_
 
 from webapp.members_routes import MemberPost
+# noinspection PyPep8Naming
 from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
 	MemberShowLink as MSL, db
-from webapp.svgs import *
 
 
 from flask import current_app as app
@@ -68,6 +58,7 @@ class MemberRenderer:
 		return "/".join(["/past-shows", ["m", "u"][self.has_user], self.id, "-".join([self.firstname, self.lastname])])
 
 
+# noinspection PyUnresolvedReferences
 @bp.route("/", methods=["GET"])
 def frontpage():
 	latest_show = Show.query \
@@ -95,12 +86,12 @@ def frontpage():
 		.order_by(Show.date.asc()) \
 		.order_by(Post.date.desc()) \
 		.with_entities(
-		Post.date,
-		Post.title,
-		Post.content,
-		Show.title.label("show_title"),
-		Show.subtitle.label("show_subtitle")
-	) \
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		) \
 		.first()
 
 	if post is None:
@@ -108,9 +99,9 @@ def frontpage():
 			.filter(Show.date > datetime.now()) \
 			.order_by(Show.date.asc()) \
 			.with_entities(
-			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
-		) \
+				Show.title.label("show_title"),
+				Show.subtitle.label("show_subtitle")
+			) \
 			.first()
 
 	return render_template(
@@ -132,6 +123,7 @@ def links():
 	)
 
 
+# noinspection PyUnresolvedReferences
 @bp.route("/auditions", methods=["GET"])
 def auditions():
 	post = Post.query \
@@ -141,15 +133,13 @@ def auditions():
 		.order_by(Show.date.asc()) \
 		.order_by(Post.date.desc()) \
 		.with_entities(
-		Post.date,
-		Post.title,
-		Post.content,
-		Show.title.label("show_title"),
-		Show.subtitle.label("show_subtitle")
-	) \
+			Post.date,
+			Post.title,
+			Post.content,
+			Show.title.label("show_title"),
+			Show.subtitle.label("show_subtitle")
+		) \
 		.first()
-
-	# print(post)
 
 	return render_template(
 		"auditions.html",
@@ -161,11 +151,11 @@ def auditions():
 @bp.route("/search", methods=["GET"])
 def search():
 	class Result:
-		def __init__(self, link, title, searchable, type):
+		def __init__(self, link, title, searchable_text, result_type):
 			self.link = link
 			self.title = title
-			self.searchable = searchable
-			self.type = type
+			self.searchable = searchable_text
+			self.type = result_type
 
 	results = []
 
@@ -190,9 +180,9 @@ def search():
 		)
 
 	for result in Post.query \
-			.filter(Post.date < datetime.now()) \
-			.filter_by(type="blog") \
-			.order_by(Post.date).all():
+		.filter(Post.date < datetime.now()) \
+		.filter_by(type="blog") \
+		.order_by(Post.date).all():
 		searchable = " ".join([
 			result.title or "",
 			result.type or "",
@@ -207,9 +197,9 @@ def search():
 			)
 		)
 	for result in Post.query \
-			.filter(Post.date < datetime.now()) \
-			.filter(or_(Post.type == "public", Post.type == "auditions")) \
-			.order_by(Post.date.desc()).all():
+		.filter(Post.date < datetime.now()) \
+		.filter(or_(Post.type == "public", Post.type == "auditions")) \
+		.order_by(Post.date.desc()).all():
 		searchable = " ".join([
 			result.title or "",
 			result.type or "",
@@ -224,27 +214,27 @@ def search():
 			)
 		)
 
-	users = {}
-	members = []
+	users_list = {}
+	members_list = []
 	for member in Member.query.all():
 		if member.associated_user is not None:
-			if member.associated_user not in users.keys():
+			if member.associated_user not in users_list.keys():
 				user = User.query.filter_by(id=member.associated_user).first()
 				for i in Member.query.filter_by(associated_user=member.associated_user).all():
-					users.setdefault(member.associated_user, []).append(
+					users_list.setdefault(member.associated_user, []).append(
 						MemberRenderer(
 							i,
 							user
 						)
 					)
 		else:
-			members.append(
+			members_list.append(
 				MemberRenderer(
 					member
 				)
 			)
 
-	for result in [*users.values(), *members]:
+	for result in [*users_list.values(), *members_list]:
 		if isinstance(result, list):
 			renderer = result[0]
 			searchable = " ".join([
@@ -351,14 +341,14 @@ def past_show_page(show_id, test):
 		.filter_by(show_id=show_id, cast_or_crew="cast") \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-		MSL.show_id,
-		MSL.cast_or_crew,
-		MSL.role_name,
-		Member.id,
-		Member.firstname,
-		Member.lastname,
-		Member.associated_user
-	) \
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
 		.order_by(MSL.order_val) \
 		.all()
 	cast = {}
@@ -370,14 +360,14 @@ def past_show_page(show_id, test):
 		.filter_by(show_id=show_id, cast_or_crew="crew") \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-		MSL.show_id,
-		MSL.cast_or_crew,
-		MSL.role_name,
-		Member.id,
-		Member.firstname,
-		Member.lastname,
-		Member.associated_user
-	) \
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
 		.order_by(MSL.order_val) \
 		.all()
 	crew = {}
@@ -422,6 +412,7 @@ def u_redirect(user_id):
 	return redirect("/".join([user_id, page_title]))
 
 
+# noinspection DuplicatedCode
 @bp.route("/past-shows/u/<user_id>/<test>")
 def u(user_id, test):
 	test += " "
@@ -433,18 +424,19 @@ def u(user_id, test):
 		.all()
 	]
 
+	# noinspection PyUnresolvedReferences
 	msls = MSL.query \
 		.filter(MSL.member_id.in_(user_members)) \
 		.join(Member, MSL.member_id == Member.id) \
 		.with_entities(
-		MSL.show_id,
-		MSL.cast_or_crew,
-		MSL.role_name,
-		Member.id,
-		Member.firstname,
-		Member.lastname,
-		Member.associated_user
-	) \
+			MSL.show_id,
+			MSL.cast_or_crew,
+			MSL.role_name,
+			Member.id,
+			Member.firstname,
+			Member.lastname,
+			Member.associated_user
+		) \
 		.all()
 
 	user = User.query.filter_by(id=user_id).first_or_404()
@@ -452,6 +444,7 @@ def u(user_id, test):
 	for link in msls:
 		shows.setdefault(link.show_id, []).append(MemberRenderer(link, user))
 
+	# noinspection PyUnresolvedReferences
 	show_details = {i.id: i for i in Show.query.order_by(Show.date.desc()).filter(Show.id.in_(shows.keys())).all()}
 
 	return render_template(
@@ -472,6 +465,7 @@ def m_redirect(member_id):
 	return redirect("/".join([member_id, page_title]))
 
 
+# noinspection DuplicatedCode
 @bp.route("/past-shows/m/<member_id>/<test>")
 def m(member_id, test):
 	test += " "
@@ -494,6 +488,7 @@ def m(member_id, test):
 	for link in msls:
 		shows.setdefault(link.show_id, []).append(MemberRenderer(link))
 
+	# noinspection PyUnresolvedReferences
 	show_details = {i.id: i for i in Show.query.order_by(Show.date.desc()).filter(Show.id.in_(shows.keys())).all()}
 
 	return render_template(
@@ -543,6 +538,7 @@ def tickets():
 	)
 
 
+# noinspection PyUnusedLocal
 @app.errorhandler(401)
 @bp.route("/members", methods=["GET", "POST"])
 def members(*args):
@@ -564,13 +560,26 @@ def members(*args):
 		elif request.method == "GET":
 			files = [
 				MemberPost(
-					id=i.id,
+					title="Adult Membership Subs",
+					date=datetime.utcnow(),
+					text="Click to Pay",
+					link="https://checkout.square.site/buy/2RAQ4QC2TWDCTY6WTQSAXZHG",
+					post_type="link"
+				),
+				MemberPost(
+					title="Junior Membership Subs",
+					date=datetime.utcnow(),
+					text="Click to Pay",
+					link="https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT",
+					post_type="link"
+				)
+			] + [
+				MemberPost(
+					post_id=i.id,
 					title=i.name,
 					date=i.date,
-					type="file"
-				) for i in Files.query
-					.filter_by(show_id="members_public")
-					.all()
+					post_type="file"
+				) for i in Files.query.filter_by(show_id="members_public").all()
 			]
 
 			return render_template(
@@ -578,7 +587,6 @@ def members(*args):
 				files=files,
 				no_portal=True,
 				css=["m_dashboard.css", "members.css"]
-				# css="members.css"
 			)
 
 
@@ -621,6 +629,7 @@ def css(filename):
 		abort(404)
 
 
+# noinspection PyUnresolvedReferences
 @bp.get("/sounds/<filename>")
 def sound(filename):
 	if filename not in app.available_sounds:
@@ -670,16 +679,3 @@ def accessibility():
 def tempest_redirect():
 	return redirect("/past-shows/L2hhNXIZPeXgGyY/the-tempest")
 # TODO: change this to allow configuring custom redirects through admin settings
-
-
-@bp.route("/test")
-def test():
-	pprint([x.rule for x in app.url_map.iter_rules()])
-	return "test"
-
-@bp.route("/user")
-def test_user():
-	if current_user.is_authenticated:
-		return current_user.email
-	else:
-		return "Anon"

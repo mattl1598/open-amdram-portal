@@ -15,6 +15,7 @@
 		<br>
 		<label for="content">Blog Content</label>
 		<textarea id="wysiwyg" name="content">{{ post.content }}</textarea>
+		<!--suppress JSUnresolvedFunction, JSUnusedLocalSymbols -->
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
 				const easyMDE = new EasyMDE({element: document.querySelector("#wysiwyg") });

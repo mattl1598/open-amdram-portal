@@ -49,6 +49,7 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
+  //noinspection CssUnknownProperty
   -webkit-transform: translateX(1ch);
   -ms-transform: translateX(1ch);
   transform: translateX(1ch);
