@@ -22,7 +22,6 @@ def after_app_request(response):
 		"photos_routes.get_photo",
 		"routes.favicon"
 	]
-	print(request.endpoint)
 	if request.endpoint not in ignored_endpoints and "None" not in request.url and response.status_code != 302:
 		if current_user.is_authenticated:
 			email = current_user.email
@@ -43,6 +42,5 @@ def after_app_request(response):
 		db.session.add(new_log)
 		db.session.commit()
 
-	print("test")
 	db.session.commit()
 	return response

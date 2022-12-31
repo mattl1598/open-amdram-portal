@@ -15,7 +15,7 @@ from datetime import timedelta  # , datetime
 from dateutil.relativedelta import relativedelta
 
 from flask import abort, Blueprint, flash, make_response, redirect, render_template, send_file, session, url_for, \
-	request
+	request, jsonify
 from flask_login import logout_user, current_user, login_required
 # noinspection PyPackageRequirements
 from sqlalchemy import and_, extract, func, not_, or_, sql
@@ -839,30 +839,57 @@ def manage_users():
 		if "u" in request.args.keys():
 			user = User.query \
 				.filter_by(id=request.args.get("u")) \
-				.with_entities(
-					User.id,
-					User.email
-				) \
 				.first_or_404()
+		all_users = User.query\
+			.filter(
+				User.email.is_not(None),
+				User.firstname != "Test"
+			).with_entities(
+				User.id,
+				User.firstname,
+				User.lastname,
+				User.email,
+				User.role
+			)\
+			.all()
+		all_users += User.query\
+			.filter(
+				User.email.is_not(None),
+				User.firstname == "Test"
+			).with_entities(
+				User.id,
+				User.firstname,
+				User.lastname,
+				User.email,
+				User.role
+			)\
+			.all()
 		return render_template(
 			"members/manage_users.html",
 			user=user,
-			css="m_dashboard.css"
+			users=all_users,
+			css="manage_users.css",
+			js="manage_users.js"
 		)
 	else:
-		new_id = User.get_new_id()
-		new_user = User(
-			id=new_id,
-			firstname=request.form.get("firstname"),
-			lastname=request.form.get("lastname"),
-			email=request.form.get("email"),
-			role=request.form.get("role"),
-			password=new_id
-		)
-		db.session.add(new_user)
-		db.session.commit()
-
-		return redirect(url_for("members_routes.manage_users", u=new_id))
+		if request.args.get("form") == "invite":
+			new_id = User.get_new_id()
+			new_user = User(
+				id=new_id,
+				firstname=request.form.get("firstname"),
+				lastname=request.form.get("lastname"),
+				email=request.form.get("email"),
+				role=request.form.get("role"),
+				password=new_id
+			)
+			db.session.add(new_user)
+			db.session.commit()
+			return redirect(url_for("members_routes.manage_users", u=new_id))
+		elif request.args.get("form") == "role":
+			user = User.query.filter_by(id=request.json.get("userId")).first_or_404()
+			user.role = request.json.get("newRole")
+			db.session.commit()
+			return jsonify(200)
 
 
 @bp.route("/members/analytics")
@@ -1034,8 +1061,7 @@ def analytics():
 		.all()
 
 	test1 = {
-		"-".join([str(int(j)).zfill(2) for j in i[1:]])
-		:
+		"-".join([str(int(j)).zfill(2) for j in i[1:]]):
 		{
 			"x": "-".join([str(int(j)).zfill(2) for j in i[1:]]),
 			"y": i[0]

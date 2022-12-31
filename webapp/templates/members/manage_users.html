@@ -2,11 +2,37 @@
 {% block portal_content %}
 	{% if user is not none %}
 		<h3>Invite Details</h3>
-		Email: {{ user.email }}<br>
-		Temp Password: {{ user.id }}
+		<div class="invite">
+			<div class="copy_outer">
+				<span class="icon" onclick="inviteCopy(event)">
+					<svg viewbox="0 0 50 50">
+						{{ icons["copy_icon"] | safe }}
+					</svg>
+					Copy
+				</span>
+			</div>
+			<code>
+				Hi {{ user.firstname }},<br>
+
+				We're excited to invite you to join us on the {{ web_config["site-name"] }} website as a member!<br><br>
+
+				Your temporary login details are:<br>
+				Email: {{ user.email }}<br>
+				Password: {{ user.id }}<br><br>
+
+				Just click on this link to start the process and log in: {{ request.host_url[:-1] }}{{ url_for("routes.members") }}<br>
+
+				After you click the link, you'll be prompted to enter your email and password to log in. <br>Don't forget to change your password once you're logged in - it's temporary and you'll need to set a new one before you can access any other parts of the website.<br><br>
+
+				We hope you enjoy using the website and we'd love to hear your feedback on it. If you have any comments, suggestions or issues, feel free to use the feedback form on the website or reach out directly.<br><br>
+
+				Best,<br>
+				{{ current_user.firstname }}
+			</code>
+		</div>
 		<hr>
 	{% endif %}
-	<form method="post">
+	<form method="post" action="?form=invite">
 		<h3>Invite User</h3>
 		<div class="fancy-input">
 			<input type="text" name="firstname">
@@ -25,4 +51,38 @@
 		<br>
 		<input type="submit">
 	</form>
+
+	<div>
+		<table class="users-table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Role</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user in users %}
+					<tr>
+						<td><code>{{ user.id }}</code></td>
+						<td>{{ user.firstname }} {{ user.lastname }}</td>
+						<td>{{ user.email }}</td>
+						<td class="right">
+							<select onchange='sendRoleUpdate(this.value, "{{ user.id }}")'>
+								<option value="member" {{ "selected" if user.role in ["", "member"] }}>Member</option>
+								<option value="author" {{ "selected" if user.role == "author" }}>Author</option>
+								<option value="admin" {{ "selected" if user.role == "admin" }}>Admin</option>
+							</select>
+						</td>
+						<td class="right">
+							<button type="button" onclick='passwordReset("{{ user.id }}")'>Reset Password</button>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+
+		</table>
+	</div>
 {% endblock %}

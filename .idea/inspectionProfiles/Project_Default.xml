@@ -85,6 +85,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="datetime.datetime.desc" />
+          <option value="str.is_not" />
         </list>
       </option>
     </inspection_tool>
