@@ -1,0 +1,115 @@
+@import "partials/layout";
+@import "partials/m_layout";
+@import "partials/variables";
+@import "partials/form_element";
+
+a {
+	//text-decoration: none;
+	@include theme(color, text);
+
+	&.button {
+		@include theme(border-color, accent1);
+		white-space: nowrap;
+		text-align: center;
+	}
+}
+
+summary {
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 120%;
+}
+
+div.manage {
+	display: flex;
+	gap: 1rem;
+
+	@include mobile {
+		flex-direction: column;
+	}
+	@include not-mobile {
+		flex-direction: row;
+
+		div.form, form {
+			flex-grow: 1;
+			max-width: 50%;
+		}
+	}
+
+	div.form, form {
+		padding-top: 1rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+
+		h3 {
+			margin: 0;
+		}
+	}
+}
+
+div.invite {
+	display: inline-block;
+	width: fit-content;
+
+	border-radius: 0.3rem;
+	@include theme(background, bg0);
+
+	div.copy_outer {
+		display: flex;
+		font-size: inherit;
+		flex-direction: row;
+		justify-content: right;
+
+		border-bottom: 0.08rem solid;
+		@include theme(border-bottom-color, text);
+
+		padding: 0.4rem 0.4rem 0.3rem;
+
+		span.icon {
+			cursor: pointer;
+
+			svg {
+				font-size: inherit;
+				width: 1rem;
+				height: 1rem;
+				fill: white;
+				@include theme(color, text);
+				padding-right: 0.2rem;
+			}
+
+			&:hover {
+			}
+		}
+	}
+
+	code {
+		font-size: 120%;
+	}
+}
+
+code {
+	//backdrop-filter: brightness(10%);
+	@include theme(background, bg0);
+	padding: 0.3rem;
+	border-radius: 0.3rem;
+
+	display: block;
+	white-space: normal;
+	width: fit-content;
+}
+
+table.users-table {
+	width: 100%;
+	border-collapse: collapse;
+
+	thead th {
+		border-bottom: 0.12rem solid;
+		@include theme(border-bottom-color, text);
+	}
+
+	td.right {
+		text-align: right;
+	}
+}
