@@ -664,10 +664,8 @@ def favicon():
 @bp.route("/accessibility")
 def accessibility():
 	if request.args.get('theme') is not None:
-		print(request.args.get('theme'))
 		session["theme"] = request.args.get('theme')
 	if request.args.get('fontsize') is not None:
-		print(request.args.get('fontsize'))
 		session["fontsize"] = request.args.get('fontsize')
 
 	session.modified = True

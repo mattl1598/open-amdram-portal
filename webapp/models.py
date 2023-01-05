@@ -69,6 +69,9 @@ class User(UserMixin, db.Model, NewIdGetter):
 	password_hash = db.Column(db.String(128))
 	password = db.Column(db.String(60))
 	role = db.Column(db.String(30))
+	e_con_name = db.Column(db.String(50))
+	e_con_phone = db.Column(db.String(13))
+
 	blogpost = db.relationship('BlogPost', backref='user', lazy=True)
 	post = db.relationship('Post', backref='user', lazy=True)
 	member = db.relationship('Member', backref='user', lazy=True)

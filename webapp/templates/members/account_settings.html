@@ -40,36 +40,6 @@
 				<span class="form_success"> - Password was changed successfully.</span>
 			{% endif %}
 		</form>
-		{# PROFILE #}
-		<form action="" method=post>
-			<h2>Update Profile</h2>
-			<div class="fancy-input">
-				<input type="text" name="firstname" value="{{ current_user.firstname }}" placeholder=" " required>
-				<label for="firstname">
-					Firstname
-					{% if request.args.get('e') == "empty_firstname" %}
-						<span class="form_error"> - Firstname cannot be empty </span>
-					{% endif %}
-				</label>
-			</div>
-			<br>
-			<div class="fancy-input">
-				<input type="text" name="lastname" value="{{ current_user.lastname }}" placeholder=" " required>
-				<label for="lastname">
-					Lastname
-					{% if request.args.get('e') == "empty_lastname" %}
-						<span class="form_error"> - Lastname cannot be empty </span>
-					{% endif %}
-				</label>
-			</div>
-			<br>
-			<div class="fancy-input">
-				<input type="submit" name="submit" value="Update Profile">
-			</div>
-			{% if request.args.get('e') == "profile_success" %}
-				<span class="form_success"> - Profile was updated successfully.</span>
-			{% endif %}
-		</form>
 		{# OTP #}
 		<form action="" method=post>
 			<h2>Setup 2 Factor Authentication</h2>
@@ -107,6 +77,66 @@
 				<div class="fancy-input">
 					<input type="submit" name="submit" value="Activate 2FA">
 				</div>
+			{% endif %}
+		</form>
+		{# PROFILE #}
+		<form action="" method=post>
+			<h2>Update Profile</h2>
+			<div class="fancy-input">
+				<input type="text" name="firstname" value="{{ current_user.firstname }}" placeholder=" " required>
+				<label for="firstname">
+					Firstname
+					{% if request.args.get('e') == "empty_firstname" %}
+						<span class="form_error"> - Firstname cannot be empty </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="text" name="lastname" value="{{ current_user.lastname }}" placeholder=" " required>
+				<label for="lastname">
+					Lastname
+					{% if request.args.get('e') == "empty_lastname" %}
+						<span class="form_error"> - Lastname cannot be empty </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="submit" name="submit" value="Update Profile">
+			</div>
+			{% if request.args.get('e') == "profile_success" %}
+				<span class="form_success"> - Profile was updated successfully.</span>
+			{% endif %}
+		</form>
+		{# EMERGENCY CONTACT #}
+		<form action="" method=post>
+			<h2>Emergency Contact</h2>
+			<div class="fancy-input">
+				<input type="text" name="contact_name" value="{{ current_user.e_con_name or "" }}" placeholder=" " required>
+				<label for="firstname">
+					Name
+					{% if request.args.get('e') == "empty_name" %}
+						<span class="form_error"> - Name cannot be empty </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="text" name="contact_phone" value="{{ current_user.e_con_phone or "" }}" placeholder=" " required>
+				<label for="contact_phone">
+					Phone Number
+					{% if request.args.get('e') == "empty_phone" %}
+						<span class="form_error"> - Phone Number cannot be empty </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="submit" name="submit" value="Save Contact Info">
+			</div>
+			{% if request.args.get('e') == "contact_success" %}
+				<span class="form_success"> - Profile was updated successfully.</span>
 			{% endif %}
 		</form>
 	</div>

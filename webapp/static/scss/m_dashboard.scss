@@ -14,6 +14,10 @@ a {
 	}
 }
 
+div.content:not(:has(> div > :not(:only-child)))::after {
+	content: "Theres currently no recent content to show you here. In the meantime, please feel free to stare at this empty page and use your imagination to fill in the space. Or, you know, you could just check back later when we actually have something here. Your call."
+}
+
 summary {
 	cursor: pointer;
 	font-weight: bold;
@@ -110,6 +114,11 @@ div.posts {
 	display: flex;
 	flex-direction: column;
 	gap: 1.7ex;
+
+	&:has(a.post:only-child) {
+		display: none;
+		//background: red;
+	}
 }
 
 .post {

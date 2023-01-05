@@ -20,7 +20,7 @@
 				Email: {{ user.email }}<br>
 				Password: {{ user.id }}<br><br>
 
-				Just click on this link to start the process and log in: {{ request.host_url[:-1] }}{{ url_for("routes.members") }}<br>
+				Just click on this link to start the process and log in: {{ request.host_url[:-1].replace("http://","https://") }}{{ url_for("routes.members") }}<br>
 
 				After you click the link, you'll be prompted to enter your email and password to log in. <br>Don't forget to change your password once you're logged in - it's temporary and you'll need to set a new one before you can access any other parts of the website.<br><br>
 

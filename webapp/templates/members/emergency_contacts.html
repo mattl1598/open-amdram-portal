@@ -1,0 +1,20 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h2>Emergency Contacts</h2>
+
+	<span class="quick-search">
+		<div class="fancy-input">
+			<input type="text" name="quick-search" id="quick-search" placeholder=" " oninput="quickSearch(this, 'div#contacts_list div.contacts_item')">
+			<label for="quick-search">Quick Search</label>
+		</div>
+	</span>
+	<div id="contacts_list">
+		{% for user in users %}
+			<div class="contacts_item" data-searchable="{{ user.firstname }} {{ user.lastname }}">
+				<h3>{{ user.firstname }} {{ user.lastname }}</h3>
+				<div><strong>Name: </strong>{{ user.e_con_name }}</div>
+				<div><strong>Number: </strong>{{ user.e_con_phone }}</div>
+			</div>
+		{% endfor %}
+	</div>
+{% endblock %}

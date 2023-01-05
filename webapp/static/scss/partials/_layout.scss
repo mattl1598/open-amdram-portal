@@ -5,6 +5,10 @@
 	$m: &;
 }
 
+.hide {
+	display: none !important;
+}
+
 body {
 	&.font_single {
 		font-size: 100%;
@@ -56,6 +60,9 @@ html,body
 	}
 }
 
+summary {
+	cursor: pointer;
+}
 
 button.quick-button {
 	padding: 1ch;

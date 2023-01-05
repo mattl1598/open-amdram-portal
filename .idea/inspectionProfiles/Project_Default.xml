@@ -86,6 +86,8 @@
         <list>
           <option value="datetime.datetime.desc" />
           <option value="str.is_not" />
+          <option value="str.ilike" />
+          <option value="str.in_" />
         </list>
       </option>
     </inspection_tool>

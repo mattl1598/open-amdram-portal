@@ -1,8 +1,40 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
 	<!--suppress ALL -->
-	<h1>Dashboard</h1>
+	<h1 class="dashboard_title">Dashboard</h1>
 
+	<div class="posts">
+		<a class="post heading" href="">
+			<span class="date"></span>
+			<span class="icon">
+				<svg class="icon" viewbox="0 0 50 50">
+					<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
+					<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+				</svg>
+			</span>
+			<div>
+				<span class="title"><h2>Actions</h2></span>
+			</div>
+		</a>
+		{% if not (current_user.e_con_name and current_user.e_con_phone) %}
+			<a class="post showpage" href="{{ url_for("members_routes.account_settings") }}">
+				<span class="date">{{ datetime.utcnow().strftime("%d %b") }}<br>{{ datetime.utcnow().strftime("%Y") }}</span>
+				<span class="icon">
+					<svg class="icon" viewbox="0 0 50 50">
+	{#					{{ post.icon | safe }}#}
+						<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+					</svg>
+				</span>
+				<div class="text">
+	{#				{% if post.show_title %}#}
+	{#					<span class="show"><h4>{{ post.show_title }}</h4></span>#}
+	{#				{% endif %}#}
+					<span class="title"><h3>Add Emergency Contact</h3></span>
+					<span class="text"><span>Click to Update your Emergency Contact Details</span></span>
+				</div>
+			</a>
+		{% endif %}
+	</div>
 
 	<div class="posts">
 		<a class="post heading" href="">

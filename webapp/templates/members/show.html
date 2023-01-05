@@ -9,7 +9,7 @@
 			<form action="/members/upload_file/{{ show.id }}" method=post enctype=multipart/form-data>
 				<h3>Add Files</h3>
 				<div class="fancy-input no-margin">
-					<input type=file name=file>
+					<input type=file name=file required>
 				</div>
 				<div class="fancy-input no-margin">
 					<input type=submit value=Upload>
@@ -20,6 +20,16 @@
 				<div class="fancy-input no-margin">
 					<a class="button" href="/members/new_post/{{ show.id }}">
 						Create New Post
+					</a>
+				</div>
+			</div>
+			<div class="form">
+				<h3>Emergency Contacts</h3>
+				<p>Warning: This is for genuine emergency use only. <br>All access will be logged and reported to the devs and committee.</p>
+				<div class="fancy-input no-margin">
+					<a class="button" href="/members/emergency_contacts/{{ show.id }}"
+					   onclick="return confirm('Are you sure? Continuing will report this access to the devs and committee.')">
+						Access Emergency Contacts
 					</a>
 				</div>
 			</div>

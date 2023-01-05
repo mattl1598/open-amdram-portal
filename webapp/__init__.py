@@ -12,6 +12,7 @@ import os
 import subprocess
 import platform
 import string
+from datetime import datetime
 
 # noinspection PyPackageRequirements
 from sqlalchemy import and_
@@ -71,7 +72,8 @@ def create_app():
 			str=str,
 			len=len,
 			type=type,
-			list=list
+			list=list,
+			datetime=datetime
 		)
 
 		@app.context_processor

@@ -2,6 +2,7 @@ import collections
 import csv
 import io
 import re
+from pprint import pprint
 
 import distinctipy as distinctipy
 import dotmap
@@ -9,6 +10,7 @@ import json
 
 import mammoth as mammoth
 import pyotp
+import requests
 import tld as tld
 from PIL import Image
 from datetime import timedelta  # , datetime
@@ -289,6 +291,53 @@ def m_show(show_id):
 	)
 
 
+@bp.route("/members/emergency_contacts/<show_id>")
+@login_required
+def emergency_contacts(show_id):
+	"""member,author,admin"""
+	show = Show.query.get_or_404(show_id)
+	permissions = MSL.query.join(Member, MSL.member_id == Member.id)\
+		.filter(
+			Member.associated_user == current_user.id,
+			MSL.role_name.in_(["Director", "Producer"]),
+			MSL.show_id == show_id
+		).count()
+	if current_user.role != "admin" and not permissions:
+		abort(403)
+
+	if webhook := KeyValue.query.get("alerts_webhook"):
+		url = webhook.value
+		data = {
+			"content": "",
+			"embeds": [
+				{
+					"type": "rich",
+					"title": "Emergency Contact",
+					"description":
+					f"User: {current_user.firstname} {current_user.lastname} ({current_user.email}) \n"
+					f"accessed Emergency Contact details for {show.title} ({show.date.year})",
+					"color": 0xcd4a46,
+					"url": "https://silchesterplayers.org",
+				}
+			],
+			"type": 1
+		}
+		headers = {'Content-type': 'application/json'}  # NEEDS TO BE JSON NOT JUST A RAW DICTIONARY WHYYYYYY
+		requests.post(url=url, data=json.dumps(data), headers=headers)
+
+	users = User.query\
+		.filter(
+			User.email.is_not(None),
+			not_(User.email.ilike("%@example.com%"))
+		).all()
+	return render_template(
+		"members/emergency_contacts.html",
+		css="emergency_contacts.css",
+		js="quicksearch.js",
+		users=users
+	)
+
+
 @bp.route("/members/new_post/<show_id>", methods=["GET", "POST"])
 @login_required
 def new_post(show_id):
@@ -505,13 +554,14 @@ def file_direct(file_id, filename):
 def file_upload(show_id):
 	"""member,author,admin"""
 	f = request.files.get('file')
-	new_file = Files(
-		show_id=show_id,
-		name=f.filename,
-		content=f.read()
-	)
-	db.session.add(new_file)
-	db.session.commit()
+	if f.filename:
+		new_file = Files(
+			show_id=show_id,
+			name=f.filename,
+			content=f.read()
+		)
+		db.session.add(new_file)
+		db.session.commit()
 	return redirect(f"/members/show/{show_id}")
 
 
@@ -679,7 +729,7 @@ def edit_show(show_id):
 				for i in range(1, int(dic.get(msl_type + "_count")) + 1):
 					role = dic.get(msl_type + "_roles" + str(i))
 					if role != "":
-						print(msl_type + "_members" + str(i))
+						# print(msl_type + "_members" + str(i))
 						for j in dic.get(msl_type + "_members" + str(i)):
 							form_roles.append((role, j, i,))
 
@@ -726,7 +776,7 @@ def edit_show(show_id):
 				for i in range(1, count + 1):
 					role = dic.get(msl_type + "_roles" + str(i))
 					if role != "":
-						print(msl_type + "_members" + str(i))
+						# print(msl_type + "_members" + str(i))
 						if (members := dic.get(msl_type + "_members" + str(i))) is not None:
 							for j in members:
 								form_roles.append((role, j, i,))
@@ -1202,6 +1252,17 @@ def account_settings():
 					error = "bad_otp_code"
 				else:
 					error = "empty_otp_code"
+		elif request.form.get("submit") == "Save Contact Info":
+			error = "contact_success"
+			if not request.form.get("contact_name"):
+				error = "empty_name"
+			elif not request.form.get("contact_phone"):
+				error = "empty_phone"
+			else:
+				current_user.e_con_name = request.form.get("contact_name") or ""
+				current_user.e_con_phone = request.form.get("contact_phone") or ""
+				db.session.commit()
+				error = "contact_success"
 
 		return redirect(url_for("members_routes.account_settings", e=error))
 
