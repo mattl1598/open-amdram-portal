@@ -99,7 +99,7 @@ class MemberPost:
 
 @bp.before_request
 def force_password_change():
-	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
+	if request.endpoint not in ["members_routes.account_settings", "logout", "js", "css"]:
 		if current_user.is_authenticated and session.get('set_password'):
 			return redirect(url_for("members_routes.account_settings"))
 
