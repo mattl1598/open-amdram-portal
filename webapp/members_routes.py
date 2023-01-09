@@ -940,7 +940,11 @@ def manage_users():
 			user.role = request.json.get("newRole")
 			db.session.commit()
 			return jsonify(200)
-
+		elif request.args.get("form") == "pswd":
+			user = User.query.filter_by(id=request.json.get("userId")).first_or_404()
+			user.password = user.id
+			db.session.commit()
+			return jsonify(200)
 
 @bp.route("/members/analytics")
 @login_required
