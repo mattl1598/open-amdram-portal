@@ -101,7 +101,7 @@ class MemberPost:
 def force_password_change():
 	if request.endpoint not in ["account_settings", "logout", "js", "css"]:
 		if current_user.is_authenticated and session.get('set_password'):
-			return redirect(url_for("member_routes.account_settings", pwd="set"))
+			return redirect(url_for("member_routes.account_settings"))
 
 
 # noinspection PyUnresolvedReferences
