@@ -147,7 +147,7 @@ def manage_media(**kwargs):
 				"path": f"/media/{new_item.id}/{new_item.filename}"
 			}
 		else:
-			return redirect(request.endpoint)
+			return redirect(request.referrer)
 	else:
 		if "delete" in request.args.keys():
 			media_db = StaticMedia.query.filter_by(id=request.args.get("delete")).first()
@@ -183,7 +183,7 @@ def manage_media(**kwargs):
 
 			db.session.commit()
 
-			return redirect(request.endpoint)
+			return redirect(request.referrer)
 		else:
 			media_db = StaticMedia.query.all()
 
