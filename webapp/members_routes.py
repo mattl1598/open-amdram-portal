@@ -585,22 +585,28 @@ def file_direct(file_id, filename):
 
 	# Test fudging
 	class FakeFile:
-		def __init__(self, show_id, found):
+		def __init__(self, show_id, found, id):
 			self.show_id = show_id
+			self.id = id
 			self.found = found
 
 	if file is None:
-		file = FakeFile("", False)
+		file = FakeFile("", False, "")
 	else:
 		file.found = True
 
-	auditions_files = Post.query \
+	auditions = Post.query \
 		.filter_by(type="auditions") \
 		.join(Show, Post.show_id == Show.id) \
 		.filter(Show.date > datetime.now()) \
 		.order_by(Show.date.asc()) \
 		.order_by(Post.date.desc()) \
-		.first().linked_files.get("files")
+		.first()
+
+	if auditions is not None:
+		auditions_files = auditions.linked_files.get("files")
+	else:
+		auditions_files = []
 
 	if current_user.is_authenticated or file.show_id == "members_public" or file.id in auditions_files:
 		if file.found:

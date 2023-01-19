@@ -142,18 +142,21 @@ def auditions():
 		) \
 		.first()
 
-	files = [
-		MemberPost(
-			post_id=i.id,
-			title=i.name,
-			date=i.date,
-			post_type="file"
-		) for i in Files.query\
-			.filter(
-				Files.id.in_(post.linked_files["files"])
-			)\
-			.all()
-	]
+	if post is not None:
+		files = [
+			MemberPost(
+				post_id=i.id,
+				title=i.name,
+				date=i.date,
+				post_type="file"
+			) for i in Files.query\
+				.filter(
+					Files.id.in_(post.linked_files["files"])
+				)\
+				.all()
+		]
+	else:
+		files = []
 
 	return render_template(
 		"auditions.html",
