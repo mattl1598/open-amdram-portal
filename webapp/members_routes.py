@@ -940,6 +940,22 @@ def add_show_member():
 					db.session.add(new_link)
 					valid += 1
 			flash(f"{len(new_roles)} roles submitted, {valid} roles added.")
+		elif "api" in request.args.keys():
+			json_data = request.get_json()
+			# Extract the first and last name from the JSON data
+			first_name = json_data["firstName"]
+			last_name = json_data["lastName"]
+			if (first_name, last_name) not in existing:
+				new_member = Member(
+					id=Member.get_new_id(),
+					firstname=first_name,
+					lastname=last_name
+				)
+				db.session.add(new_member)
+				db.session.commit()
+				return jsonify({"id": new_member.id})
+			else:
+				abort(400)
 		else:
 			used_ids = [value[0] for value in Member.query.with_entities(Member.id).all()]
 			new_id = corha.rand_string(request.form["firstname"], 16, used_ids)

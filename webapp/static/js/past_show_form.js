@@ -71,12 +71,30 @@ function addCast(prefill_role="", members=[]) {
 		hideSelected: true,
 		items:members,
 		hidePlaceholder:true,
-		create: true,
-		onItemAdd: function(){
-			// noinspection JSUnresolvedFunction
-			this.setTextboxValue('')
-			// noinspection JSUnresolvedFunction
-			this.refreshOptions()
+		create: function(input, callback) {
+			let id=""
+		    // Split the name into an array of words
+		    let nameArray = input.split(" ")
+		    // Get the last word as the last name
+		    let lastName = nameArray.pop()
+		    // Join the remaining words as the first name
+		    let firstName = nameArray.join(" ")
+
+		    // Send the first and last name to the API
+		    fetch('/members/add-show-member?api=', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify({ firstName: firstName, lastName: lastName })
+		    })
+		    .then(response => response.json())
+		    .then(data => {
+		        // Return the ID value that the API sends back
+			    console.log(data.id)
+			    callback({value:id,text:input})
+		    })
+		    .catch(error => {
+		        console.error(error)
+		    })
 		}
 	})
 }
@@ -103,12 +121,30 @@ function addCrew(prefill_role="", members=[]) {
 		hideSelected: true,
 		items:members,
 		hidePlaceholder:true,
-		create: true,
-		onItemAdd: function(){
-			// noinspection JSUnresolvedFunction
-			this.setTextboxValue('');
-			// noinspection JSUnresolvedFunction
-			this.refreshOptions();
+		create: function(input, callback) {
+			let id=""
+		    // Split the name into an array of words
+		    let nameArray = input.split(" ")
+		    // Get the last word as the last name
+		    let lastName = nameArray.pop()
+		    // Join the remaining words as the first name
+		    let firstName = nameArray.join(" ")
+
+		    // Send the first and last name to the API
+		    fetch('/members/add-show-member?api=', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json' },
+		        body: JSON.stringify({ firstName: firstName, lastName: lastName })
+		    })
+		    .then(response => response.json())
+		    .then(data => {
+		        // Return the ID value that the API sends back
+			    console.log(data.id)
+			    callback({value:id,text:input})
+		    })
+		    .catch(error => {
+		        console.error(error)
+		    })
 		}
 	})
 	// noinspection JSUnresolvedFunction
