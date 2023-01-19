@@ -1,3 +1,4 @@
+import json
 import re
 from os import walk
 from urllib.parse import urlparse
@@ -73,7 +74,8 @@ def create_app():
 			len=len,
 			type=type,
 			list=list,
-			datetime=datetime
+			datetime=datetime,
+			json=json
 		)
 
 		@app.context_processor

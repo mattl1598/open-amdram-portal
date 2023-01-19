@@ -16,5 +16,6 @@ pyotp
 pytest
 python-dateutil
 requests
+smaz-py3
 tld
 urllib3

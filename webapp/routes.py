@@ -137,14 +137,30 @@ def auditions():
 			Post.title,
 			Post.content,
 			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
+			Show.subtitle.label("show_subtitle"),
+			Post.linked_files
 		) \
 		.first()
+
+	files = [
+		MemberPost(
+			post_id=i.id,
+			title=i.name,
+			date=i.date,
+			post_type="file"
+		) for i in Files.query\
+			.filter(
+				Files.id.in_(post.linked_files["files"])
+			)\
+			.all()
+	]
 
 	return render_template(
 		"auditions.html",
 		post=post,
-		css="frontpage.css"
+		files=files,
+		no_portal=True,
+		css=["m_dashboard.css", "members.css"]
 	)
 
 

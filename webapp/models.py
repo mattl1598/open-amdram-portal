@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from corha import corha
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.mutable import MutableDict
 # noinspection PyPackageRequirements
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin
@@ -53,6 +54,7 @@ class Post(db.Model, NewIdGetter):
 	content = db.Column(db.Text)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	views = db.Column(db.Integer, default=0)
+	linked_files = db.Column(MutableDict.as_mutable(db.JSON))
 
 	@staticmethod
 	def get_type():

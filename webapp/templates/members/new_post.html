@@ -1,23 +1,23 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
-	<form action="" method=post>
+	<form action="" method=post enctype=multipart/form-data>
 		<br>
 		<div class="fancy-input">
-			<input type="text" name="title">
+			<input type="text" name="title" value="{{ draft.get('title') or "" }}">
 			<label for="title">Title</label>
 		</div>
 		<br>
 		<div class="fancy-input">
 			<select name="type">
-				<option value="public">Public</option>
-				<option value="auditions">Auditions</option>
-				<option value="private" selected>Private</option>
+				<option value="public" {{ "selected" if draft.get("post_type") == "public" }}>Public</option>
+				<option value="auditions" {{ "selected" if draft.get("post_type") == "auditions" }}>Auditions</option>
+				<option value="private" {{ "selected" if ((draft.get("post_type") == "private") or (draft.get("post_type") == none)) }}>Private</option>
 			</select>
 			<label for="type">Post Type</label>
 		</div>
 		<br>
 		<label for="content"></label>
-		<textarea id="wysiwyg" name="content"></textarea>
+		<textarea id="wysiwyg" name="content">{{ draft.get('content') or "" }}</textarea>
 		<!--suppress JSUnresolvedFunction, JSUnusedLocalSymbols -->
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
@@ -25,6 +25,37 @@
 			}, false)
 		</script>
 
-		<input type="submit">
+		<h3>Link Files:</h3>
+		<span>
+			<label for="select_file">Select a file...</label>
+			<select name="select_file">
+				<option value="">Select...</option>
+				{% for file in available_files %}
+					<option value="{{ file.id }}">{{ file.title }}</option>
+				{% endfor %}
+			</select>
+		</span><br>
+		<span>
+			<label for=new_file>...Or Upload a New One:</label>
+			<input type=file name=new_file>
+		</span><br>
+
+		<input type="submit" name="submit" value="Add File">
+		<div class="files">
+			<input type="hidden" name="selected_files" value="{{ json.dumps(chosen_files|map(attribute='id')|list) }}">
+			{% for file in chosen_files %}
+				<div class="file">
+					<a class="icon" href="{{ file.link }}" download>
+						<svg class="icon" viewbox="0 0 50 50">
+							{{ file.icon | safe }}
+						</svg>
+					</a>
+					<a class="filetext" href="{{ file.link }}">
+						{{ file.title }}
+					</a>
+				</div>
+			{% endfor %}
+		</div>
+		<input type="submit" name="submit" value="Submit">
 	</form>
 {% endblock %}

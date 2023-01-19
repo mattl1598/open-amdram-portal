@@ -28,7 +28,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="41">
+          <list size="42">
             <item index="0" class="java.lang.String" itemvalue="Flask-APScheduler" />
             <item index="1" class="java.lang.String" itemvalue="uWSGI" />
             <item index="2" class="java.lang.String" itemvalue="gevent-websocket" />
@@ -70,6 +70,7 @@
             <item index="38" class="java.lang.String" itemvalue="Flask-SocketIO" />
             <item index="39" class="java.lang.String" itemvalue="idna" />
             <item index="40" class="java.lang.String" itemvalue="Pillow" />
+            <item index="41" class="java.lang.String" itemvalue="smaz-py3" />
           </list>
         </value>
       </option>

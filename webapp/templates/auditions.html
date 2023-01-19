@@ -8,8 +8,41 @@
 		</div>
 		<hr>
 		<h2>{{ post.title }}</h2>
-		{{ post.date }}<br>
+{#		{{ post.date }}<br>#}
 		<div class="post_content">{{ md(post.content) | safe }}</div>
+
+		{% if len(files) %}
+			<div class="posts">
+				<a class="post heading" href="">
+					<span class="icon">
+						<svg class="icon" viewbox="0 0 50 50">
+							<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
+							<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+						</svg>
+					</span>
+					<div>
+						<span class="title"><h3>Audition Files</h3></span>
+					</div>
+				</a>
+				{% for post in files %}
+					<a class="post" href="{{ post.link }}">
+						<span class="icon">
+							<svg class="icon" viewbox="0 0 50 50">
+								{{ post.icon | safe }}
+								<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+							</svg>
+						</span>
+						<div class="text">
+							{% if post.show_title %}
+								<span class="show"><h4>{{ post.show_title }}</h4></span>
+							{% endif %}
+							<span class="title"><h3>{{ post.title }}</h3></span>
+							<span class="text"><span>{{ post.text }}</span></span>
+						</div>
+					</a>
+				{% endfor %}
+			</div>
+		{% endif %}
 	{% else %}
 		<h1>Auditions</h1>
 		<h2>There are no upcoming auditions event scheduled.</h2>

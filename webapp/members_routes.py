@@ -1,7 +1,9 @@
+import base64
 import collections
 import csv
 import io
 import re
+import smaz
 from pprint import pprint
 
 import distinctipy as distinctipy
@@ -99,7 +101,7 @@ class MemberPost:
 
 @bp.before_request
 def force_password_change():
-	if request.endpoint not in ["members_routes.account_settings", "logout", "js", "css"]:
+	if request.endpoint not in ["members_routes.account_settings", "routes.logout", "routes.js", "routes.css"]:
 		if current_user.is_authenticated and session.get('set_password'):
 			return redirect(url_for("members_routes.account_settings"))
 
@@ -154,6 +156,7 @@ def dashboard():
 	return render_template(
 		"members/dashboard.html",
 		posts=dash_posts,
+		# posts=[],
 		css="m_dashboard.css"
 	)
 
@@ -343,30 +346,83 @@ def emergency_contacts(show_id):
 def new_post(show_id):
 	"""member,author,admin"""
 	Show.query.filter_by(id=show_id).first_or_404()
+	draft = json.loads(
+		smaz.decompress(
+			base64.urlsafe_b64decode(
+				(request.args.get("d") or '_wF7fQ<<').replace("<", "=").encode("ascii")
+			)
+		)
+	)
 	if request.method == "GET":
+		available_files = [
+			MemberPost(
+				post_id=i.id,
+				title=i.name,
+				date=i.date,
+				post_type="file"
+			) for i in Files.query \
+				.filter_by(show_id=show_id) \
+				.filter(not_(Files.id.in_(draft.get("files") or []))) \
+				.all()
+		]
+
+		chosen_files = [
+			MemberPost(
+				post_id=i.id,
+				title=i.name,
+				date=i.date,
+				post_type="file"
+			) for i in Files.query \
+				.filter_by(show_id=show_id) \
+				.filter(
+					Files.id.in_(draft.get("files") or [])
+				).all()
+		]
+
 		return render_template(
 			"members/new_post.html",
+			draft=draft,
+			available_files=available_files,
+			chosen_files=chosen_files,
 			modules={
 				"wysiwyg": True
 			},
 			css="m_dashboard.css"
 		)
 	else:
-		used_ids = [value[0] for value in Post.query.with_entities(Post.id).all()]
-		db_new_post = Post(
-			id=corha.rand_string(request.form.get("title"), 16, used_ids),
-			type=request.form.get("type"),
-			author=current_user.id,
-			show_id=show_id,
-			title=request.form.get("title"),
-			content=request.form.get("content"),
-			date=datetime.now()
-		)
+		if request.form.get("submit") == "Submit":
+			db_new_post = Post(
+				id=Post.get_new_id(),
+				type=request.form.get("type"),
+				author=current_user.id,
+				show_id=show_id,
+				title=request.form.get("title"),
+				content=request.form.get("content"),
+				date=datetime.now(),
+				linked_files={"files": json.loads(request.form.get("selected_files"))}
+			)
 
-		db.session.add(db_new_post)
-		db.session.commit()
+			db.session.add(db_new_post)
+			db.session.commit()
 
-		return redirect(f"/members/show/{show_id}")
+			return redirect(f"/members/show/{show_id}")
+		elif request.form.get("submit") == "Add File":
+			if new_file := request.files.get("new_file"):
+				file_id = file_upload(show_id, file=new_file)
+			elif request.form.get("select_file"):
+				file_id = request.form.get("select_file")
+			else:
+				return redirect(url_for("members_routes.new_post", show_id=show_id, d=draft))
+			updated_draft = {
+				"title": request.form.get("title"),
+				"type": request.form.get("type"),
+				"content": request.form.get("content"),
+				"files": json.loads(request.form.get("selected_files")) + [file_id]
+			}
+			url_draft = base64.urlsafe_b64encode(smaz.compress(json.dumps(updated_draft))).decode("ascii").replace("=", "<")
+
+			return redirect(url_for("members_routes.new_post", show_id=show_id, d=url_draft))
+
 
 
 @bp.route("/members/manage-blog")
@@ -538,7 +594,15 @@ def file_direct(file_id, filename):
 	else:
 		file.found = True
 
-	if current_user.is_authenticated or file.show_id == "members_public":
+	auditions_files = Post.query \
+		.filter_by(type="auditions") \
+		.join(Show, Post.show_id == Show.id) \
+		.filter(Show.date > datetime.now()) \
+		.order_by(Show.date.asc()) \
+		.order_by(Post.date.desc()) \
+		.first().linked_files.get("files")
+
+	if current_user.is_authenticated or file.show_id == "members_public" or file.id in auditions_files:
 		if file.found:
 			return send_file(io.BytesIO(file.content), download_name=file.name)
 		else:
@@ -551,18 +615,26 @@ def file_direct(file_id, filename):
 
 @bp.route("/members/upload_file/<show_id>", methods=["POST"])
 @login_required
-def file_upload(show_id):
+def file_upload(show_id, **kwargs):
 	"""member,author,admin"""
-	f = request.files.get('file')
+	if kwargs.get("file"):
+		f = kwargs.get("file")
+	else:
+		f = request.files.get('file')
 	if f.filename:
 		new_file = Files(
+			id=Files.get_new_id(),
 			show_id=show_id,
 			name=f.filename,
 			content=f.read()
 		)
 		db.session.add(new_file)
 		db.session.commit()
-	return redirect(f"/members/show/{show_id}")
+
+		if kwargs.get("file"):
+			return new_file.id
+		else:
+			return redirect(f"/members/show/{show_id}")
 
 
 @bp.route("/members/file_delete/<file_id>/<filename>", methods=["GET"])
@@ -1123,7 +1195,38 @@ def analytics():
 		for i in requests_date_log
 	}
 	# noinspection PyTypeChecker
-	test2 = collections.OrderedDict(sorted({x: test1.setdefault(x, {"x": x, "y": 0}) for x in labels}.items()))
+	requests_datelog = collections.OrderedDict(sorted({x: test1.setdefault(x, {"x": x, "y": 0}) for x in labels}.items()))
+
+	# noinspection PyUnresolvedReferences
+	# noinspection Duplicates
+	tickets_date_log = AnalyticsLog.query\
+		.filter(
+			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('%.php%')),
+			not_(AnalyticsLog.request_destination.ilike('%.php%')),
+			not_(AnalyticsLog.user_agent.ilike('%http%')),
+			not_(AnalyticsLog.user_agent.ilike('%RepoLookoutBot%')),
+			not_(AnalyticsLog.user_agent.ilike('%Expanse, a Palo Alto Networks company%')),
+			not_(AnalyticsLog.code == 404),
+			AnalyticsLog.server.contains('silchesterplayers.org'),
+			AnalyticsLog.request_destination.ilike('%/tickets%')
+		).with_entities(
+			func.count(query),
+			*outs
+		).order_by(func.date(AnalyticsLog.date), query)\
+		.group_by(func.date(AnalyticsLog.date), query)\
+		.all()
+
+	test2 = {
+		"-".join([str(int(j)).zfill(2) for j in i[1:]]):
+		{
+			"x": "-".join([str(int(j)).zfill(2) for j in i[1:]]),
+			"y": i[0]
+		}
+		for i in tickets_date_log
+	}
+	# noinspection PyTypeChecker
+	tickets_datelog = collections.OrderedDict(sorted({x: test2.setdefault(x, {"x": x, "y": 0}) for x in labels}.items()))
 
 	# noinspection PyUnresolvedReferences
 	# noinspection Duplicates
@@ -1158,7 +1261,8 @@ def analytics():
 		],
 		os=os,
 		device_type=device_type,
-		requests_datelog=list(test2.values()),
+		requests_datelog=list(requests_datelog.values()),
+		tickets_datelog=list(tickets_datelog.values()),
 		session_lengths=session_lengths,
 		css="m_analytics.css"
 	)
