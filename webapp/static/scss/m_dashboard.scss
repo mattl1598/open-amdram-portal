@@ -25,6 +25,58 @@ summary {
 	font-size: 120%;
 }
 
+div.media {
+	display: grid !important;
+	grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+	grid-gap: 10px;
+
+	padding: 0 !important;
+
+	div {
+		border-radius: 0.5ch;
+		padding: 0.5ch 0.5ch !important;
+		text-align: center;
+		text-decoration: none;
+		@include theme(background-color, accent2);
+		@include theme(color, text);
+		border: 3px solid;
+		@include theme-adjust(border-color, accent2, darken, 20%);
+
+		display: grid;
+		overflow: hidden;
+	}
+
+	div.new_photo {
+		grid-column: span 2;
+		display: flex !important;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem !important;
+
+		h3 {
+			margin: 0;
+		}
+	}
+
+	div.draggable {
+		user-select: none;
+
+		&:hover {
+			@include theme(background-color, accent1);
+			cursor: grab;
+		}
+
+		img {
+			grid-area: 1/-1;
+			z-index: 10;
+			object-fit: cover;
+			aspect-ratio: 1;
+		}
+	}
+}
+
 div.manage {
 	display: flex;
 	gap: 1rem;

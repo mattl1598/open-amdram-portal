@@ -163,7 +163,7 @@ def auditions():
 		post=post,
 		files=files,
 		no_portal=True,
-		css=["m_dashboard.css", "members.css"]
+		css=["m_dashboard.css", "frontpage.css"]
 	)
 
 

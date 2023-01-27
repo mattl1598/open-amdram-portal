@@ -1,6 +1,29 @@
 @import "variables";
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+svg.loading {
+	circle {
+        @include theme(fill, accent1);
+		@for $i from 1 through 8 {
+		    &:nth-child(#{$i}) {
+			    filter: Opacity(#{20%+($i*10%)})
+		    }
+		}
+	}
+
+	height: 4rem;
+	width: 4rem;
+
+	animation: spin 4s infinite linear;
+	transform-origin: center center;
+	transform-box: fill-box;
+
+	@keyframes spin{
+		from {transform: rotate(0deg);}
+		to {transform: rotate(360deg);}
+	}
+}
+
 .mobile {
 	$m: &;
 }

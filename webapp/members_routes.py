@@ -27,7 +27,7 @@ from sqlalchemy import and_, extract, func, not_, or_, sql
 # noinspection PyPep8Naming
 from webapp.models import MemberShowLink as MSL
 from webapp.models import *
-from webapp.photos_routes import manage_media
+from webapp.photos_routes import manage_media, update_access_token
 
 bp = Blueprint("members_routes", __name__)
 
@@ -354,6 +354,34 @@ def new_post(show_id):
 		)
 	)
 	if request.method == "GET":
+		media_db = StaticMedia.query.order_by(StaticMedia.date.desc()).all()
+
+		if media_db:
+			media_ids = {
+				f"{x.item_id}": f"{x.id}"
+				for x in media_db
+			}
+
+			update_access_token()
+
+			url = f"https://photoslibrary.googleapis.com/v1/mediaItems:batchGet?mediaItemIds="
+			url += f"{'&mediaItemIds='.join(media_ids.keys())}"
+			url += f"&access_token={session.get('access_token')}"
+
+			x = requests.get(url)
+
+			thumbs = [
+				(
+					media_ids[i["mediaItem"]["id"]],
+					f'{i["mediaItem"]["baseUrl"]}=d',
+					i["mediaItem"]["filename"],
+				)
+				for i in x.json()["mediaItemResults"]
+			]
+
+		else:
+			thumbs = []
+
 		available_files = [
 			MemberPost(
 				post_id=i.id,
@@ -382,8 +410,10 @@ def new_post(show_id):
 		return render_template(
 			"members/new_post.html",
 			draft=draft,
+			media=thumbs,
 			available_files=available_files,
 			chosen_files=chosen_files,
+			js="new_post.js",
 			modules={
 				"wysiwyg": True
 			},
@@ -1403,3 +1433,8 @@ def logout():
 	"""member,author,admin"""
 	logout_user()
 	return redirect(url_for("routes.frontpage"))
+
+@bp.route("/members/test", methods=["GET"])
+def test():
+	test1 = User.query.get("r5zwBgKQjl7Kesy")
+	return jsonify(test1.verify_password("r5zwBgKQjl7Kesy"))

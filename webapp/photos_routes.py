@@ -8,7 +8,7 @@ from pprint import pprint
 
 import requests
 from corha import corha
-from flask import abort, Blueprint, redirect, render_template, url_for, request, session
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify
 from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
 from flask import current_app as app
 bp = Blueprint("photos_routes", __name__)
@@ -143,10 +143,19 @@ def manage_media(**kwargs):
 		db.session.commit()
 
 		if kwargs.get("mammoth") == "true":
+			print("mammoth")
 			return {
-				"path": f"/media/{new_item.id}/{new_item.filename}"
+				"path": f"/media/{new_item.id}/{new_item.filename}",
+				"filename": f"{new_item.filename}"
 			}
+		elif request.args.get("api") == "true":
+			return jsonify({
+				"success": True,
+				"url": f"/media/{new_item.id}/{new_item.filename}",
+				"filename": f"{new_item.filename}"
+			})
 		else:
+			print("direct")
 			return redirect(request.referrer)
 	else:
 		if "delete" in request.args.keys():

@@ -58,4 +58,33 @@
 		</div>
 		<input type="submit" name="submit" value="Submit">
 	</form>
+</div>
+<div class="sidebar m">
+	<div>
+		<h3>Photos (drag to insert):</h3>
+		<div class="media">
+			<div class="new_photo">
+				<h3>Upload New Photo</h3>
+				<span>
+					<input type="file" id="new_photo">
+					<input type="button" onclick="upload_photo()" value="Upload">
+				</span>
+				<svg class="loading hide" id="new_photo_loader" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+					<circle id="Ellipse1" cx="5" cy="1" r="1"></circle>
+					<circle id="Ellipse2" cx="7.83" cy="2.17157" r="1"></circle>
+					<circle id="Ellipse3" cx="9" cy="5" r="1"></circle>
+					<circle id="Ellipse4" cx="7.82843" cy="7.82843" r="1"></circle>
+					<circle id="Ellipse5" cx="5" cy="9" r="1"></circle>
+					<circle id="Ellipse6" cx="2.17157" cy="7.82843" r="1"></circle>
+					<circle id="Ellipse7" cx="1" cy="5" r="1"></circle>
+					<circle id="Ellipse8" cx="2.17157" cy="2.17157" r="1"></circle>
+				</svg>
+			</div>
+			{% for item in media %}
+				<div data-imgtext="![{{ item[2] }}](/media/{{ item[0] }}/{{ item[2] }})" class="draggable" draggable="true">
+					<img src="{{ item[1] }}" alt="{{ item[0] }}" title="{{ item[2] }}" draggable="false">
+				</div>
+			{% endfor %}
+		</div>
+	</div>
 {% endblock %}
