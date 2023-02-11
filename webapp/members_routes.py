@@ -1435,6 +1435,8 @@ def logout():
 	return redirect(url_for("routes.frontpage"))
 
 @bp.route("/members/test", methods=["GET"])
+@login_required
 def test():
+	"""member,author,admin"""
 	test1 = User.query.get("r5zwBgKQjl7Kesy")
 	return jsonify(test1.verify_password("r5zwBgKQjl7Kesy"))

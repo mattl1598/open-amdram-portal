@@ -3,7 +3,7 @@
 	<form action="" method=post enctype=multipart/form-data>
 		<br>
 		<div class="fancy-input">
-			<input type="text" name="title" value="{{ draft.get('title') or "" }}">
+			<input type="text" name="title" value="{{ draft.get('title') or "" }}" maxlength="80">
 			<label for="title">Title</label>
 		</div>
 		<br>

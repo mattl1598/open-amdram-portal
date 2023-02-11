@@ -50,7 +50,7 @@ class Post(db.Model, NewIdGetter):
 	type = db.Column(db.String(16))
 	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
 	author = db.Column(db.String(16), db.ForeignKey('user.id'))
-	title = db.Column(db.String(40))
+	title = db.Column(db.String(80))
 	content = db.Column(db.Text)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	views = db.Column(db.Integer, default=0)
