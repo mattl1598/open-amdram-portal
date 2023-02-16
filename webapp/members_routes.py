@@ -1073,6 +1073,7 @@ def manage_users():
 @bp.route("/members/analytics")
 @login_required
 def analytics():
+	## ?start=2022-12-08T00:00:00&end=2023-01-29
 	if request.args.get("start"):
 		start_time = datetime.strptime(request.args.get("start"), "%Y-%m-%dT%H:%M:%S")
 	else:
@@ -1116,7 +1117,7 @@ def analytics():
 
 	for result in raw_external_origins:
 		if ip_pattern.search(result[0]):
-			external_origins["other_ips"] += result[1]
+			# external_origins["other_ips"] += result[1]
 			stripped = "other_ips"
 			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
 		elif "android-app://" in result[0]:

@@ -7,6 +7,10 @@ h2.title {
 }
 
 div.login_form form {
+	&.bad_login::before {
+		content: 'Login failed: Email or password incorrect.'
+	}
+
 	display: flex;
 	flex-direction: column;
 	align-items: center;

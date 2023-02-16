@@ -2,7 +2,7 @@
 {% block content %}
 	<div class="login_form">
 		<h2 class="title">Members</h2>
-		<form action="/members" method="post">
+		<form action="/members" method="post" class="{{ error }}">
 			<div class="fancy-input">
 				<input id="email" name="email" type="text" placeholder=" " required>
 				<label for="email">Email</label>

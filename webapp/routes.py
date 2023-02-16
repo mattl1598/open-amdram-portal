@@ -89,12 +89,15 @@ def frontpage():
 			Post.date,
 			Post.title,
 			Post.content,
+			Post.type,
+			Post.linked_files,
 			Show.title.label("show_title"),
 			Show.subtitle.label("show_subtitle")
 		) \
 		.first()
 
 	if post is None:
+		files = []
 		post = Show.query \
 			.filter(Show.date > datetime.now()) \
 			.order_by(Show.date.asc()) \
@@ -103,14 +106,30 @@ def frontpage():
 				Show.subtitle.label("show_subtitle")
 			) \
 			.first()
-
+	else:
+		files = [
+			MemberPost(
+				post_id=i.id,
+				title=i.name,
+				date=i.date,
+				post_type="file"
+			) for i in Files.query\
+				.filter(
+					Files.id.in_(post.linked_files["files"])
+				)\
+				.all()
+		]
+	print(files)
 	return render_template(
 		"frontpage.html",
 		latest_show=latest_show,
 		post=post,
 		photos=photos,
 		frontpage=True,
-		css="frontpage.css",
+		title="Home",
+		files=files,
+		no_portal=True,
+		css=["m_dashboard.css", "frontpage.css"],
 		js="carousel.js"
 	)
 
@@ -575,7 +594,7 @@ def members(*args):
 					login_user(user)
 					return redirect(url_for('members_routes.dashboard'))
 			else:
-				return redirect(url_for("routes.members"))
+				return redirect(url_for("routes.members", error="bad_login"))
 		elif request.method == "GET":
 			files = [
 				MemberPost(
@@ -603,6 +622,7 @@ def members(*args):
 
 			return render_template(
 				"members.html",
+				error=request.args.get("error") or "",
 				files=files,
 				no_portal=True,
 				css=["m_dashboard.css", "members.css"]

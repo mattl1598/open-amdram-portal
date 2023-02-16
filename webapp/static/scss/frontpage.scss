@@ -4,7 +4,12 @@ div.next_show {
 	text-align: center;
 }
 
-div.post_content img {
-	max-width: 100%;
-	max-height: 50vh;
+div.post_content {
+	p:has(img) {
+		text-align: center;
+	}
+	img {
+		max-width: 100%;
+		max-height: 50vh;
+	}
 }

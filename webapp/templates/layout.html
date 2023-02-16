@@ -3,7 +3,11 @@
 <html id="html" class="{{ session.get("theme", "auto") }}" lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>{{ title }} - {{ web_config["site-name"] }}</title>
+	{% if title is defined and title != "" %}
+		<title>{{ title }} - {{ web_config["site-name"] }}</title>
+	{% else %}
+		<title>{{ web_config["site-name"] }}</title>
+	{% endif %}
 	{% if css is defined %}
 		{% if type(css) == type("string") %}
 			{% set css = [css] %}
