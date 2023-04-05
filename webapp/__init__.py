@@ -139,7 +139,7 @@ def create_app():
 				"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
 			}
 
-			if (db_latest_blog := Post.query.filter_by(type="blog").order_by(Post.date.desc()).first()) is not None:
+			if (db_latest_blog := Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(Post.date.desc()).first()) is not None:
 				web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
 
 			if (db_latest_show := Show.query.filter(Show.date < datetime.now()).order_by(
