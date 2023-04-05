@@ -305,7 +305,7 @@ def search():
 
 @bp.route("/blog", methods=["GET"])
 def blogs():
-	posts = Post.query.filter_by(type="blog").order_by(Post.date.desc()).all()
+	posts = Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(Post.date.desc()).all()
 	return render_template(
 		"blogs.html",
 		template={True: "blank_template.html", False: "layout.html"}["embedded" in request.args],
@@ -317,7 +317,7 @@ def blogs():
 
 @bp.route("/blog/latest", methods=["GET"])
 def latest_blog():
-	post = Post.query.filter_by(type="blog").order_by(Post.date.desc()).first_or_404()
+	post = Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(Post.date.desc()).first_or_404()
 	return redirect("/".join(["/blog", post.id]))
 
 
