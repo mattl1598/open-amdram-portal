@@ -492,7 +492,7 @@ def upload_blog():
 				orientation = 1
 
 			pil_image = pil_image.rotate(
-				{1: 0, 2: 0, 3: 180, 4: 180, 5: 270, 6: 270, 7: 90, 8: 90}[orientation],
+				{1: 0, 2: 0, 3: 180, 4: 180, 5: 270, 6: 270, 7: 90, 8: 90}.get(orientation) or 0,
 				expand=True
 			)
 
