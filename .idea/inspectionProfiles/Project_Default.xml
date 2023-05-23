@@ -25,10 +25,11 @@
     <inspection_tool class="HttpUrlsUsage" enabled="true" level="INFORMATION" enabled_by_default="true" />
     <inspection_tool class="JSUnresolvedLibraryURL" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="PyArgumentListInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyInterpreterInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="42">
+          <list size="53">
             <item index="0" class="java.lang.String" itemvalue="Flask-APScheduler" />
             <item index="1" class="java.lang.String" itemvalue="uWSGI" />
             <item index="2" class="java.lang.String" itemvalue="gevent-websocket" />
@@ -71,6 +72,17 @@
             <item index="39" class="java.lang.String" itemvalue="idna" />
             <item index="40" class="java.lang.String" itemvalue="Pillow" />
             <item index="41" class="java.lang.String" itemvalue="smaz-py3" />
+            <item index="42" class="java.lang.String" itemvalue="lorem-text" />
+            <item index="43" class="java.lang.String" itemvalue="pyotp" />
+            <item index="44" class="java.lang.String" itemvalue="pytest" />
+            <item index="45" class="java.lang.String" itemvalue="python-dateutil" />
+            <item index="46" class="java.lang.String" itemvalue="flask-qrcode" />
+            <item index="47" class="java.lang.String" itemvalue="libsass" />
+            <item index="48" class="java.lang.String" itemvalue="numpy" />
+            <item index="49" class="java.lang.String" itemvalue="requests" />
+            <item index="50" class="java.lang.String" itemvalue="urllib3" />
+            <item index="51" class="java.lang.String" itemvalue="tld" />
+            <item index="52" class="java.lang.String" itemvalue="distinctipy" />
           </list>
         </value>
       </option>

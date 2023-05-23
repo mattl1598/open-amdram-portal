@@ -817,7 +817,9 @@ def edit_show(show_id):
 		msl_ids = [value[0] for value in MSL.query.with_entities(MSL.id).all()]
 
 		if show_id == "new":
+			new_id = Show.get_new_id()
 			new_show = Show(
+				id=new_id,
 				date=dic.get("last-perf"),
 				season=dic.get("season"),
 				show_type=dic.get("show-type"),
@@ -826,7 +828,8 @@ def edit_show(show_id):
 				genre=dic.get("genre"),
 				author=dic.get("show-author"),
 				programme=dic.get("programme-img"),
-				text_blob=dic.get("text_blob")
+				text_blob=dic.get("text_blob"),
+				noda_review=dic.get("noda_review")
 			)
 
 			db.session.add(new_show)
@@ -865,6 +868,7 @@ def edit_show(show_id):
 			show.author = dic.get("show-author")
 			show.programme = dic.get("programme-img")
 			show.text_blob = dic.get("text_blob")
+			show.noda_review = dic.get("noda_review")
 
 			for msl_type in ["cast", "crew"]:
 				existing_roles = set([
