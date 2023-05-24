@@ -829,7 +829,7 @@ def edit_show(show_id):
 				author=dic.get("show-author"),
 				programme=dic.get("programme-img"),
 				text_blob=dic.get("text_blob"),
-				noda_review=dic.get("noda_review")
+				noda_review=dic.get("noda-review")
 			)
 
 			db.session.add(new_show)
@@ -868,7 +868,7 @@ def edit_show(show_id):
 			show.author = dic.get("show-author")
 			show.programme = dic.get("programme-img")
 			show.text_blob = dic.get("text_blob")
-			show.noda_review = dic.get("noda_review")
+			show.noda_review = dic.get("noda-review")
 
 			for msl_type in ["cast", "crew"]:
 				existing_roles = set([
