@@ -98,7 +98,8 @@ def create_app():
 				"dashboard": dash,
 				"help": help_icon,
 				"logout": logout_icon,
-				"copy_icon": copy_icon
+				"copy_icon": copy_icon,
+				"important": important
 			}
 
 			nav = [

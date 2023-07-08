@@ -17,24 +17,21 @@
 					<span class="title"><h2>Actions</h2></span>
 				</div>
 			</a>
-			{% if not (current_user.e_con_name and current_user.e_con_phone) %}
-				<a class="post showpage" href="{{ url_for("members_routes.account_settings") }}">
-					<span class="date">{{ datetime.utcnow().strftime("%d %b") }}<br>{{ datetime.utcnow().strftime("%Y") }}</span>
+			{% for action in actions %}
+				<a class="post showpage" href="{{ action["link"] }}">
+					<span class="date">{{ action["date"].strftime("%d %b") }}<br>{{ action["date"].strftime("%Y") }}</span>
 					<span class="icon">
-					<svg class="icon" viewbox="0 0 50 50">
-	{#					{{ post.icon | safe }}#}
-						<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
-					</svg>
-				</span>
+						<svg class="icon" viewbox="0 0 50 50">
+							{{ icons[action["icon"]] | safe }}
+							<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+						</svg>
+					</span>
 					<div class="text">
-						{#				{% if post.show_title %}#}
-						{#					<span class="show"><h4>{{ post.show_title }}</h4></span>#}
-						{#				{% endif %}#}
-						<span class="title"><h3>Add Emergency Contact</h3></span>
-						<span class="text"><span>Click to Update your Emergency Contact Details</span></span>
+						<span class="title"><h3>{{ action["title_text"] }}</h3></span>
+						<span class="text"><span>{{ action["body_text"] }}</span></span>
 					</div>
 				</a>
-			{% endif %}
+			{% endfor %}
 		</div>
 
 		{#	dashboard posts#}

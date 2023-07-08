@@ -111,6 +111,14 @@ def force_password_change():
 @login_required
 def dashboard():
 	"""member,author,admin"""
+
+	actions = []
+	if not (current_user.e_con_name and current_user.e_con_phone):
+		actions.append({
+			"icon": "important", "link": url_for("members_routes.account_settings"), "date": datetime.utcnow(),
+			"title_text": "Add Emergency Contact", "body_text": "Click to Update your Emergency Contact Details"
+		 })
+
 	posts = Post.query \
 		.filter(
 			or_(
@@ -156,7 +164,7 @@ def dashboard():
 	return render_template(
 		"members/dashboard.html",
 		posts=dash_posts,
-		# posts=[],
+		actions=actions,
 		css="m_dashboard.css"
 	)
 
@@ -1136,6 +1144,7 @@ def analytics():
 	raw_external_origins = AnalyticsLog.query\
 		.filter(
 			date_filter,
+			not_(AnalyticsLog.request_origin.ilike('')),
 			not_(AnalyticsLog.request_origin.ilike('%.php%')),
 			not_(AnalyticsLog.request_destination.ilike('%.php%')),
 			not_(AnalyticsLog.user_agent.ilike('%http%')),
