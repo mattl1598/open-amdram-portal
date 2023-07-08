@@ -1,0 +1,37 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	{% if len(files) %}
+		<div class="posts">
+			<a class="post heading" href="">
+{#				<span class="date"></span>#}
+				<span class="icon">
+					<svg class="icon" viewbox="0 0 50 50">
+						<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
+						<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+					</svg>
+				</span>
+				<div>
+					<span class="title"><h2>Members Documents</h2></span>
+				</div>
+			</a>
+			{% for post in files %}
+				<a class="post" href="{{ post.link }}">
+{#					<span class="date">{{ post.date.strftime("%d %b") }}<br>{{ post.date.strftime("%Y") }}</span>#}
+					<span class="icon">
+						<svg class="icon" viewbox="0 0 50 50">
+							{{ post.icon | safe }}
+							<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+						</svg>
+					</span>
+					<div class="text">
+						{% if post.show_title %}
+							<span class="show"><h4>{{ post.show_title }}</h4></span>
+						{% endif %}
+						<span class="title"><h3>{{ post.title }}</h3></span>
+						<span class="text"><span>{{ post.text }}</span></span>
+					</div>
+				</a>
+			{% endfor %}
+		</div>
+	{% endif %}
+{% endblock %}
