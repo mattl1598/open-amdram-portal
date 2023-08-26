@@ -111,7 +111,6 @@ def force_password_change():
 @login_required
 def dashboard():
 	"""member,author,admin"""
-
 	actions = []
 	if not (current_user.e_con_name and current_user.e_con_phone):
 		actions.append({
@@ -247,9 +246,9 @@ def m_show(show_id):
 
 	db_posts = Post.query \
 		.filter_by(show_id=show_id) \
-		.filter(Post.type != "public") \
 		.order_by(Post.date.desc()) \
 		.all()
+	# .filter(Post.type != "public") \
 
 	db_files = Files.query \
 		.filter_by(show_id=show_id) \
@@ -1117,6 +1116,7 @@ def manage_users():
 			db.session.commit()
 			return jsonify(200)
 
+
 @bp.route("/members/analytics")
 @login_required
 def analytics():
@@ -1449,6 +1449,13 @@ def account_settings():
 					error = "empty_lastname"
 			else:
 				error = "empty_firstname"
+		elif request.form.get("submit") == "Update Phone Number":
+			error = "phone_success"
+			if request.form.get('phone_number'):
+				current_user.phone_number = request.form.get('phone_number')
+				db.session.commit()
+			else:
+				error = "empty_phone_number"
 		elif request.form.get("submit") == "Activate 2FA":
 			error = "otp_success"
 			totp = pyotp.parse_uri(request.form.get("otp_qr"))
@@ -1482,6 +1489,7 @@ def logout():
 	"""member,author,admin"""
 	logout_user()
 	return redirect(url_for("routes.frontpage"))
+
 
 @bp.route("/members/test", methods=["GET"])
 @login_required

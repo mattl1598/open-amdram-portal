@@ -67,6 +67,7 @@ class User(UserMixin, db.Model, NewIdGetter):
 	firstname = db.Column(db.String(20))
 	lastname = db.Column(db.String(30))
 	email = db.Column(db.String(120), unique=True)
+	phone_number = db.Column(db.String(13))
 	otp_secret = db.Column(db.String(32))
 	password_hash = db.Column(db.String(128))
 	password = db.Column(db.String(60))

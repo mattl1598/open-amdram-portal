@@ -110,6 +110,26 @@
 				<span class="form_success"> - Profile was updated successfully.</span>
 			{% endif %}
 		</form>
+		{# PROFILE #}
+		<form action="" method=post>
+			<h2>Update Phone Number</h2>
+			<div class="fancy-input">
+				<input type="text" name="phone_number" value="{{ current_user.phone_number or "" }}" placeholder=" " required>
+				<label for="phone_number">
+					Phone Number
+					{% if request.args.get('e') == "empty_phone_number" %}
+						<span class="form_error"> - Phone Number cannot be empty </span>
+					{% endif %}
+				</label>
+			</div>
+			<br>
+			<div class="fancy-input">
+				<input type="submit" name="submit" value="Update Phone Number">
+			</div>
+			{% if request.args.get('e') == "phone_success" %}
+				<span class="form_success"> - Phone Number was updated successfully.</span>
+			{% endif %}
+		</form>
 		{# EMERGENCY CONTACT #}
 		<form action="" method=post>
 			<h2>Emergency Contact</h2>
