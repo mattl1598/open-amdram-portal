@@ -590,7 +590,8 @@ def prizedraw():
 			name=request.form.get('name'),
 			email=request.form.get('email'),
 			phone_number=request.form.get('phone_number'),
-			terms_agreed=request.form.get('terms_agreed')
+			terms_agreed=request.form.get('terms_agreed'),
+			datetime=datetime.utcnow()
 		)
 
 		try:
