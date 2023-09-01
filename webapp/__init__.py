@@ -199,5 +199,3 @@ def create_app():
 	return app
 
 
-# from webapp import models
-# db.create_all()

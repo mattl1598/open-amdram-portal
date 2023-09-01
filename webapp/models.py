@@ -61,6 +61,16 @@ class Post(db.Model, NewIdGetter):
 		return "Post"
 
 
+class PrizeDrawEntry(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	name = db.Column(db.String(50))
+	email = db.Column(db.String(120), unique=True)
+	phone_number = db.Column(db.String(13), unique=True)
+	terms_agreed = db.Column(db.String(20))
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+
+
+
 # noinspection PyRedeclaration
 class User(UserMixin, db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)

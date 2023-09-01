@@ -467,28 +467,28 @@ def member_docs():
 	"""member,author,admin"""
 	if current_user.is_authenticated:
 		files = [
-	        MemberPost(
-		        title="Adult Membership Subs",
-		        date=datetime.utcnow(),
-		        text="Click to Pay",
-		        link="https://checkout.square.site/buy/2RAQ4QC2TWDCTY6WTQSAXZHG",
-		        post_type="link"
-	        ),
-	        MemberPost(
-		        title="Junior Membership Subs",
-		        date=datetime.utcnow(),
-		        text="Click to Pay",
-		        link="https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT",
-		        post_type="link"
-	        )
-        ] + [
-	        MemberPost(
-		        post_id=i.id,
-		        title=i.name,
-		        date=i.date,
-		        post_type="file"
-	        ) for i in Files.query.filter_by(show_id="members_public").all()
-        ]
+			MemberPost(
+				title="Adult Membership Subs",
+				date=datetime.utcnow(),
+				text="Click to Pay",
+				link="https://checkout.square.site/buy/2RAQ4QC2TWDCTY6WTQSAXZHG",
+				post_type="link"
+			),
+			MemberPost(
+				title="Junior Membership Subs",
+				date=datetime.utcnow(),
+				text="Click to Pay",
+				link="https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT",
+				post_type="link"
+			)
+		] + [
+			MemberPost(
+				post_id=i.id,
+				title=i.name,
+				date=i.date,
+				post_type="file"
+			) for i in Files.query.filter_by(show_id="members_public").all()
+		]
 
 		return render_template(
 			"members/temp_member_docs.html",

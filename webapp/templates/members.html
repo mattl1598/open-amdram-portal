@@ -4,7 +4,10 @@
 		<h2 class="title">Members</h2>
 		<form action="/members" method="post" class="{{ error }}">
 			<div class="fancy-input">
-				<input id="email" name="email" type="text" placeholder=" " required>
+				<input
+					id="email" name="email" type="text" placeholder=" " required
+					{% if request.args.get("email") %}value="{{ request.args.get("email") }}"{% endif %}
+				>
 				<label for="email">Email</label>
 			</div>
 			<div class="fancy-input">

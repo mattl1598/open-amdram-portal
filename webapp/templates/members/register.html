@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block content %}
+	<div class="login_form">
+		<h2 class="title">Become a Member</h2>
+		<form id="registration_form" action="" method="post" class="{{ error }}">
+			<div class="row">
+				<div class="fancy-input name">
+					<input id="firstname" name="firstname" type="text" placeholder=" " required>
+					<label for="firstname">Firstname</label>
+				</div>
+				<div class="fancy-input name">
+					<input id="lastname" name="lastname" type="text" placeholder=" " required>
+					<label for="lastname">Lastname</label>
+				</div>
+			</div>
+			<div class="fancy-input email">
+				<input id="email" name="email" type="text" placeholder=" " required>
+				<label for="email">Email</label>
+			</div>
+			<div class="row">
+				<div class="fancy-input password">
+					<input id="password" name="password" type="password" required>
+					<label for="password">Password</label>
+				</div>
+				<div class="fancy-input password">
+					<input id="password-confirm" name="password-confirm" type="password" required>
+					<label for="password-confirm">Confirm Password</label>
+				</div>
+			</div>
+			<div class="fancy-input">
+				<input type="submit" value="Register">
+			</div>
+		</form>
+	</div>
+{% endblock %}

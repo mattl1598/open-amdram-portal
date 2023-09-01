@@ -1,4 +1,7 @@
 from datetime import datetime
+
+import psycopg2
+import sqlalchemy
 from lorem_text import lorem as lorem_func
 import pyotp
 
@@ -10,7 +13,7 @@ from sqlalchemy import or_
 
 from webapp.members_routes import MemberPost
 # noinspection PyPep8Naming
-from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, Show, ShowPhotos, User, \
+from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, PrizeDrawEntry, Show, ShowPhotos, User, \
 	MemberShowLink as MSL, db
 
 
@@ -574,6 +577,70 @@ def tickets():
 		"tickets.html",
 		css="frontpage.css"
 	)
+
+
+@bp.route("/prizedraw", methods=["GET", "POST"])
+def prizedraw():
+	if request.method == "POST":
+		if session.get('prizedraw') in [x[0] for x in PrizeDrawEntry.query.with_entities(PrizeDrawEntry.id).all()]:
+			return redirect(url_for("routes.prizedraw"))
+
+		new_entry = PrizeDrawEntry(
+			id=PrizeDrawEntry.get_new_id(),
+			name=request.form.get('name'),
+			email=request.form.get('email'),
+			phone_number=request.form.get('phone_number'),
+			terms_agreed=request.form.get('terms_agreed')
+		)
+
+		try:
+			db.session.add(new_entry)
+			db.session.commit()
+			entry_id = new_entry.id
+			msg = "success"
+		except psycopg2.errors.UniqueViolation:
+			db.session.rollback()
+			msg = "already_entered"
+			entry_id = PrizeDrawEntry.query.filter(
+				or_(
+					PrizeDrawEntry.email == request.form.get('email'),
+					PrizeDrawEntry.email == request.form.get('phone_number')
+				)
+			).first().id
+		except sqlalchemy.exc.IntegrityError:
+			db.session.rollback()
+			msg = "already_entered"
+			entry_id = PrizeDrawEntry.query.filter(
+				or_(
+					PrizeDrawEntry.email == request.form.get('email'),
+					PrizeDrawEntry.email == request.form.get('phone_number')
+				)
+			).first().id
+		except sqlalchemy.exc.PendingRollbackError:
+			db.session.rollback()
+			msg = "already_entered"
+			entry_id = PrizeDrawEntry.query.filter(
+				or_(
+					PrizeDrawEntry.email == request.form.get('email'),
+					PrizeDrawEntry.email == request.form.get('phone_number')
+				)
+			).first().id
+
+		# on success
+		session['prizedraw'] = entry_id
+		session.modified = True
+		return redirect(url_for("routes.prizedraw", e=msg))
+	else:
+		entered = False
+		session_entered = session.get('prizedraw') in [x[0] for x in PrizeDrawEntry.query.with_entities(PrizeDrawEntry.id).all()]
+		details_entered = request.args.get('e') in ['already_entered', 'success']
+		if session_entered or details_entered:
+			entered = True
+		return render_template(
+			"prizedraw.html",
+			entered=entered,
+			css="pay_subs.css"
+		)
 
 
 # noinspection PyUnusedLocal

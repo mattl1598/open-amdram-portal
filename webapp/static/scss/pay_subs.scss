@@ -1,0 +1,140 @@
+@import "partials/layout";
+@import "partials/form_element";
+
+div.content.m {
+	min-width: initial !important;
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	@include mobile {
+		gap: 1rem;
+	}
+	@include not-mobile {
+		gap: 0.5rem;
+		max-width: 28rem;
+	}
+
+	//width: 100%;
+	margin: 1ch;
+
+	.row {
+		align-self: stretch;
+		display: inline-flex;
+
+		div[title] {
+			text-decoration-style: dotted;
+			text-decoration-line: underline;
+
+			&:hover {
+				cursor: pointer;
+			}
+		}
+
+		.divider {
+			width: 100%;
+			display: inline-flex;
+			flex-direction: row;
+			justify-content: center;
+
+			h3 {
+				width: 100%;
+				text-align: center;
+				display: inline-flex;
+			}
+
+			h3::before, h3::after {
+				flex: 1;
+				content: '';
+				//padding: 3px;
+				background-color: white;
+				margin: 0.5rem;
+				border-radius: 5px;
+			}
+		}
+
+		@include not-mobile {
+			flex-wrap: wrap;
+			flex-direction: row;
+			gap: 0.5rem;
+
+			.fancy-input {
+				flex-basis: 20%;
+				flex-grow: 1;
+			}
+
+			.full-width {
+				flex-basis: 100%;
+				text-align: center;
+			}
+		}
+		@include mobile {
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
+}
+
+div.sidebar {
+	display: flex !important;
+}
+
+form.entered {
+	-webkit-filter: blur(5px);
+	-moz-filter: blur(5px);
+	-o-filter: blur(5px);
+	-ms-filter: blur(5px);
+	filter: blur(5px);
+}
+
+div.prize_draw_info {
+	text-align: center;
+}
+
+@include mobile {
+	div.divider, div.prize_draw_info {
+		h1 {
+			font-size: 5rem;
+		}
+		h2 {
+			font-size: 4rem;
+		}
+		h3 {
+			font-size: 3rem;
+		}
+		h4 {
+			font-size: 3rem;
+		}
+	}
+
+	input[type="submit"] {
+		font-size: 3.5rem;
+	}
+
+}
+
+div.terms {
+	display: inline-flex;
+	flex-direction: row;
+	align-items: center;
+
+
+	input[type="checkbox"] {
+		height: 3rem;
+		width: 3rem;
+		padding-right: 1rem;
+	}
+	@include not-mobile {
+		label {
+			font-size: 1.3rem;
+		}
+	}
+	@include mobile {
+		label {
+			font-size: 3rem;
+		}
+	}
+}

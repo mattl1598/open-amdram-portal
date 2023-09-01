@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block content %}
+	<div class="prize_draw_info">
+		<h1>Prize Draw Entry</h1>
+		<h3>Win two tickets to our next show. <br>Two winners will be drawn.</h3>
+		{% if entered %}
+			<h2>Thanks for entering the prize draw. <br>We will be in contact soon if you win.</h2>
+		{% endif %}
+	</div>
+	<form action="" method="post" class="{% if entered %}entered{% endif %}">
+		<div class="row">
+			<div class="full-width">
+				<div class="divider"><h4>Your Details</h4></div>
+			</div>
+			<div class="fancy-input full-width">
+				<input id="name" name="name" type="text" placeholder=" " maxlength="50" required {% if entered %}disabled{% endif %}>
+				<label for="name">Name</label>
+			</div>
+			<div class="fancy-input full-width">
+				<input id="email" name="email" type="text" placeholder=" " maxlength="120" required {% if entered %}disabled{% endif %}>
+				<label for="email">Email Address</label>
+			</div>
+			<div class="fancy-input full-width">
+				<input id="phone_number" name="phone_number" type="text" maxlength="13" placeholder=" " required {% if entered %}disabled{% endif %}>
+				<label for="phone_number">Phone Number</label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="full-width">
+				<div class="divider"><h4>Terms and Conditions</h4></div>
+				<div class="subheading">
+					One entry per email address and phone number.
+					Duplicated entries, either via paper or web forms, will not count.
+				</div>
+				<div class="subheading">
+					By submitting your details via this form, you agree to join our audience newsletter.
+				</div>
+				<div class="subheading">
+					We usually send around 3 emails for each production we perform, about 9 a year.
+					You may unsubscribe from the newsletter at any time via the unsubscribe link in every email.
+				</div>
+				<div class="subheading">
+					If you win the draw, we will contact you by the provided phone number and email.
+					If you do not respond within 24 hours, we will redraw.
+					We will not store your phone number any longer than needed for any redraws.
+				</div>
+			</div>
+			<div class="terms">
+				<input id="terms_agreed" name="terms_agreed" type="checkbox" placeholder=" " required {% if entered %}disabled{% endif %}>
+				<label for="terms_agreed">I agree to the terms.</label>
+			</div>
+			<div class="fancy-input">
+				<input id="submit" name="submit" type="submit" value="Enter Draw" placeholder=" " {% if entered %}disabled{% endif %}>
+{#				<label for="submit">Enter Prize Draw</label>#}
+			</div>
+		</div>
+	</form>
+{% endblock %}
