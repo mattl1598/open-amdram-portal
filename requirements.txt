@@ -17,5 +17,6 @@ pytest
 python-dateutil
 requests
 smaz-py3
+squareup
 tld
 urllib3

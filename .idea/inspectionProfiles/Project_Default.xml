@@ -29,7 +29,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="53">
+          <list size="54">
             <item index="0" class="java.lang.String" itemvalue="Flask-APScheduler" />
             <item index="1" class="java.lang.String" itemvalue="uWSGI" />
             <item index="2" class="java.lang.String" itemvalue="gevent-websocket" />
@@ -83,6 +83,7 @@
             <item index="50" class="java.lang.String" itemvalue="urllib3" />
             <item index="51" class="java.lang.String" itemvalue="tld" />
             <item index="52" class="java.lang.String" itemvalue="distinctipy" />
+            <item index="53" class="java.lang.String" itemvalue="squareup" />
           </list>
         </value>
       </option>

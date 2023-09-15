@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import markdown as markdown
 from flask import Flask, redirect, render_template, request, session, abort  # , url_for, session
 from flask_qrcode import QRcode
+from square.client import Client as SquareClient
 # noinspection PyPackageRequirements
 from sass import compile
 import corha
@@ -65,6 +66,11 @@ def create_app():
 
 		app.config['g_client_id'] = app.envs.g_client_id
 		app.config['g_client_secret'] = app.envs.g_client_secret
+
+		app.square = SquareClient(
+			access_token=app.envs.square_access_token,
+			environment=app.envs.square_environment
+		)
 
 		compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
 
@@ -163,11 +169,12 @@ def create_app():
 				m_shows=m_shows
 			)
 
-		from webapp import routes, members_routes, photos_routes, analytics_routes
+		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes
 		app.register_blueprint(routes.bp)
 		app.register_blueprint(members_routes.bp)
 		app.register_blueprint(photos_routes.bp)
 		app.register_blueprint(analytics_routes.bp)
+		app.register_blueprint(tickets_routes.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():
