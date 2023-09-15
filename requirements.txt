@@ -20,3 +20,4 @@ smaz-py3
 squareup
 tld
 urllib3
+xlsxwriter
