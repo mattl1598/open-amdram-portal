@@ -59,7 +59,7 @@ class OrderInfo:
 		return sum(self.tickets.values())
 
 
-@bp.get('/get_orders')
+@bp.get('/members/get_orders')
 @login_required
 def get_orders():
 	"""member,author,admin"""
