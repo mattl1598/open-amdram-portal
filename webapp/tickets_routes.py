@@ -62,6 +62,7 @@ class OrderInfo:
 @bp.get('/get_orders')
 @login_required
 def get_orders():
+	"""member,author,admin"""
 	now = datetime.now() + timedelta(days=1)
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
 
