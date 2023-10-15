@@ -3,6 +3,8 @@ import collections
 import csv
 import io
 import re
+import uuid
+
 import smaz
 from pprint import pprint
 
@@ -20,9 +22,10 @@ from dateutil.relativedelta import relativedelta
 
 from flask import abort, Blueprint, flash, make_response, redirect, render_template, send_file, session, url_for, \
 	request, jsonify
-from flask_login import logout_user, current_user, login_required
+from flask_login import login_user, logout_user, current_user, login_required
 # noinspection PyPackageRequirements
 from sqlalchemy import and_, extract, func, not_, or_, sql
+from flask import current_app as app
 
 # noinspection PyPep8Naming
 from webapp.models import MemberShowLink as MSL
@@ -1229,6 +1232,204 @@ def account_settings():
 				error = "contact_success"
 
 		return redirect(url_for("members_routes.account_settings", e=error))
+
+
+@bp.route("/members/register", methods=["GET", "POST"])
+def member_registeration():
+	if current_user.is_authenticated:
+		return redirect(url_for("members_routes.account_settings"))
+	elif request.method == "POST":
+		registered_emails = [x[0] for x in User.query.with_entities(User.email).all()]
+		if request.form.get("email") in registered_emails:
+			return redirect(url_for("routes.members", email=request.form.get("email")))
+		if request.form.get("password") != request.form.get("password-confirm"):
+			return redirect(url_for("members_routes.register", error="bad_password"))
+
+		new_user = User(
+			id=User.get_new_id(),
+			first_name=request.form.get("firstname"),
+			last_name=request.form.get("lastname"),
+			email=request.form.get("email"),
+			password=request.form.get("password")
+		)
+		db.session.add(new_user)
+		db.session.commit()
+
+		if len(payments := SubsPayment.query.filter_by(email=new_user.email).order_by(
+				SubsPayment.datetime.desc()).all()):
+			for payment in payments:
+				payment.user_id = new_user.id
+			db.session.commit()
+
+			current_date = datetime.now()
+
+			# Calculate the most recent July 1st that has passed
+			if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+				most_recent_july_1st = datetime(current_date.year, 7, 1)
+			else:
+				most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+
+			# Get the datestamp for midnight on the most recent July 1st
+			midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+
+			if payments[0].datetime > midnight_july_1st:
+				return redirect(url_for("members_routes.dashboard"))
+
+		return redirect(url_for("members_routes.pay_subs"))
+
+	else:
+		return render_template(
+			"members/register.html",
+			error=request.args.get("error") or "",
+			no_portal=True,
+			css="members.css"
+		)
+
+
+@bp.route("/members/pay_subs", methods=["GET", "POST"])
+@login_required
+def pay_subs():
+	idempotency_key = uuid.uuid4().hex
+	subs_levels = json.loads(KeyValue.query.get("subs_levels").value)
+	return render_template(
+		"members/pay_subs.html",
+		idempotency_key=idempotency_key,
+		subs_levels=subs_levels,
+		css="pay_subs.css",
+		js="pay_subs.js"
+	)
+
+
+@bp.route("/api/members/subs_amount/<query>", methods=["GET"])
+@login_required
+def subs_amount(query):
+	levels = json.loads(KeyValue.query.get("subs_levels").value)
+	result = levels.get(query)
+	if result is not None:
+		if (amount := result.get("amount")) is not None:
+			return f"{amount}"
+		else:
+			abort(404)
+	else:
+		abort(404)
+
+
+@bp.route("/api/new_idemp", methods=["GET"])
+def new_idemp():
+	return jsonify({"new_key": uuid.uuid4().hex})
+
+
+@bp.route("/api/members/subs_payment", methods=["GET","POST"])
+@login_required
+def subs_payment():
+	amount = 0
+	item_id = ""
+	try:
+		order_idempotency_key = request.json.get("order_idempotency_key")
+		payment_idempotency_key = request.json.get("payment_idempotency_key")
+		membership_details = {
+			"Members Name (A): ": f"{current_user.firstname} {current_user.lastname}",
+			"Members Telephone (B):": request.json.get("phone"),
+			"Members Email (C):": current_user.email,
+			"Emergency Contact Name (D):": request.json.get("e_con_name"),
+			"Emergency Contact Telephone (E):": request.json.get("e_con_phone")
+		}
+		print(membership_details)
+		level_details = json.loads(KeyValue.query.get("subs_levels").value).get(request.json.get("level"))
+		amount = level_details.get("amount")
+		item_id = level_details.get("square_id")
+		item_name = request.json.get("level")
+	except AttributeError:
+		return 404
+
+	order_id = None
+	# create an order
+	result = app.square.orders.create_order(
+		body={
+			"order": {
+				"location_id": app.envs.square_membership_location,
+				"line_items": [
+					{
+						"quantity": "1",
+						"name": f"{item_name.capitalize()} Membership",
+						"item_type": "ITEM",
+						"modifiers": [
+							{
+								"name": f"{k} {v}",
+								"quantity": "1",
+								"base_price_money": {
+									"amount": 0,
+									"currency": "GBP"
+								}
+							}
+							for k, v in membership_details.items()
+						],
+						"base_price_money": {
+							"amount": amount*100,
+							"currency": "GBP"
+						}
+					}
+				]
+			},
+			"idempotency_key": order_idempotency_key
+		}
+	)
+	if result.is_error():
+		print("order error")
+		response = make_response(jsonify(result.body))
+		response.status_code = 400
+		return response
+	elif result.is_success():
+		print(result.body)
+		order_id = result.body["order"]["id"]
+
+		payment_body = {
+			"accept_partial_authorization": False,
+			"autocomplete": True,
+			"source_id": request.json.get("source_id"),
+			"verification_token": request.json.get("verification_token"),
+			"idempotency_key": payment_idempotency_key,
+			"amount_money": {
+				"amount": amount*100,
+				"currency": "GBP"
+			},
+			"location_id": app.envs.square_membership_location,
+			"note": json.dumps(membership_details)
+		}
+
+		if order_id is not None:
+			payment_body["order_id"] = order_id
+
+		payment_result = app.square.payments.create_payment(
+			body=payment_body
+		)
+		if payment_result.is_error():
+			print("payment error")
+			print(payment_result.errors)
+			response = make_response(jsonify(payment_result.body))
+			response.status_code = 400
+			return response
+		elif payment_result.is_success():
+			print(payment_result.body)
+
+			new_subs_payment = SubsPayment(
+				id=SubsPayment.get_new_id(),
+				user_id=current_user.id,
+				membership_type=item_name,
+				amount_paid=amount,
+				datetime=datetime.utcnow(),
+				name=f"{current_user.firstname} {current_user.lastname}",
+				email=current_user.email,
+				phone=request.json.get("phone"),
+				e_con_name=request.json.get("e_con_name"),
+				e_con_phone=request.json.get("e_con_phone"),
+				order_id=order_id,
+				payment_id=payment_result.body["payment"].get("id")
+			)
+			db.session.add(new_subs_payment)
+			db.session.commit()
+
+			return jsonify(payment_result.body)
 
 
 @bp.route("/members/logout")

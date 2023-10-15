@@ -1,4 +1,5 @@
 from datetime import datetime
+from pprint import pprint
 
 import psycopg2
 import sqlalchemy
@@ -712,6 +713,124 @@ def otp():
 			return redirect(url_for("members_routes.dashboard"))
 		else:
 			return redirect(url_for("routes.members"))
+
+
+@bp.route("/members/register", methods=["GET", "POST"])
+def register():
+	if request.method == "GET":
+		current_date = datetime.now()
+		# Calculate the most recent July 1st that has passed
+		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+			most_recent_july_1st = datetime(current_date.year, 7, 1)
+		else:
+			most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+		# Get the datestamp for midnight on the most recent July 1st
+		midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+
+		results = app.square.orders.search_orders(
+			body={
+				"location_ids": [
+					"0W6A3GAFG53BH"
+				],
+				"query": {
+					"filter": {
+						"date_time_filter": {
+							"created_at": {
+								"start_at": midnight_july_1st.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+							}
+						},
+						"source_filter": {
+							"source_names": [
+								"Checkout Link"
+							]
+						}
+					}
+				}
+			}
+		)
+
+		if results.is_error():
+			print(results.errors)
+			abort(500)
+		else:
+			paid_emails = []
+			for order in results.body["orders"]:
+				for item in order["line_items"]:
+					try:
+						for modifier in item["modifiers"]:
+							if ">Members Email (C): " in modifier["name"]:
+								paid_emails.append(modifier["name"].replace(">Members Email (C): ", ""))
+					except KeyError:
+						pprint(item)
+			pprint(paid_emails)
+		return render_template(
+			"members/register.html",
+			css="pay_subs.css"
+		)
+	elif request.method == "POST":
+		if User.query.filter_by(email=request.form.get('email')).first() is not None:
+			return redirect(url_for("routes.members", email=request.form.get('email')))
+		elif request.form.get("password") != request.form.get('password-confirm'):
+			return redirect(url_for("routes.register", e="password-confirm"))
+		else:
+			new_user_params = {
+				'firstname': request.form.get('firstname'),
+				'lastname': request.form.get('lastname'),
+				'email': request.form.get('email'),
+				'password': request.form.get('password')
+			}
+
+			current_date = datetime.now()
+			# Calculate the most recent July 1st that has passed
+			if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+				most_recent_july_1st = datetime(current_date.year, 7, 1)
+			else:
+				most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+			# Get the datestamp for midnight on the most recent July 1st
+			midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+
+			results = app.square.orders.search_orders(
+				body={
+					"query": {
+						"filter": {
+							"date_time_filter": {
+								"created_at": {
+									"start_at": midnight_july_1st.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+								}
+							},
+							"source_filter": {
+								"source_names": [
+									"Checkout Link"
+								]
+							}
+						}
+					}
+				}
+			)
+
+			if results.is_error():
+				abort(500)
+			else:
+				paid_emails = []
+				for order in results.body["orders"]:
+					for item in order["line_items"]:
+						for modifier in item["modifier"]:
+							if ">Members Email (C): " in modifier["name"]:
+								paid_emails.append(modifier["name"].replace(">Members Email (C):", ""))
+				print(paid_emails)
+				if new_user_params['email'] in paid_emails:
+					new_user = User(
+						**new_user_params
+					)
+					db.session.add(new_user)
+					db.session.commit()
+
+					login_user(new_user)
+					return redirect("members_routes.dashboard")
+				else:
+					session['new_user_params'] = new_user_params
+					session.modified = True
+					return redirect("members_routes.pay_subs")
 
 
 @bp.route("/js/<string:filename>", methods=["GET"])

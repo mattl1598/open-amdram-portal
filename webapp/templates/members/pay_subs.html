@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+{% block content %}
+	{% if app.envs.square_environment == "sandbox" %}
+		<script type="text/javascript" src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+	{% else %}
+		<script type="text/javascript" src="https://web.squarecdn.com/v1/square.js"></script>
+	{% endif %}
+	<script>
+		const appId = '{{ app.envs.square_app_id }}'
+		const locationId = '{{ app.envs.square_membership_location }}'
+		const orderIdempotencyKey = '{{ idempotency_key }}'
+		let paymentIdempotencyKey = '{{ idempotency_key }}'
+		const firstname = '{{ current_user.firstname }}'
+		const lastname = '{{ current_user.lastname }}'
+		const email = '{{ current_user.email }}'
+		let postalcode = ''
+	</script>
+	<form id="form" action="" method="post" class="form">
+		<div class="row">
+			<div class="full-width">
+				<div class="divider"><h3>Membership Details</h3></div>
+				<div class="subheading">Renewable on the 1st July each year.</div>
+				{% for name, details in subs_levels.items() %}
+					<div class="subheading"
+						{% if details.get("desc") != None %}title="{{ details['desc'] }}" onclick="alert(this.title)"{% endif %}
+					>
+						Annual {{ name.capitalize() }} Memberships: £{{ details["amount"] }}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="fancy-input">
+				<script>
+					function setAmount(selectObject) {
+						let amount = selectObject.options[selectObject.selectedIndex].dataset.amount
+						document.querySelector('#amount').innerHTML = amount
+					}
+				</script>
+				<select id="membership_type" name="membership_type" required onchange="setAmount(this)">
+					<option value="" selected disabled></option>
+					{% for name, details in subs_levels.items() %}
+						<option value="{{ name }}" data-amount="{{ details["amount"] }}">{{ name.capitalize() }} - £{{ details["amount"] }}</option>
+					{% endfor %}
+				</select>
+				<label for="membership_type">Membership Type - Please Select</label>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="full-width">
+				<div class="divider"><h3>Your Details</h3></div>
+			</div>
+			<div class="fancy-input">
+				<input
+						id="phone_number" name="phone_number" type="text" placeholder=" " required
+						{% if current_user.phone_number %}value="{{ current_user.phone_number }}"{% endif %}
+				>
+				<label for="phone_number">Your Phone Number</label>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="full-width">
+				<span class="divider"><h3>Emergency Contact Details</h3></span>
+				<span class="subheading">Please make sure these are up-to-date.</span>
+			</div>
+			<div class="fancy-input">
+				<input
+					id="e_con_name" name="e_con_name" type="text" placeholder=" " required
+					{% if current_user.e_con_name %}value="{{ current_user.e_con_name }}"{% endif %}
+				>
+				<label for="e_con_name">Name</label>
+			</div>
+			<div class="fancy-input">
+				<input
+					id="e_con_phone" name="e_con_phone" type="text" placeholder=" " required
+					{% if current_user.e_con_phone %}value="{{ current_user.e_con_phone }}"{% endif %}
+				>
+				<label for="e_con_phone">Their Phone Number</label>
+			</div>
+		</div>
+
+		<div class="row payments">
+			<div class="full-width">
+				<span class="divider"><h3>Payment</h3></span>
+{#				<div class="subheading">Pay by card.</div>#}
+			</div>
+			<div class="full-width"><div id="google-pay-button"></div></div>
+			<div class="full-width"><div id="card-container"></div></div>
+{#			<div id="card_input">#}
+{#				<span class="card_icon"><svg viewbox="0 0 50 50"><path d="M41.667 16.667H8.333V12.5H41.667M41.667 37.5H8.333V25H41.667M41.667 8.333H8.333C6.021 8.333 4.167 10.188 4.167 12.5V37.5A4.167 4.167 0 0 0 8.333 41.667H41.667A4.167 4.167 0 0 0 45.833 37.5V12.5C45.833 10.188 43.958 8.333 41.667 8.333Z"></path></svg></span>#}
+{#				<span class="separator">|</span>#}
+{#				<div class="card_number fancy-input">#}
+{#					<input id="card_number" name="card_number" type="text" placeholder=" " required>#}
+{#					<label for="card_number">Card number</label>#}
+{#				</div>#}
+{#				<span class="separator">|</span>#}
+{#				<div class="card_expiry fancy-input">#}
+{#					<input id="card_expiry" name="card_expiry" type="text" placeholder=" " required>#}
+{#					<label for="card_expiry">MM/YY</label>#}
+{#				</div>#}
+{#				<span class="separator">|</span>#}
+{#				<div class="card_cvv fancy-input">#}
+{#					<input id="card_cvv" name="card_cvv" type="text" placeholder=" " required>#}
+{#					<label for="card_cvv">CVV</label>#}
+{#				</div>#}
+{#				<span class="separator">|</span>#}
+{#				<div class="card_postcode fancy-input">#}
+{#					<input id="card_postcode" name="card_postcode" type="text" placeholder=" " required>#}
+{#					<label for="card_postcode">Postcode</label>#}
+{#				</div>#}
+{#			</div>#}
+			<button type="button" class="card_pay_button" id="card-button">
+				<span><h3>Pay with card<span id="amount"></span></h3></span>
+			</button>
+			<div class="full-width"><div id="payment-status-container"></div></div>
+			<div id="waiting" class="hidden"></div>
+		</div>
+	</form>
+	<script>
+		const form = document.querySelector('#form')
+	</script>
+{% endblock %}

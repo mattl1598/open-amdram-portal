@@ -63,7 +63,7 @@ class OrderInfo:
 @login_required
 def get_orders():
 	"""member,author,admin"""
-	now = datetime.now() + timedelta(days=1)
+	now = datetime.now() - timedelta(days=1)
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
 
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"

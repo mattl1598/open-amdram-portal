@@ -1,11 +1,38 @@
 @import "partials/layout";
 @import "partials/form_element";
+@import "partials/payment_status_container";
+
+div#waiting:not(.hidden) {
+	cursor: wait !important;
+	position: fixed;
+	top: 0;
+	left: 0;
+
+	width: 100vw;
+	height: 100vh;
+	z-index: 100000;
+}
+
+div.main-section div.content.m {
+	min-width: 480px !important;
+}
+
+span.card_icon {
+	//content: url('data:image/svg+xml; utf8, ');
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	svg {
+		@include theme(color, text);
+	}
+}
 
 div.content.m {
 	min-width: initial !important;
 }
 
 form {
+	min-width: 500px !important;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -18,8 +45,152 @@ form {
 		max-width: 28rem;
 	}
 
+	select, input, textarea, a {
+		font-size: 110%;
+		padding: 8px 8px !important;
+
+	}
+
+	button.card_pay_button {
+		all: unset;
+	}
+
+	button.card_pay_button:disabled {
+		background-color: grey;
+	}
+
 	//width: 100%;
 	margin: 1ch;
+
+	div.row {
+		div#card-container {
+			.sq-card-message-no-error {
+				&::before {
+					@include theme(background-color, text);
+				}
+				@include theme(color, text);
+			}
+			.sq-card-message-error {
+				color: red;
+				&::before {
+					background-color: red;
+				}
+			}
+		}
+
+
+		div#card_input {
+			align-self: stretch;
+			display: inline-flex;
+			flex-direction: row;
+
+			@include theme(background, bg3);
+			@include theme(color, text);
+
+			border: 2px solid grey;
+			border-radius: 0.25rem;
+
+			span.card_icon  {
+				@include theme(fill, text);
+				margin: auto 0.5ch;
+			}
+
+			span.separator {
+				margin: auto 0;
+				//padding: 10px 0;
+				color: grey;
+			}
+
+			div:not(.full-width) {
+				flex-basis: 1%;
+
+				input {
+					border: none;
+					background: transparent;
+				}
+
+				&.fancy-input {
+					margin-top: 0.5rem;
+				}
+
+				select, input, textarea, a {
+					padding: 8px 4px 4px !important;
+					font-size: 110%;
+
+					&:focus + label,
+					&:hover + label,
+					& + label:hover,
+					&:not([type=text]):valid + label,
+					&[type=text]:not(:placeholder-shown) + label {
+						margin-top: -1.1ch;
+						font-size: 85%;
+					}
+				}
+
+				label {
+					@include not-mobile {
+						padding-top: 0.4ch;
+						padding-left: 1ch;
+					}
+				}
+
+				&.card_number {
+					flex-grow: 16;
+				}
+				&.card_expiry {
+					flex-grow: 6;
+				}
+				&.card_cvv {
+					flex-grow: 5;
+				}
+				&.card_postcode {
+					flex-grow: 10;
+				}
+			}
+
+			&:has(div.fancy-input > input:placeholder-shown) + button.card_pay_button, & button#card-button:disabled  {
+				cursor: not-allowed;
+				background-color: grey !important;
+				span {
+					pointer-events: none;
+				}
+			}
+			&:not(:has(div.fancy-input > input:placeholder-shown)) + button.card_pay_button {
+				cursor: pointer;
+				@include theme(background-color, accent1);
+			}
+			&:not(:has(div.fancy-input > input:placeholder-shown)) {
+				@include theme(border-color, accent2);
+			}
+		}
+
+		button.card_pay_button {
+			border-radius: 0.5rem;
+			padding: 0 2rem;
+			margin: 0 auto;
+			background-color: grey;
+			cursor: not-allowed;
+
+			span#amount {
+				&:not(:empty)::before {
+					content: " - £";
+				}
+			}
+
+			&:disabled {
+				cursor: not-allowed !important;
+				background-color: grey !important;
+				//span {
+				//	pointer-events: none;
+				//}
+			}
+		}
+	}
+
+	&:not(:has(div.fancy-input > input:placeholder-shown)):not(:has(option[value=""]:checked)) button.card_pay_button {
+		cursor: pointer;
+		@include theme(background-color, accent1);
+	}
 
 	.row {
 		align-self: stretch;
@@ -28,9 +199,10 @@ form {
 		div[title] {
 			text-decoration-style: dotted;
 			text-decoration-line: underline;
+			user-select: none;
 
 			&:hover {
-				cursor: pointer;
+				cursor: help;
 			}
 		}
 

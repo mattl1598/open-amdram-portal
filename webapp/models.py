@@ -70,7 +70,6 @@ class PrizeDrawEntry(db.Model, NewIdGetter):
 	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 
 
-
 # noinspection PyRedeclaration
 class User(UserMixin, db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
@@ -88,6 +87,7 @@ class User(UserMixin, db.Model, NewIdGetter):
 	blogpost = db.relationship('BlogPost', backref='user', lazy=True)
 	post = db.relationship('Post', backref='user', lazy=True)
 	member = db.relationship('Member', backref='user', lazy=True)
+	subs_payment = db.relationship('SubsPayment', backref='user', lazy=True)
 
 	def __init__(self, **kwargs):
 		super(User, self).__init__(**kwargs)
@@ -109,6 +109,21 @@ class User(UserMixin, db.Model, NewIdGetter):
 
 	def verify_password(self, password):
 		return check_password_hash(self.password_hash, password)
+
+
+class SubsPayment(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
+	membership_type = db.Column(db.String(16))
+	amount_paid = db.Column(db.Integer)
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	name = db.Column(db.String(50))
+	email = db.Column(db.String(120))
+	phone_number = db.Column(db.String(13))
+	e_con_name = db.Column(db.String(50))
+	e_con_phone = db.Column(db.String(13))
+	order_id = db.Column(db.String(192))
+	payment_id = db.Column(db.String(192))
 
 
 class Member(db.Model, NewIdGetter):

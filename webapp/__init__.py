@@ -50,7 +50,8 @@ def create_app():
 		db.init_app(app)
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
-		# db = SQLAlchemy(app)
+
+		db.create_all()
 
 		qrcode = QRcode()
 		qrcode.init_app(app)
