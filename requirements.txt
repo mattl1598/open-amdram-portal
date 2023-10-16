@@ -1,6 +1,7 @@
 corha
 distinctipy
 dotmap
+Werkzeug==2.3.7
 Flask
 Flask-Login
 flask-qrcode
