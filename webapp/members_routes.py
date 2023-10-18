@@ -1322,6 +1322,7 @@ def new_idemp():
 @bp.route("/api/members/subs_payment", methods=["GET","POST"])
 @login_required
 def subs_payment():
+	"""member,author,admin"""
 	amount = 0
 	item_id = ""
 	try:
@@ -1340,7 +1341,7 @@ def subs_payment():
 		item_id = level_details.get("square_id")
 		item_name = request.json.get("level")
 	except AttributeError:
-		return 404
+		abort(404)
 
 	order_id = None
 	# create an order

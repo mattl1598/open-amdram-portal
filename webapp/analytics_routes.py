@@ -1,6 +1,6 @@
 import collections
 
-from flask import Blueprint, render_template, request, session
+from flask import abort, Blueprint, render_template, request, session
 from flask_login import current_user, login_required
 import datetime
 import distinctipy as distinctipy
@@ -57,7 +57,9 @@ def after_app_request(response):
 @bp.route("/members/analytics")
 @login_required
 def analytics():
-	"""member,author,admin"""
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	## ?start=2022-12-08T00:00:00&end=2023-01-29
 	if request.args.get("start"):
 		start_time = datetime.strptime(request.args.get("start"), "%Y-%m-%dT%H:%M:%S")

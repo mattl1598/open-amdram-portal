@@ -2,14 +2,12 @@ import pytest
 from webapp.tests.conftest import all_routes, auth_map, auth
 
 
-# @pytest.mark.members
-# @pytest.mark.parametrize("route", all_routes)
-def test_members_views(route, admin_client, author_client, member_client):
-	client_dict = {"member": member_client, "author": author_client, "admin": admin_client}
-	auth_client = client_dict[auth]
+@pytest.mark.all_get
+@pytest.mark.parametrize("route", all_routes)
+def test_all_get(route, test_client, auth):
 	if "logout" not in route:
-		with auth_client:
-			response = auth_client.get(route, headers={"Referer": '/'})
+		with test_client:
+			response = test_client.get(route, headers={"Referer": '/'})
 			resp_code = response.status_code
 	else:
 		resp_code = 200
@@ -26,10 +24,3 @@ def test_members_views(route, admin_client, author_client, member_client):
 		codes = [200, 302]
 
 	assert resp_code in codes
-
-
-# @pytest.mark.parametrize("auth", [
-# 	"member",
-# 	"author",
-# 	"admin"
-# ])

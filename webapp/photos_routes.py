@@ -2,7 +2,7 @@ import io
 import json
 import time
 
-from flask_login import login_required
+from flask_login import current_user, login_required
 from PIL import Image
 from pprint import pprint
 
@@ -54,6 +54,7 @@ def update_access_token():
 @bp.route("/members/manage_media", methods=["POST", "GET"])
 @login_required
 def manage_media(**kwargs):
+	"""admin"""
 	if request.method == "POST" or kwargs.get("mammoth") == "true":
 		b_in = io.BytesIO()
 		if kwargs.get("mammoth") == "true":
@@ -271,6 +272,9 @@ def get_photo(media_id, **kwargs):
 @bp.route("/members/set_show_photos/oauth")
 @login_required
 def oauth():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if "localhost" in request.url_root:
 		redirect_url = request.url_root + "members/set_show_photos/form"
 	else:
@@ -301,6 +305,10 @@ def oauth():
 @bp.route("/members/set_show_photos/form", methods=["GET", "POST"])
 @login_required
 def choose_album():
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
+
 	client_id = app.config['g_client_id']
 	client_secret = app.config['g_client_secret']
 
