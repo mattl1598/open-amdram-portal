@@ -32,7 +32,7 @@ jobs:
         pip install -r requirements.txt
     - name: Test with pytest
       run: |
-        pytest --auth public
+        pytest --auth=public
 
   test-member:
     runs-on: ubuntu-22.04
@@ -53,7 +53,7 @@ jobs:
         pip install -r requirements.txt
     - name: Test member access to member area
       run: |
-        pytest --auth member
+        pytest --auth=member
 
   test-author:
     runs-on: ubuntu-22.04
@@ -74,7 +74,7 @@ jobs:
         pip install -r requirements.txt
     - name: Test author access to member area
       run: |
-        pytest --auth author
+        pytest --auth=author
 
   test-admin:
     runs-on: ubuntu-22.04
@@ -95,4 +95,4 @@ jobs:
         pip install -r requirements.txt
     - name: Test admin access to member area
       run: |
-        pytest --auth admin
+        pytest --auth=admin
