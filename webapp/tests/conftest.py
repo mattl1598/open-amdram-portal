@@ -5,20 +5,31 @@ all_routes = [x.rule for x in webapp.create_app().url_map.iter_rules()]
 
 auth_map = {}
 
+auth = ""
+
+
+def pytest_addoption(parser):
+	parser.addoption("--auth", action="store", default="")
+
 
 def pytest_configure(config):
-	config.addinivalue_line(
-		"markers",
-		"public: mark test as testing the page from the public view",
-	)
-	config.addinivalue_line(
-		"markers",
-		"members: mark test as testing the page from the members view"
-	)
-	config.addinivalue_line(
-		"markers",
-		"test: mark test as testing test functionality"
-	)
+	global auth
+	auth = config.getoption('auth')
+	if auth == "public":
+		config.addinivalue_line(
+			"markers",
+			"public: mark test as testing the page from the public view",
+		)
+	elif auth in ["member", "author", "admin"]:
+		config.addinivalue_line(
+			"markers",
+			"members: mark test as testing the page from the members view"
+		)
+
+	# config.addinivalue_line(
+	# 	"markers",
+	# 	"test: mark test as testing test functionality"
+	# )
 
 
 @pytest.fixture(scope="session")
@@ -82,5 +93,3 @@ def admin_client(app):
 @pytest.fixture()
 def runner(app):
 	return app.test_cli_runner()
-
-

@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  test-public:
     runs-on: ubuntu-22.04
     environment: PYTEST
 
@@ -32,4 +32,67 @@ jobs:
         pip install -r requirements.txt
     - name: Test with pytest
       run: |
-        pytest
+        pytest --auth public
+
+  test-member:
+    runs-on: ubuntu-22.04
+    environment: PYTEST
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: 'Create env file'
+      run: |
+        echo '${{ secrets.ENV_FILE }}' > .env
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Test member access to member area
+      run: |
+        pytest --auth member
+
+  test-author:
+    runs-on: ubuntu-22.04
+    environment: PYTEST
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: 'Create env file'
+      run: |
+        echo '${{ secrets.ENV_FILE }}' > .env
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Test author access to member area
+      run: |
+        pytest --auth author
+
+  test-admin:
+    runs-on: ubuntu-22.04
+    environment: PYTEST
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: 'Create env file'
+      run: |
+        echo '${{ secrets.ENV_FILE }}' > .env
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Test admin access to member area
+      run: |
+        pytest --auth admin
