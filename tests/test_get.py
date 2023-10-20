@@ -1,5 +1,5 @@
 import pytest
-from webapp.tests.conftest import all_routes, auth_map, auth
+from tests.conftest import all_routes, auth_map
 
 
 @pytest.mark.all_get
@@ -12,7 +12,7 @@ def test_all_get(route, test_client, auth):
 	else:
 		resp_code = 200
 
-	if "upload" in route:
+	if "upload" in route or "subs_payment" in route:
 		codes = [405]
 	elif route == "/members/otp":
 		codes = [302]

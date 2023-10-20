@@ -1319,7 +1319,7 @@ def new_idemp():
 	return jsonify({"new_key": uuid.uuid4().hex})
 
 
-@bp.route("/api/members/subs_payment", methods=["GET","POST"])
+@bp.route("/api/members/subs_payment", methods=["POST"])
 @login_required
 def subs_payment():
 	"""member,author,admin"""

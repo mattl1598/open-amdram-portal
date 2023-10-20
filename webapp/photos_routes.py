@@ -55,6 +55,8 @@ def update_access_token():
 @login_required
 def manage_media(**kwargs):
 	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	if request.method == "POST" or kwargs.get("mammoth") == "true":
 		b_in = io.BytesIO()
 		if kwargs.get("mammoth") == "true":

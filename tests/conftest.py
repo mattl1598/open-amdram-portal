@@ -2,8 +2,12 @@ import pytest
 import webapp
 
 all_routes = [x.rule for x in webapp.create_app().url_map.iter_rules()]
+test = [x for x in webapp.create_app().url_map.iter_rules()][0]
+print(test)
+
 
 auth_map = {}
+method_map = {}
 
 option = ""
 
