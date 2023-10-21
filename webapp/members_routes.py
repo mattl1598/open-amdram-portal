@@ -1289,6 +1289,7 @@ def member_registeration():
 @bp.route("/members/pay_subs", methods=["GET", "POST"])
 @login_required
 def pay_subs():
+	"""member,author,admin"""
 	idempotency_key = uuid.uuid4().hex
 	subs_levels = json.loads(KeyValue.query.get("subs_levels").value)
 	return render_template(
@@ -1301,7 +1302,6 @@ def pay_subs():
 
 
 @bp.route("/api/members/subs_amount/<query>", methods=["GET"])
-@login_required
 def subs_amount(query):
 	levels = json.loads(KeyValue.query.get("subs_levels").value)
 	result = levels.get(query)

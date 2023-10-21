@@ -62,14 +62,16 @@ class OrderInfo:
 @bp.get('/members/get_orders')
 @login_required
 def get_orders():
-	"""member,author,admin"""
+	"""admin"""
+	if current_user.role not in ["admin"]:
+		abort(403)
 	now = datetime.now() - timedelta(days=1)
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
 
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 	ticket_types = []
-	for item in app.square.catalog.search_catalog_items(
+	for item in (app.square.catalog.search_catalog_items(
 		body={
 			"category_ids": [
 				"LETDSKQATFDC3IAJITOXQFGT"
@@ -79,7 +81,7 @@ def get_orders():
 			],
 			"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
 		}
-	).body["items"]:
+	).body.get("items") or []):
 		if item["item_data"]["ecom_visibility"] == "VISIBLE":
 			ticket_types.append(item["item_data"]["name"])
 
@@ -133,7 +135,7 @@ def get_orders():
 		abort(500)
 	else:
 		test = []
-		for i in range(0, len(results.body["orders"])):
+		for i in range(0, len(results.body.get("orders") or [])):
 			order = results.body["orders"][i]
 			for item in order["line_items"]:
 				try:

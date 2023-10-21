@@ -295,7 +295,7 @@ def analytics():
 
 	test3 = {}
 
-	for x in results.body.get("orders"):
+	for x in (results.body.get("orders") or []):
 		date_key = datetime.strptime(x["created_at"], square_date_format).strftime(form)
 		test3[date_key] = {
 			"x": date_key,

@@ -718,6 +718,9 @@ def otp():
 @bp.route("/members/register", methods=["GET", "POST"])
 def register():
 	if request.method == "GET":
+		if current_user.is_authenticated:
+			return redirect(url_for("members_routes.dashboard"))
+
 		current_date = datetime.now()
 		# Calculate the most recent July 1st that has passed
 		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
