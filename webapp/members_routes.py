@@ -1444,6 +1444,8 @@ def logout():
 @bp.route("/members/test", methods=["GET"])
 @login_required
 def test():
-	"""member,author,admin"""
+	"""admin"""
+	if current_user.role != "admin":
+		abort(403)
 	test1 = User.query.get("r5zwBgKQjl7Kesy")
 	return jsonify(test1.verify_password("r5zwBgKQjl7Kesy"))
