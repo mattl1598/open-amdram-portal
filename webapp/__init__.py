@@ -4,6 +4,7 @@ from os import walk
 from urllib.parse import urlparse
 
 import markdown as markdown
+import requests
 from flask import Flask, redirect, render_template, request, session, abort  # , url_for, session
 from flask_qrcode import QRcode
 from square.client import Client as SquareClient
@@ -29,6 +30,8 @@ def create_app():
 	app = Flask(__name__, static_folder=None)
 	with app.app_context():
 		app.envs = corha.credentials_loader(".env")
+		app.requests_session = requests.Session()
+		app.requests_session.get("https://photoslibrary.googleapis.com/v1/mediaItems/")
 		git = ["git", "/usr/bin/git"][platform.system() == "Linux"]
 		output = subprocess.run([
 						git, '-C', os.getcwd(),

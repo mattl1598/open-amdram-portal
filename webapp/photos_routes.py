@@ -45,7 +45,8 @@ def update_access_token():
 			"client_secret": app.config['g_client_secret'],
 			"grant_type": "refresh_token"
 		}
-		x = requests.post(url=url, data=data).json()
+		x = app.requests_session.post(url=url, data=data).json()
+		# x = requests.post(url=url, data=data).json()
 		# pprint(x)
 		session["access_token"] = x.get("access_token")
 		session["access_token_expires"] = int(x.get("expires_in")) + int(time.time())
@@ -245,10 +246,11 @@ def get_photo(media_id, **kwargs):
 
 	if route in ["photo", "video"]:
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_id}?access_token={session.get('access_token')}"
+		x = app.requests_session.get(url=url).json()
 		# x = requests.get(url=url).json()
-		response = urllib.request.urlopen(url)
-		data = response.read()
-		x = json.loads(data)
+		# response = urllib.request.urlopen(url)
+		# data = response.read()
+		# x = json.loads(data)
 		if x.get('baseUrl') is not None:
 			if route == "photo":
 				# return redirect(
@@ -269,10 +271,11 @@ def get_photo(media_id, **kwargs):
 			f"access_token={session.get('access_token')}"
 		pprint(time.time()-start)
 		print(url)
+		x = app.requests_session.get(url=url).json()
 		# x = requests.get(url=url).json()
-		response = urllib.request.urlopen(url)
-		data = response.read()
-		x = json.loads(data)
+		# response = urllib.request.urlopen(url)
+		# data = response.read()
+		# x = json.loads(data)
 		pprint(time.time()-start)
 		if x.get('baseUrl') is not None:
 			return redirect(
