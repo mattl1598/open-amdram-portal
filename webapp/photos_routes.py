@@ -1,6 +1,7 @@
 import io
 import json
 import time
+import urllib
 
 from flask_login import current_user, login_required
 from PIL import Image
@@ -244,7 +245,10 @@ def get_photo(media_id, **kwargs):
 
 	if route in ["photo", "video"]:
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_id}?access_token={session.get('access_token')}"
-		x = requests.get(url=url).json()
+		# x = requests.get(url=url).json()
+		response = urllib.request.urlopen(url)
+		data = response.read()
+		x = json.loads(data)
 		if x.get('baseUrl') is not None:
 			if route == "photo":
 				# return redirect(
@@ -264,7 +268,11 @@ def get_photo(media_id, **kwargs):
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
 			f"access_token={session.get('access_token')}"
 		pprint(time.time()-start)
-		x = requests.get(url=url).json()
+		print(url)
+		# x = requests.get(url=url).json()
+		response = urllib.request.urlopen(url)
+		data = response.read()
+		x = json.loads(data)
 		pprint(time.time()-start)
 		if x.get('baseUrl') is not None:
 			return redirect(
