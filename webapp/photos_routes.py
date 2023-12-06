@@ -239,6 +239,7 @@ def manage_media(**kwargs):
 def get_photo(media_id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
 
+	start = time.time()
 	update_access_token()
 
 	if route in ["photo", "video"]:
@@ -257,10 +258,14 @@ def get_photo(media_id, **kwargs):
 		else:
 			abort(404)
 	elif route == "media":
+		print(time.time()-start)
 		item = StaticMedia.query.filter_by(id=media_id, filename=kwargs["filename"]).first_or_404()
+		print(time.time()-start)
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
 			f"access_token={session.get('access_token')}"
+		print(time.time()-start)
 		x = requests.get(url=url).json()
+		print(time.time()-start)
 		if x.get('baseUrl') is not None:
 			return redirect(
 				f"{x.get('baseUrl')}=d"
