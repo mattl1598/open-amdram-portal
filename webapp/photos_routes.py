@@ -45,7 +45,7 @@ def update_access_token():
 			"grant_type": "refresh_token"
 		}
 		x = requests.post(url=url, data=data).json()
-		pprint(x)
+		# pprint(x)
 		session["access_token"] = x.get("access_token")
 		session["access_token_expires"] = int(x.get("expires_in")) + int(time.time())
 		session.modified = True
@@ -146,7 +146,7 @@ def manage_media(**kwargs):
 		db.session.commit()
 
 		if kwargs.get("mammoth") == "true":
-			print("mammoth")
+			# print("mammoth")
 			return {
 				"path": f"/media/{new_item.id}/{new_item.filename}",
 				"filename": f"{new_item.filename}"
@@ -158,7 +158,7 @@ def manage_media(**kwargs):
 				"filename": f"{new_item.filename}"
 			})
 		else:
-			print("direct")
+			# print("direct")
 			return redirect(request.referrer)
 	else:
 		if "delete" in request.args.keys():
