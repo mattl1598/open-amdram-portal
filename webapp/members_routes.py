@@ -119,7 +119,20 @@ def dashboard():
 		actions.append({
 			"icon": "important", "link": url_for("members_routes.account_settings"), "date": datetime.utcnow(),
 			"title_text": "Add Emergency Contact", "body_text": "Click to Update your Emergency Contact Details"
-		 })
+		})
+	current_date = datetime.now()
+	# Calculate the most recent July 1st that has passed
+	if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+		most_recent_july_1st = datetime(current_date.year, 7, 1)
+	else:
+		most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+	# Get the datestamp for midnight on the most recent July 1st
+	midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+	if not SubsPayment.query.filter_by(user_id=current_user.id).filter(SubsPayment.datetime > midnight_july_1st).count():
+		actions.append({
+			"icon": "important", "link": url_for("members_routes.pay_subs"), "date": datetime.utcnow(),
+			"title_text": "Renew Membership", "body_text": "Click to renew your membership."
+		})
 
 	posts = Post.query \
 		.filter(
@@ -1171,9 +1184,33 @@ def account_settings():
 			key = pyotp.random_base32()
 		totp = pyotp.totp.TOTP(key)
 		otp_qr = totp.provisioning_uri(name=current_user.email, issuer_name='Silchester Players Members')
+		subs_result = SubsPayment.query.filter_by(user_id=current_user.id).order_by(SubsPayment.datetime.desc()).first()
+		current_date = datetime.now()
+		# Calculate the most recent July 1st that has passed
+		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+			most_recent_july_1st = datetime(current_date.year, 7, 1)
+		else:
+			most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+		# Get the datestamp for midnight on the most recent July 1st
+		midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+		if subs_result:
+			day = int(subs_result.datetime.strftime("%d"))
+			suffix = [["th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"][int(str(day)[-1])], "th"][14 > day > 10]
+			date = f"{day}{suffix}"
+			date += subs_result.datetime.strftime(" %B %Y")
+			last_payment = {
+				"exists": True,
+				"level": subs_result.membership_type,
+				"date": date,
+				"due": midnight_july_1st > subs_result.datetime
+			}
+		else:
+			last_payment = {"exists": False}
+
 		return render_template(
 			"members/account_settings.html",
 			otp_qr=otp_qr,
+			last_payment=last_payment,
 			css="account_settings.css"
 		)
 	else:

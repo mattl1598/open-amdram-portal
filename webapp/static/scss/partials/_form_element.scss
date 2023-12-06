@@ -65,8 +65,15 @@ div.fancy-input {
 
 		&:focus,
 		&:not([type=text]):valid,
-		&[type=text]:not(:placeholder-shown) {
+		&[type=text]:not(:placeholder-shown),
+		&:not(.disabled).border_accent2 {
 			@include theme(border-color, accent2);
+		}
+
+		&.disabled {
+			user-select: none;
+			pointer-events: none;
+			text-decoration: line-through;
 		}
 
 		&:focus + label,

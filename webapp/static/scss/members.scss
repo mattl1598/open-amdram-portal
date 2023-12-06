@@ -25,6 +25,21 @@ div.login_form form {
 	//width: 100%;
 	margin: 1ch;
 
+	.row {
+		align-self: stretch;
+
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		@include not-mobile {
+			flex-direction: row;
+			gap: 0.5rem;
+		}
+		@include mobile {
+			flex-direction: column;
+			gap: 1rem;
+		}
+	}
 
 	&#registration_form {
 		.row {

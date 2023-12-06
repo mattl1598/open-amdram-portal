@@ -715,7 +715,7 @@ def otp():
 			return redirect(url_for("routes.members"))
 
 
-@bp.route("/members/register", methods=["GET", "POST"])
+# @bp.route("/members/register0", methods=["GET", "POST"])
 def register():
 	if request.method == "GET":
 		if current_user.is_authenticated:
@@ -834,7 +834,6 @@ def register():
 					session['new_user_params'] = new_user_params
 					session.modified = True
 					return redirect("members_routes.pay_subs")
-
 
 @bp.route("/js/<string:filename>", methods=["GET"])
 def js(filename):

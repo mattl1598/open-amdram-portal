@@ -3,6 +3,28 @@
 	<h1>Account Settings</h1>
 	<div class="form_container">
 
+		{# Membership #}
+		<form action="" method=post>
+			<h2>Manage Membership</h2>
+			{% if last_payment.get("exists") %}
+				<div>
+					Membership Level: {{ last_payment["level"] | capitalize }}
+				</div>
+				<div>
+					Last Payment: {{ last_payment["date"] }}
+				</div>
+			{% endif %}
+
+			{% if last_payment.get("due") or not last_payment.get("exists") %}
+				<h3>Please click below to pay your subs this year.</h3>
+			{% else %}
+				<h3>You're all up to date!</h3>
+			{% endif %}
+
+			<div class="fancy-input">
+				<a href="/members/pay_subs" class="button border_accent2 {% if not last_payment.get("due") and last_payment.get("exists") %}disabled{% endif %}">Click to Pay Subs</a>
+			</div>
+		</form>
 		{# PASSWORD #}
 		<form action="" method=post>
 			<h2>Change Password</h2>
@@ -110,7 +132,7 @@
 				<span class="form_success"> - Profile was updated successfully.</span>
 			{% endif %}
 		</form>
-		{# PROFILE #}
+		{# CONTACT DETAILS #}
 		<form action="" method=post>
 			<h2>Update Phone Number</h2>
 			<div class="fancy-input">
