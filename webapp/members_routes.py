@@ -1458,7 +1458,7 @@ def subs_payment():
 				datetime=datetime.utcnow(),
 				name=f"{current_user.firstname} {current_user.lastname}",
 				email=current_user.email,
-				phone=request.json.get("phone"),
+				phone_number=request.json.get("phone"),
 				e_con_name=request.json.get("e_con_name"),
 				e_con_phone=request.json.get("e_con_phone"),
 				order_id=order_id,
