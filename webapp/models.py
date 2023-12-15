@@ -126,6 +126,18 @@ class SubsPayment(db.Model, NewIdGetter):
 	payment_id = db.Column(db.String(192))
 
 
+class BookingModifications(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	ref_num = db.Column(db.Integer)
+	from_item = db.Column(db.Text())
+	change_quantity = db.Column(db.Integer)
+	to_item = db.Column(db.Text)
+	is_reservation = db.Column(db.Boolean, default=False)
+	note = db.Column(db.Text())
+
+
+
 class Member(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))

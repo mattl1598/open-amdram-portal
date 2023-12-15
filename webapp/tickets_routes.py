@@ -9,6 +9,8 @@ from flask_login import current_user, login_required
 # import datetime
 from datetime import timedelta, datetime
 
+from sqlalchemy import or_
+
 from webapp.models import *
 from flask import current_app as app
 
@@ -93,6 +95,8 @@ def get_orders():
 		if perf_tree[keys[0]].get(keys[1]) is None:
 			perf_tree[keys[0]][keys[1]] = {}
 
+	pprint(perf_tree)
+
 	results = app.square.orders.search_orders(
 		body={
 			"location_ids": [
@@ -135,21 +139,95 @@ def get_orders():
 		abort(500)
 	else:
 		test = []
+		mods = (BookingModifications
+				.query
+				.filter(
+			BookingModifications.ref_num < 0,
+			BookingModifications.datetime > end_of_last_show
+		)
+				.all()
+				or [])
+		for mod in mods:
+			tickets_info = {
+				"ticket_type": mod.to_item,
+				"ticket_quantity": mod.change_quantity,
+				"name": mod.from_item,
+				"note": ["Comped - ", "Reserved - "][int(mod.is_reservation)] + (mod.note or ""),
+				"date": datetime.utcnow().strftime(square_date_format)[:-4] + "Z",
+				"id": "N/A",
+				"ref": mod.ref_num
+			}
+			order_info = OrderInfo(**tickets_info)
+			test.append(order_info)
 		for i in range(0, len(results.body.get("orders") or [])):
 			order = results.body["orders"][i]
+			mods = (BookingModifications
+					.query
+					.filter_by(ref_num=i)
+					.filter(
+						BookingModifications.datetime > end_of_last_show,
+						or_(BookingModifications.from_item == "", BookingModifications.from_item.is_(None))
+					)
+					.all()
+				or [])
+			for mod in mods:
+				tickets_info = {
+					"ticket_type": mod.to_item,
+					"ticket_quantity": mod.change_quantity,
+					"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+					"note": order["fulfillments"][0]["pickup_details"]["note"],
+					"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
+					"id": order["id"],
+					"ref": i
+				}
+				order_info = OrderInfo(**tickets_info)
+				test.append(order_info)
 			for item in order["line_items"]:
 				try:
-					tickets_info = {
-						"ticket_type": item["name"],
-						"ticket_quantity": item["quantity"],
-						"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-						"note": order["fulfillments"][0]["pickup_details"]["note"],
-						"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
-						"id": order["id"],
-						"ref": i
-					}
-					order_info = OrderInfo(**tickets_info)
-					test.append(order_info)
+					if len((mods := BookingModifications
+										.query
+										.filter_by(ref_num=i, from_item=item["name"])
+										.filter(BookingModifications.datetime > end_of_last_show)
+										.all()
+									or []
+							)):
+						remaining_quantity = int(item["quantity"])
+						for mod_num in range(0, len(mods) + 1):
+							if mod_num >= len(mods):
+								to_item = item["name"]
+								quantity = remaining_quantity
+							else:
+								to_item = mods[mod_num].to_item
+								if mods[mod_num].change_quantity > remaining_quantity:
+									abort(500,
+											f"Quantity in modification is too large for assigned order. Ref: {i}. Mod ID: {mods[mod_num].id}."
+										)
+								remaining_quantity = remaining_quantity - (quantity := mods[mod_num].change_quantity)
+
+							if quantity != 0:
+								tickets_info = {
+									"ticket_type": to_item,
+									"ticket_quantity": quantity,
+									"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+									"note": order["fulfillments"][0]["pickup_details"]["note"],
+									"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
+									"id": order["id"],
+									"ref": i
+								}
+								order_info = OrderInfo(**tickets_info)
+								test.append(order_info)
+					else:
+						tickets_info = {
+							"ticket_type": item["name"],
+							"ticket_quantity": item["quantity"],
+							"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+							"note": order["fulfillments"][0]["pickup_details"]["note"],
+							"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
+							"id": order["id"],
+							"ref": i
+						}
+						order_info = OrderInfo(**tickets_info)
+						test.append(order_info)
 				except KeyError as e:
 					pass
 					# pprint(order)
@@ -162,6 +240,8 @@ def get_orders():
 				perf_tree[keys[0]][keys[1]][item.id] = existing + item
 			else:
 				perf_tree[keys[0]][keys[1]][item.id] = item
+
+		pprint(perf_tree)
 
 		output = BytesIO()
 		workbook = xlsxwriter.Workbook(output)
