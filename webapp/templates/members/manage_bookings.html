@@ -1,0 +1,27 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h1>Manage Bookings</h1>
+	<table>
+	<thead>
+		<th>ID</th>
+		<th>Ref#</th>
+		<th>From</th>
+		<th>Quantity</th>
+		<th>New Item</th>
+		<th>Note</th>
+		<th>Reserved?</th>
+	</thead>
+	{% for mod in mods %}
+		<tr>
+			<td title="{{ mod.id }}"><span class="icon"><svg viewbox="0 0 50 50">{{ icons["important"] | safe }}</svg></span></td>
+			<td>{{ mod.ref_num }}</td>
+			<td>{{ mod.from_item }}</td>
+			<td>{{ mod.quantity }}</td>
+			<td>{{ mod.to_item }}</td>
+			<td>{{ mod.note }}</td>
+			<td><input type="checkbox" {% if mod.is_reservation %} checked {% endif %} onclick="return false;"></td>
+		</tr>
+	{% endfor %}
+	</table>
+	<a href="/members/get_orders"><h3>Download Orders File</h3></a>
+{% endblock %}
