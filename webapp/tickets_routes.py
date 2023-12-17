@@ -296,3 +296,16 @@ def get_orders():
 		output.close()
 
 		return response
+
+
+@bp.route("/members/bookings")
+def bookings():
+	"""admin"""
+	now = datetime.utcnow() - timedelta(days=1)
+	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
+	mods = BookingModifications.query.filter(BookingModifications.datetime > end_of_last_show).all()
+	return render_template(
+			"members/manage_bookings.html",
+			mods=mods,
+			css="bookings.css"
+		)

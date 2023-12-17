@@ -1,6 +1,17 @@
 @import "variables";
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+a {
+	//text-decoration: none;
+	@include theme(color, text);
+
+	&.button {
+		@include theme(border-color, accent1);
+		white-space: nowrap;
+		text-align: center;
+	}
+}
+
 svg.loading {
 	circle {
         @include theme(fill, accent1);

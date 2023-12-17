@@ -3,17 +3,6 @@
 @import "partials/variables";
 @import "partials/form_element";
 
-a {
-	//text-decoration: none;
-	@include theme(color, text);
-
-	&.button {
-		@include theme(border-color, accent1);
-		white-space: nowrap;
-		text-align: center;
-	}
-}
-
 div.if_empty:not(:has(> div > :not(:only-child)))::after {
 	white-space: pre;
 	content: "\A Theres currently no content to show you here. \A In the meantime, please feel free to stare at this empty page and use your imagination to fill in the space. \A Or, you know, you could just check back later when we actually have something here. Your call.";

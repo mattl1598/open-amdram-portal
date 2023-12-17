@@ -109,7 +109,8 @@ def create_app():
 				"help": help_icon,
 				"logout": logout_icon,
 				"copy_icon": copy_icon,
-				"important": important
+				"important": important,
+				"ticket": ticket
 			}
 
 			nav = [

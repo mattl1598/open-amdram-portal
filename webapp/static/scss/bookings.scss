@@ -1,0 +1,13 @@
+@import "partials/layout";
+@import "partials/m_layout";
+@import "partials/variables";
+@import "partials/form_element";
+
+span.icon svg {
+	transform: rotate(180deg);
+
+	path {
+		@include theme(stroke, text);
+		@include theme(fill, text);
+	}
+}

@@ -229,6 +229,12 @@
             {% endif %}
 
             {% if current_user.role == "admin" %}
+	            <a href="/members/bookings">
+		            <h3>
+						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["ticket"] | safe }}</svg></span>
+			            Manage Bookings
+		            </h3>
+	            </a>
 	            <a href="/members/admin">
 		            <h3>
 						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>
