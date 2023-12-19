@@ -24,3 +24,12 @@ td.wide input {
 	text-align: center;
 	width: 98%;
 }
+
+td input:not([type="submit"]):not([type="checkbox"]), td select {
+	@include theme(color, text);
+	@include theme(background-color, bg4);
+
+	&::placeholder {
+		@include theme(color, text);
+	}
+}

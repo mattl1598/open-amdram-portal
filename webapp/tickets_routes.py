@@ -323,7 +323,7 @@ def bookings():
 		if len(mod):
 			db.session.delete(mod[0])
 			db.session.commit()
-		return redirect(url_for("ticket_routes.bookings"))
+		return redirect(url_for("tickets_routes.bookings"))
 	now = datetime.utcnow() - timedelta(days=1)
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
 	mods = BookingModifications.query.filter(BookingModifications.datetime > end_of_last_show).all()
@@ -355,3 +355,86 @@ def bookings():
 			items=items,
 			css="bookings.css"
 		)
+
+@bp.route("/members/bookings/historic_sales")
+def historic_sales():
+	show_id = "7L7wFffY_LbEGmX"
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	show = Show.query.get(show_id)
+	end_date = show.date
+	start_date = Show.query.filter(Show.date < end_date).order_by(Show.date.desc()).first().date + timedelta(days=1)
+
+	results = app.square.orders.search_orders(
+		body={
+			"location_ids": [
+				"0W6A3GAFG53BH"
+			],
+			"query": {
+				"sort": {
+					"sort_field": "CREATED_AT",
+					"sort_order": "ASC"
+				},
+				"filter": {
+					"date_time_filter": {
+						"created_at": {
+							"start_at": start_date.strftime(square_date_format),
+							"end_at": end_date.strftime(square_date_format)
+						}
+					},
+					"source_filter": {
+						"source_names": [
+							"Square Online"
+						]
+					},
+					"state_filter": {
+						"states": [
+							"OPEN",
+							"COMPLETED"
+						]
+					},
+					"fulfillment_filter": {
+						"fulfillment_types": [
+							"PICKUP"
+						]
+					}
+				}
+			}
+		}
+	)
+
+	if results.is_error():
+		print("Error:", results.errors)
+		abort(500)
+	else:
+		sums = {}
+		for order in (results.body.get("orders") or []):
+			for item in order["line_items"]:
+				sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
+
+	result = app.square.payments.list_payments(
+		begin_time=start_date.strftime(square_date_format),
+		end_time=end_date.strftime(square_date_format),
+		location_id="0W6A3GAFG53BH"
+	)
+
+	if result.is_error():
+		print(result.errors)
+	else:
+		totals = {
+			"paid": 0,
+			"fees": 0,
+			"net": 0
+		}
+		for payment in result.body.get("payments"):
+			if payment["status"] == "COMPLETED":
+				try:
+					totals["paid"] += int(payment["amount_money"]["amount"])
+					totals["net"] += int(payment["amount_money"]["amount"])
+					totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+					totals["net"] -= int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+				except KeyError as e:
+					pprint(payment)
+					print(e)
+
+	sums["totals"] = totals
+	return jsonify(sums)
