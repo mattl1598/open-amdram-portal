@@ -13,15 +13,46 @@
 	</thead>
 	{% for mod in mods %}
 		<tr>
-			<td title="{{ mod.id }}"><span class="icon"><svg viewbox="0 0 50 50">{{ icons["important"] | safe }}</svg></span></td>
-			<td>{{ mod.ref_num }}</td>
-			<td>{{ mod.from_item }}</td>
-			<td>{{ mod.quantity }}</td>
-			<td>{{ mod.to_item }}</td>
-			<td>{{ mod.note }}</td>
-			<td><input type="checkbox" {% if mod.is_reservation %} checked {% endif %} onclick="return false;"></td>
+			<td class="info" title="{{ mod.id }}"><span class="icon"><svg viewbox="0 0 50 50">{{ icons["important"] | safe }}</svg></span></td>
+			<td class="center">{{ mod.ref_num }}</td>
+			<td>{{ mod.from_item or "" }}</td>
+			<td class="center">{{ mod.change_quantity }}</td>
+			<td class="wide">{{ mod.to_item }}</td>
+			<td>{{ mod.note or "" }}</td>
+			<td class="center"><input type="checkbox" {% if mod.is_reservation %} checked {% endif %} onclick="return false;"></td>
+			<td class="center"><a href="/members/bookings?delete={{ mod.id }}">Delete</a></td>
 		</tr>
 	{% endfor %}
+		<tfoot>
+			<tr>
+				<form action="" id="add_mod">
+					<td></td>
+					<td class="center"><input form="add_mod" type="number" name="ref_num" placeholder="#"></td>
+					<td class="wide">
+						<datalist id="items_list">
+							{% for item in items %}
+								<option value="{{ item }}">{{ item }}</option>
+							{% endfor %}
+						</datalist>
+						<input type="text" list="items_list" name="from_item" placeholder="From (Name or Item)">
+					</td>
+					<td class="center"><input form="add_mod" type="number" min="1" name="change_quantity" value="1"></td>
+					<td class="wide">
+						<select form="add_mod" name="to_item" required>
+							<option value="" disabled selected>...</option>
+							{% for item in items %}
+								<option value="{{ item }}">{{ item }}</option>
+							{% endfor %}
+						</select>
+					</td>
+					<td class="wide"><input form="add_mod" type="text" name="note"></td>
+					<td class="center"><input form="add_mod" type="checkbox" name="is_reservation"></td>
+					<td class="center"><input form="add_mod" type="submit"></td>
+				</form>
+			</tr>
+		</tfoot>
 	</table>
-	<a href="/members/get_orders"><h3>Download Orders File</h3></a>
+	<div class="fancy-input">
+		<a href="/members/get_orders" class="button">Download Orders File</a>
+	</div>
 {% endblock %}

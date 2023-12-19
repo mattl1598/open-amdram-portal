@@ -4,7 +4,7 @@ from io import BytesIO
 from pprint import pprint
 
 import xlsxwriter
-from flask import Blueprint, make_response, render_template, request, session, abort, jsonify
+from flask import Blueprint, make_response, redirect, render_template, request, session, abort, jsonify, url_for
 from flask_login import current_user, login_required
 # import datetime
 from datetime import timedelta, datetime
@@ -95,7 +95,7 @@ def get_orders():
 		if perf_tree[keys[0]].get(keys[1]) is None:
 			perf_tree[keys[0]][keys[1]] = {}
 
-	pprint(perf_tree)
+	# pprint(perf_tree)
 
 	results = app.square.orders.search_orders(
 		body={
@@ -241,7 +241,7 @@ def get_orders():
 			else:
 				perf_tree[keys[0]][keys[1]][item.id] = item
 
-		pprint(perf_tree)
+		# pprint(perf_tree)
 
 		output = BytesIO()
 		workbook = xlsxwriter.Workbook(output)
@@ -298,14 +298,60 @@ def get_orders():
 		return response
 
 
-@bp.route("/members/bookings")
+@bp.route("/members/bookings", methods=["GET", "POST"])
 def bookings():
 	"""admin"""
+	if current_user.role not in ["admin"]:
+		abort(403)
+	if request.method == "POST":
+		# add new mod
+		new_mod = BookingModifications(
+			id=BookingModifications.get_new_id(),
+			datetime=datetime.utcnow(),
+			ref_num=request.form.get("ref_num"),
+			from_item=request.form.get("from_item"),
+			change_quantity=request.form.get("change_quantity"),
+			to_item=request.form.get("to_item"),
+			is_reservation=request.form.get("is_reservation"),
+			note=request.form.get("note")
+		)
+		db.session.add(new_mod)
+		db.session.commit()
+		return redirect(url_for('tickets_routes.bookings'))
+	if request.args.get("delete"):
+		mod = BookingModifications.query.filter_by(id=request.args.get("delete")).all()
+		if len(mod):
+			db.session.delete(mod[0])
+			db.session.commit()
+		return redirect(url_for("ticket_routes.bookings"))
 	now = datetime.utcnow() - timedelta(days=1)
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
 	mods = BookingModifications.query.filter(BookingModifications.datetime > end_of_last_show).all()
+	items = []
+	for item in (app.square.catalog.search_catalog_items(
+			body={
+				"category_ids": [
+					"LETDSKQATFDC3IAJITOXQFGT"
+				],
+				"product_types": [
+					"REGULAR"
+				],
+				"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
+			}
+	).body.get("items") or []):
+		items.append(item["item_data"]["name"])
+
+	def extract_numbers(string):
+		# Use regular expression to find all numbers in the string
+		numbers = re.findall(r'\d+', string)
+		# Convert the first number found to an integer (assuming there's at least one number)
+		return int(numbers[0]) if numbers else float('inf')
+
+	items = sorted(items, key=extract_numbers)
+
 	return render_template(
 			"members/manage_bookings.html",
 			mods=mods,
+			items=items,
 			css="bookings.css"
 		)

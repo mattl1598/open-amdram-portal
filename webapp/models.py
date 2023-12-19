@@ -137,7 +137,6 @@ class BookingModifications(db.Model, NewIdGetter):
 	note = db.Column(db.Text())
 
 
-
 class Member(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
