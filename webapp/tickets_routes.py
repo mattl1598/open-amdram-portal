@@ -383,7 +383,11 @@ def bookings():
 
 
 @bp.route("/members/bookings/historic_sales")
+@login_required
 def historic_sales():
+	"""admin"""
+	if current_user.role not in ["admin"]:
+		abort(403)
 	show_id = request.args.get("show_id")
 	data = None
 	totals = None
