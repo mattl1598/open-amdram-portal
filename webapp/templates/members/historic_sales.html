@@ -1,0 +1,49 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h1>Historic Sales</h1>
+	<select onchange=window.location.href=`?show_id=${this.value}`>
+		<option value="" {% if not id %}selected{% endif %} disabled>Select Show...</option>
+		{% for show in shows %}
+			<option value="{{ show.id }}" {% if id == show.id %}selected{% endif %}>{{ show.title }}</option>
+		{% endfor %}
+	</select>
+	{% if data is not none %}
+		<h3>Sales</h3>
+		<table>
+			<thead>
+				<tr>
+					<th>Item</th>
+					<th>Quantity</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for key, value in data %}
+					<tr>
+						<td>{{ key }}</td>
+						<td>{{ value }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% endif %}
+	{% if totals is not none %}
+		<h3>Amounts</h3>
+		<table>
+			<tbody>
+				<tr>
+					<th>Total</th>
+					<td>£{{ '%0.2f' % (totals["paid"]/100.0) }}</td>
+				</tr>
+				<tr>
+					<th>Fees</th>
+					<td>£{{ '%0.2f' % (totals["fees"]/100.0) }}</td>
+				</tr>
+				<tr>
+					<th>Net</th>
+					<td>£{{ '%0.2f' % (totals["net"]/100.0) }}</td>
+				</tr>
+			</tbody>
+		</table>
+	{% endif %}
+
+{% endblock %}

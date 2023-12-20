@@ -1407,18 +1407,31 @@ def subs_payment():
 							"currency": "GBP"
 						}
 					}
+				],
+				"fulfillments": [
+					{
+						"pickup_details": {
+							"auto_complete_duration": "P1W",
+							"recipient": {
+								"display_name": f"{current_user.firstname} {current_user.lastname}"
+							},
+							"schedule_type": "ASAP",
+							"prep_time_duration": "PT0S"
+						},
+						"type": "PICKUP"
+					}
 				]
 			},
 			"idempotency_key": order_idempotency_key
 		}
 	)
 	if result.is_error():
-		print("order error")
+		# print("order error")
 		response = make_response(jsonify(result.body))
 		response.status_code = 400
 		return response
 	elif result.is_success():
-		print(result.body)
+		# print(result.body)
 		order_id = result.body["order"]["id"]
 
 		payment_body = {
@@ -1432,7 +1445,7 @@ def subs_payment():
 				"currency": "GBP"
 			},
 			"location_id": app.envs.square_membership_location,
-			"note": json.dumps(membership_details)
+			"note": f"{item_name.capitalize()} Membership"
 		}
 
 		if order_id is not None:

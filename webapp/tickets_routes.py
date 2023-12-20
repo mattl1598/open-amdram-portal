@@ -17,6 +17,36 @@ from flask import current_app as app
 bp = Blueprint("tickets_routes", __name__)
 
 
+def extract_numbers(string):
+	# Use regular expression to find all numbers in the string
+	numbers = re.findall(r'\d+', string)
+	# Convert the first number found to an integer (assuming there's at least one number)
+	return "".join(numbers) if numbers else float('inf')
+
+
+def extract_month(string):
+	# Use regular expression to find the month name in the string
+	month_match = re.search(r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b', string, re.IGNORECASE)
+	if month_match:
+		month_name = month_match.group(0)
+		lookup = {
+			"Jan": 1, "Feb": 2, "Mar": 3,
+			"Apr": 4, "May": 5, "Jun": 6,
+			"Jul": 7, "Aug": 8, "Sep": 9,
+			"Oct": 10, "Nov": 11, "Dec": 12,
+			"January": 1, "February": 2, "March": 3,
+			"April": 4, "June": 6, "July": 7,
+			"August": 8, "September": 9, "October": 10,
+			"November": 11, "December": 12
+		}
+		# Convert the month name to a numeric value
+		month_number = lookup[month_name]
+		return month_number
+	else:
+		# Return a default value for strings with no month information
+		return float('inf')
+
+
 class OrderInfo:
 	def __init__(self, id: str, ref: int, date: str, name: str, note: str, ticket_type: str, ticket_quantity: int):
 		self.id = id
@@ -52,6 +82,7 @@ class OrderInfo:
 
 	def merge(self, new_order) -> None:
 		if self.id == new_order.id and self.date == new_order.date:
+			self.note += " " + new_order.note
 			for k, v in new_order.tickets.items():
 				self.tickets[k] = v + self.tickets.setdefault(k, 0)
 		else:
@@ -175,7 +206,7 @@ def get_orders():
 					"ticket_type": mod.to_item,
 					"ticket_quantity": mod.change_quantity,
 					"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-					"note": order["fulfillments"][0]["pickup_details"]["note"],
+					"note": " ".join([order["fulfillments"][0]["pickup_details"]["note"], mod.note or ""]),
 					"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
 					"id": order["id"],
 					"ref": i
@@ -209,7 +240,7 @@ def get_orders():
 									"ticket_type": to_item,
 									"ticket_quantity": quantity,
 									"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-									"note": order["fulfillments"][0]["pickup_details"]["note"],
+									"note": " ".join([order["fulfillments"][0]["pickup_details"]["note"], mods[mod_num].note or ""]),
 									"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
 									"id": order["id"],
 									"ref": i
@@ -299,12 +330,12 @@ def get_orders():
 
 
 @bp.route("/members/bookings", methods=["GET", "POST"])
+@login_required
 def bookings():
 	"""admin"""
 	if current_user.role not in ["admin"]:
 		abort(403)
 	if request.method == "POST":
-		# add new mod
 		new_mod = BookingModifications(
 			id=BookingModifications.get_new_id(),
 			datetime=datetime.utcnow(),
@@ -341,12 +372,6 @@ def bookings():
 	).body.get("items") or []):
 		items.append(item["item_data"]["name"])
 
-	def extract_numbers(string):
-		# Use regular expression to find all numbers in the string
-		numbers = re.findall(r'\d+', string)
-		# Convert the first number found to an integer (assuming there's at least one number)
-		return int(numbers[0]) if numbers else float('inf')
-
 	items = sorted(items, key=extract_numbers)
 
 	return render_template(
@@ -356,85 +381,99 @@ def bookings():
 			css="bookings.css"
 		)
 
+
 @bp.route("/members/bookings/historic_sales")
 def historic_sales():
-	show_id = "7L7wFffY_LbEGmX"
-	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
-	show = Show.query.get(show_id)
-	end_date = show.date
-	start_date = Show.query.filter(Show.date < end_date).order_by(Show.date.desc()).first().date + timedelta(days=1)
+	show_id = request.args.get("show_id")
+	data = None
+	totals = None
+	if show_id is not None:
+		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+		show = Show.query.get(show_id)
+		end_date = show.date
+		start_date = Show.query.filter(Show.date < end_date).order_by(Show.date.desc()).first().date + timedelta(days=1)
 
-	results = app.square.orders.search_orders(
-		body={
-			"location_ids": [
-				"0W6A3GAFG53BH"
-			],
-			"query": {
-				"sort": {
-					"sort_field": "CREATED_AT",
-					"sort_order": "ASC"
-				},
-				"filter": {
-					"date_time_filter": {
-						"created_at": {
-							"start_at": start_date.strftime(square_date_format),
-							"end_at": end_date.strftime(square_date_format)
+		results = app.square.orders.search_orders(
+			body={
+				"location_ids": [
+					"0W6A3GAFG53BH"
+				],
+				"query": {
+					"sort": {
+						"sort_field": "CREATED_AT",
+						"sort_order": "ASC"
+					},
+					"filter": {
+						"date_time_filter": {
+							"created_at": {
+								"start_at": start_date.strftime(square_date_format),
+								"end_at": end_date.strftime(square_date_format)
+							}
+						},
+						"source_filter": {
+							"source_names": [
+								"Square Online"
+							]
+						},
+						"state_filter": {
+							"states": [
+								"OPEN",
+								"COMPLETED"
+							]
+						},
+						"fulfillment_filter": {
+							"fulfillment_types": [
+								"PICKUP"
+							]
 						}
-					},
-					"source_filter": {
-						"source_names": [
-							"Square Online"
-						]
-					},
-					"state_filter": {
-						"states": [
-							"OPEN",
-							"COMPLETED"
-						]
-					},
-					"fulfillment_filter": {
-						"fulfillment_types": [
-							"PICKUP"
-						]
 					}
 				}
 			}
-		}
+		)
+
+		if results.is_error():
+			print("Error:", results.errors)
+			abort(500)
+		else:
+			sums = {}
+			for order in (results.body.get("orders") or []):
+				for item in order["line_items"]:
+					sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
+
+		result = app.square.payments.list_payments(
+			begin_time=start_date.strftime(square_date_format),
+			end_time=end_date.strftime(square_date_format),
+			location_id="0W6A3GAFG53BH"
+		)
+
+		if result.is_error():
+			print(result.errors)
+		else:
+			totals = {
+				"paid": 0,
+				"fees": 0,
+				"net": 0
+			}
+			for payment in result.body.get("payments"):
+				if payment["status"] == "COMPLETED":
+					try:
+						totals["paid"] += int(payment["amount_money"]["amount"])
+						totals["net"] += int(payment["amount_money"]["amount"])
+						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+						totals["net"] -= int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+					except KeyError as e:
+						pprint(payment)
+						print(e)
+
+		data = sorted(list(sums.items()), key=lambda tup: extract_numbers(tup[0]))
+		print([extract_numbers(i[0]) for i in data])
+		data = sorted(data, key=lambda tup: extract_month(tup[0]))
+
+	return render_template(
+		"members/historic_sales.html",
+		data=data,
+		totals=totals,
+		id=show_id,
+		shows=Show.query.order_by(Show.date.desc()).all(),
+		css="bookings.css"
 	)
-
-	if results.is_error():
-		print("Error:", results.errors)
-		abort(500)
-	else:
-		sums = {}
-		for order in (results.body.get("orders") or []):
-			for item in order["line_items"]:
-				sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
-
-	result = app.square.payments.list_payments(
-		begin_time=start_date.strftime(square_date_format),
-		end_time=end_date.strftime(square_date_format),
-		location_id="0W6A3GAFG53BH"
-	)
-
-	if result.is_error():
-		print(result.errors)
-	else:
-		totals = {
-			"paid": 0,
-			"fees": 0,
-			"net": 0
-		}
-		for payment in result.body.get("payments"):
-			if payment["status"] == "COMPLETED":
-				try:
-					totals["paid"] += int(payment["amount_money"]["amount"])
-					totals["net"] += int(payment["amount_money"]["amount"])
-					totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
-					totals["net"] -= int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
-				except KeyError as e:
-					pprint(payment)
-					print(e)
-
-	sums["totals"] = totals
-	return jsonify(sums)
