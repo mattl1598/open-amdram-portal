@@ -283,13 +283,13 @@ def collect_orders():
 @bp.get("/members/api/orders/<show>/<perf>")
 def orders_api(show, perf):
 	"""admin"""
-	if (current_user.is_authenticated and (current_user.role in ["admin"])) or request.args.get("auth") != KeyValue.query.get("api_key"):
+	if (current_user.is_authenticated and (current_user.role in ["admin"])) or request.args.get("auth") == KeyValue.query.get("api_key"):
 		perf_tree = collect_orders()
 		if "<" in show or "<" in perf:
-			abort(401)
+			abort(404)
 		return jsonify(json.loads(json.dumps(list(perf_tree.get(show).get(perf).values()), default=OrderInfo.default)))
 	else:
-		abort(403)
+		abort(401)
 
 
 @bp.get('/members/get_orders')
