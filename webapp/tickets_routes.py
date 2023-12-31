@@ -282,9 +282,13 @@ def collect_orders():
 
 @bp.get("/members/api/orders/<show>/<perf>")
 def orders_api(show, perf):
-	perf_tree = collect_orders()
+	"""admin"""
+	if request.args.get("auth") == KeyValue.query.get("api_key") or current_user.role == "admin":
+		perf_tree = collect_orders()
 
-	return jsonify(json.loads(json.dumps(list(perf_tree.get(show).get(perf).values()), default=OrderInfo.default)))
+		return jsonify(json.loads(json.dumps(list(perf_tree.get(show).get(perf).values()), default=OrderInfo.default)))
+	else:
+		abort(403)
 
 
 @bp.get('/members/get_orders')
