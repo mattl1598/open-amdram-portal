@@ -298,6 +298,7 @@ def get_orders():
 	if current_user.role not in ["admin"]:
 		abort(403)
 
+	else:
 		perf_tree = collect_orders()
 
 		output = BytesIO()
