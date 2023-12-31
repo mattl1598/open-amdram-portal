@@ -543,3 +543,33 @@ def historic_sales():
 		shows=Show.query.order_by(Show.date.desc()).all(),
 		css="bookings.css"
 	)
+
+
+# tickets seat number formatting
+# test = "A7, A9, A10, A11, A12, B7, B8, B9, B10, B11, B12, C7, C8, C9, C10, C11, C12, D7, D8, D9, D10, D12"
+def group_seats(string):
+	testlist = string.split(", ")
+	output = []
+	temp = ""
+
+	for i in range(0, len(testlist)):
+		if temp == "":
+			temp = testlist[i]
+		row = testlist[i][0]
+		seat = int(testlist[i][1:])
+		print(row, seat)
+		next_seat = row + str(seat+1)
+		if i < len(testlist)-1:
+			if next_seat != testlist[i+1]:
+				if temp != testlist[i]:
+					output.append(temp + "-" + testlist[i])
+				else:
+					output.append(temp)
+				temp = ""
+		else:
+			if temp != testlist[i]:
+				output.append(temp + "-" + testlist[i])
+			else:
+				output.append(temp)
+
+	return output
