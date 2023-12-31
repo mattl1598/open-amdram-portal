@@ -59,8 +59,8 @@ class OrderInfo:
 			ticket_type: int(ticket_quantity)
 		}
 
-	def __repr__(self):
-		return str({
+	def __dict__(self):
+		return {
 			"ref": self.ref,
 			"name": self.name,
 			"note": self.note,
@@ -68,13 +68,16 @@ class OrderInfo:
 			"order_id": self.id,
 			"tickets": self.tickets,
 			"tickets_count": self.tickets_total()
-		})
+		}
+
+	def __repr__(self):
+		return str(self.__dict__())
 
 	def __str__(self):
 		return str(self.__repr__())
 
 	def default(self):
-		return self.__repr__()
+		return self.__dict__()
 
 	def __add__(self, other):
 		self.merge(other)
@@ -82,7 +85,8 @@ class OrderInfo:
 
 	def merge(self, new_order) -> None:
 		if self.id == new_order.id and self.date == new_order.date:
-			self.note += " " + new_order.note
+			if self.note != new_order.note:
+				self.note += " " + new_order.note
 			for k, v in new_order.tickets.items():
 				self.tickets[k] = v + self.tickets.setdefault(k, 0)
 		else:
@@ -92,28 +96,19 @@ class OrderInfo:
 		return sum(self.tickets.values())
 
 
-@bp.get('/members/get_orders')
-@login_required
-def get_orders():
-	"""admin"""
-	if current_user.role not in ["admin"]:
-		abort(403)
-	now = datetime.now() - timedelta(days=1)
-	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
-
-	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
-
+@bp.route("/test")
+def get_ticket_types():
 	ticket_types = []
 	for item in (app.square.catalog.search_catalog_items(
-		body={
-			"category_ids": [
-				"LETDSKQATFDC3IAJITOXQFGT"
-			],
-			"product_types": [
-				"REGULAR"
-			],
-			"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
-		}
+			body={
+				"category_ids": [
+					"LETDSKQATFDC3IAJITOXQFGT"
+				],
+				"product_types": [
+					"REGULAR"
+				],
+				"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
+			}
 	).body.get("items") or []):
 		if item["item_data"]["ecom_visibility"] == "VISIBLE":
 			ticket_types.append(item["item_data"]["name"])
@@ -125,6 +120,17 @@ def get_orders():
 			perf_tree[keys[0]] = {}
 		if perf_tree[keys[0]].get(keys[1]) is None:
 			perf_tree[keys[0]][keys[1]] = {}
+
+	return perf_tree
+
+
+def collect_orders():
+	now = datetime.now() - timedelta(days=1)
+	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
+
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+	perf_tree = get_ticket_types()
 
 	# pprint(perf_tree)
 
@@ -169,13 +175,13 @@ def get_orders():
 		print("Error:", results.errors)
 		abort(500)
 	else:
-		test = []
+		items = []
 		mods = (BookingModifications
-				.query
-				.filter(
-			BookingModifications.ref_num < 0,
-			BookingModifications.datetime > end_of_last_show
-		)
+					.query
+					.filter(
+						BookingModifications.ref_num < 0,
+						BookingModifications.datetime > end_of_last_show
+					)
 				.all()
 				or [])
 		for mod in mods:
@@ -185,22 +191,22 @@ def get_orders():
 				"name": mod.from_item,
 				"note": ["Comped - ", "Reserved - "][int(mod.is_reservation)] + (mod.note or ""),
 				"date": datetime.utcnow().strftime(square_date_format)[:-4] + "Z",
-				"id": "N/A",
+				"id": mod.id,
 				"ref": mod.ref_num
 			}
 			order_info = OrderInfo(**tickets_info)
-			test.append(order_info)
+			items.append(order_info)
 		for i in range(0, len(results.body.get("orders") or [])):
 			order = results.body["orders"][i]
 			mods = (BookingModifications
-					.query
-					.filter_by(ref_num=i)
-					.filter(
-						BookingModifications.datetime > end_of_last_show,
-						or_(BookingModifications.from_item == "", BookingModifications.from_item.is_(None))
-					)
+						.query
+						.filter_by(ref_num=i)
+						.filter(
+							BookingModifications.datetime > end_of_last_show,
+							or_(BookingModifications.from_item == "", BookingModifications.from_item.is_(None))
+						)
 					.all()
-				or [])
+					or [])
 			for mod in mods:
 				tickets_info = {
 					"ticket_type": mod.to_item,
@@ -212,7 +218,7 @@ def get_orders():
 					"ref": i
 				}
 				order_info = OrderInfo(**tickets_info)
-				test.append(order_info)
+				items.append(order_info)
 			for item in order["line_items"]:
 				try:
 					if len((mods := BookingModifications
@@ -220,7 +226,7 @@ def get_orders():
 										.filter_by(ref_num=i, from_item=item["name"])
 										.filter(BookingModifications.datetime > end_of_last_show)
 										.all()
-									or []
+								or []
 							)):
 						remaining_quantity = int(item["quantity"])
 						for mod_num in range(0, len(mods) + 1):
@@ -232,7 +238,7 @@ def get_orders():
 								if mods[mod_num].change_quantity > remaining_quantity:
 									abort(500,
 											f"Quantity in modification is too large for assigned order. Ref: {i}. Mod ID: {mods[mod_num].id}."
-										)
+									)
 								remaining_quantity = remaining_quantity - (quantity := mods[mod_num].change_quantity)
 
 							if quantity != 0:
@@ -240,13 +246,14 @@ def get_orders():
 									"ticket_type": to_item,
 									"ticket_quantity": quantity,
 									"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-									"note": " ".join([order["fulfillments"][0]["pickup_details"]["note"], mods[mod_num].note or ""]),
+									"note": " ".join(
+										[order["fulfillments"][0]["pickup_details"]["note"], mods[mod_num].note or ""]),
 									"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
 									"id": order["id"],
 									"ref": i
 								}
 								order_info = OrderInfo(**tickets_info)
-								test.append(order_info)
+								items.append(order_info)
 					else:
 						tickets_info = {
 							"ticket_type": item["name"],
@@ -258,13 +265,11 @@ def get_orders():
 							"ref": i
 						}
 						order_info = OrderInfo(**tickets_info)
-						test.append(order_info)
+						items.append(order_info)
 				except KeyError as e:
 					pass
-					# pprint(order)
-					# print(e)
 
-		for item in test:
+		for item in items:
 			keys = list(item.tickets.keys())[0].split(" - ", 2)
 			item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
 			if (existing := perf_tree[keys[0]][keys[1]].get(item.id)) is not None:
@@ -272,13 +277,31 @@ def get_orders():
 			else:
 				perf_tree[keys[0]][keys[1]][item.id] = item
 
-		# pprint(perf_tree)
+	return perf_tree
+
+
+@bp.get("/members/api/orders/<show>/<perf>")
+def orders_api(show, perf):
+	perf_tree = collect_orders()
+
+	return jsonify(json.loads(json.dumps(list(perf_tree.get(show).get(perf).values()), default=OrderInfo.default)))
+
+
+@bp.get('/members/get_orders')
+@login_required
+def get_orders():
+	"""admin"""
+	if current_user.role not in ["admin"]:
+		abort(403)
+
+		perf_tree = collect_orders()
 
 		output = BytesIO()
 		workbook = xlsxwriter.Workbook(output)
 
-		for a, b in perf_tree.items():
-			for x, y in b.items():
+		for perf in perf_tree.keys():
+			orders = perf_tree.get(perf)
+			for x, y in orders.items():
 				row = 1
 				date_string = x.replace("st", "").replace("nd", "").replace("rd", "").replace("th", "")
 				date_string = date_string\
@@ -291,9 +314,9 @@ def get_orders():
 					.replace(" 9 ", " 09 ") + f" {datetime.now().year}"
 				dt = datetime.strptime(date_string, "%a %d %B %I:%M%p %Y")
 
-				worksheet_name = f"{''.join([i[0] for i in a.split(' ')])} - {dt.strftime('%a %d %b %I.%M%p')}"
+				worksheet_name = f"{''.join([i[0] for i in perf.split(' ')])} - {dt.strftime('%a %d %b %I.%M%p')}"
 				worksheet = workbook.add_worksheet(name=worksheet_name)
-				worksheet.write("A1", f"{a} - {x}")
+				worksheet.write("A1", f"{perf} - {x}")
 
 				worksheet.write(row, 0, "Date")
 				worksheet.write(row, 1, "Ref #")
@@ -391,6 +414,7 @@ def historic_sales():
 	show_id = request.args.get("show_id")
 	data = None
 	totals = None
+	errors = 0
 	if show_id is not None:
 		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 		show = Show.query.get(show_id)
@@ -434,40 +458,69 @@ def historic_sales():
 				}
 			}
 		)
-
+		sums = {}
+		payment_ids = []
 		if results.is_error():
 			print("Error:", results.errors)
 			abort(500)
 		else:
-			sums = {}
+			flag = True
 			for order in (results.body.get("orders") or []):
 				for item in order["line_items"]:
 					sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
+				try:
+					for tender in order["tenders"]:
+						payment_ids.append(tender["id"])
+				except KeyError as e:
+					print("KeyError:", e)
+					pprint(order)
 
-		result = app.square.payments.list_payments(
-			begin_time=start_date.strftime(square_date_format),
-			end_time=end_date.strftime(square_date_format),
-			location_id="0W6A3GAFG53BH"
-		)
+		payments = []
+		flag = True
+		cursor = ""
+		while flag:
+			if cursor:
+				result = app.square.payments.list_payments(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format),
+					location_id="0W6A3GAFG53BH",
+					cursor=cursor
+				)
+			else:
+				result = app.square.payments.list_payments(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format),
+					location_id="0W6A3GAFG53BH"
+				)
+			if result.is_error():
+				print(result.errors)
+				errors += 1
+				flag = False
+			else:
+				payments += list(result.body.get("payments"))
+				if not (cursor := result.body.get("cursor")):
+					flag = False
 
-		if result.is_error():
-			print(result.errors)
-		else:
-			totals = {
-				"paid": 0,
-				"fees": 0,
-				"net": 0
-			}
-			for payment in result.body.get("payments"):
+		totals = {
+			"paid": 0,
+			"fees": 0,
+			"net": 0
+		}
+		for payment in payments:
+			if payment["id"] in payment_ids:
 				if payment["status"] == "COMPLETED":
 					try:
 						totals["paid"] += int(payment["amount_money"]["amount"])
 						totals["net"] += int(payment["amount_money"]["amount"])
 						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
 						totals["net"] -= int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+
 					except KeyError as e:
+						errors += 1
 						pprint(payment)
 						print(e)
+				else:
+					print(payment["status"])
 
 		data = sorted(list(sums.items()), key=lambda tup: extract_numbers(tup[0]))
 		print([extract_numbers(i[0]) for i in data])
@@ -478,6 +531,7 @@ def historic_sales():
 		data=data,
 		totals=totals,
 		id=show_id,
+		errors=errors,
 		shows=Show.query.order_by(Show.date.desc()).all(),
 		css="bookings.css"
 	)

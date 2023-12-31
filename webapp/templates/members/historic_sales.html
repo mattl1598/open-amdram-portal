@@ -42,6 +42,10 @@
 					<th>Net</th>
 					<td>£{{ '%0.2f' % (totals["net"]/100.0) }}</td>
 				</tr>
+				<tr>
+					<th>Errors</th>
+					<td>{{ errors }}</td>
+				</tr>
 			</tbody>
 		</table>
 	{% endif %}
