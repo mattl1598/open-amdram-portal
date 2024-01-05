@@ -228,6 +228,15 @@
 	            </a>
             {% endif %}
 
+            {% if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK" %}
+	            <a href="/members/get_subs">
+		            <h3>
+						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["membership"] | safe }}</svg></span>
+			            Get Subs
+		            </h3>
+	            </a>
+            {% endif %}
+
             {% if current_user.role == "admin" %}
 	            <a href="/members/bookings">
 		            <h3>

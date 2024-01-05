@@ -1,0 +1,9 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h2>Paid Members since {{ since.strftime("%d %B %Y") }}</h2>
+	<ul>
+		{% for name in paid %}
+			<li>{{ name[0] }}</li>
+		{% endfor %}
+	</ul>
+{% endblock %}

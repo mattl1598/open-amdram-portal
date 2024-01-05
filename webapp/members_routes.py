@@ -1483,6 +1483,37 @@ def subs_payment():
 			return jsonify(payment_result.body)
 
 
+@bp.route("/members/get_subs")
+@login_required
+def get_subs():
+	"""admin"""
+	if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK":
+		current_date = datetime.now()
+
+		# Calculate the most recent July 1st that has passed
+		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+			most_recent_july_1st = datetime(current_date.year, 7, 1)
+		else:
+			most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+
+		# Get the datestamp for midnight on the most recent July 1st
+		midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+		paid = list(SubsPayment.query
+					.filter(SubsPayment.datetime > midnight_july_1st)
+					.order_by(SubsPayment.datetime.asc())
+					.with_entities(SubsPayment.name)
+					.all()
+				)
+
+		return render_template(
+			"members/get_subs.html",
+			paid=paid,
+			since=midnight_july_1st,
+			css="m_dashboard.css"
+		)
+
+
+
 @bp.route("/members/logout")
 @login_required
 def logout():
