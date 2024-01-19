@@ -6,7 +6,7 @@ import sqlalchemy
 from lorem_text import lorem as lorem_func
 import pyotp
 
-from flask import abort, Blueprint, make_response, redirect, \
+from flask import abort, Blueprint, make_response, redirect, jsonify, \
 	render_template, Response, send_file, send_from_directory, url_for, request, session
 from flask_login import login_user, current_user
 # noinspection PyPackageRequirements
@@ -15,7 +15,7 @@ from sqlalchemy import or_
 from webapp.members_routes import MemberPost
 # noinspection PyPep8Naming
 from webapp.models import BlogImage, BlogPost, Files, KeyValue, Member, Post, PrizeDrawEntry, Show, ShowPhotos, User, \
-	MemberShowLink as MSL, db
+	MemberShowLink as MSL, db, SubsPayment
 
 
 from flask import current_app as app
@@ -794,6 +794,9 @@ def register():
 
 			results = app.square.orders.search_orders(
 				body={
+					"location_ids": [
+						"0W6A3GAFG53BH"
+					],
 					"query": {
 						"filter": {
 							"date_time_filter": {
@@ -834,6 +837,75 @@ def register():
 					session['new_user_params'] = new_user_params
 					session.modified = True
 					return redirect("members_routes.pay_subs")
+
+
+@bp.route("/newsletter", methods=["GET", "POST"])
+def newsletter():
+	if request.method == "GET":
+		return redirect("https://silchester-players.square.site/")
+		# return render_template(
+		# 	"newsletter.html",
+		# 	er=request.args.get("er"),
+		# 	css="members.css"
+		# )
+	if request.method == "POST":
+		if (group_id := KeyValue.query.get("audience_emails_group").value) is None:
+			abort(404)
+		email_address = request.form.get("email")
+		result = app.square.customers.search_customers(
+			body={
+				"limit": 1,
+				"query": {
+					"filter": {
+						"email_address": {
+							"exact": email_address
+						}
+					}
+				}
+			}
+		)
+
+		if result.is_success():
+			print(result.body)
+			if result.body.get("customers") is None:
+				create_result = app.square.customers.create_customer(
+					body={
+						"email_address": email_address,
+					}
+				)
+				if create_result.is_success():
+					# print(create_result.body)
+					# print("customer created")
+					customer = create_result.body.get("customer")
+				elif create_result.is_error():
+					# print(create_result.errors)
+					# print("Throw error")
+					return redirect(url_for("routes.newsletter", er="email_invalid"))
+
+			else:
+				customer = result.body.get("customers")[0]
+				# pprint(customer)
+				# print("customer collected")
+
+			group_add_result = app.square.customers.add_group_to_customer(
+				customer_id=customer.get("id"),
+				group_id=group_id
+			)
+
+			if group_add_result.is_success():
+				# print(group_add_result.body)
+				# print("added to group")
+				return redirect(url_for("routes.newsletter", er="success"))
+			elif group_add_result.is_error():
+				# print(group_add_result.errors)
+				# print("adding error")
+				abort(500)
+
+		elif result.is_error():
+			# print(result.errors)
+			# print("email address error")
+			abort(500)
+
 
 @bp.route("/js/<string:filename>", methods=["GET"])
 def js(filename):

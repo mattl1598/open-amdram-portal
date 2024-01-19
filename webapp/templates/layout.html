@@ -308,6 +308,30 @@
 				</div>
 			{% endif %}
 
+			{# newsletter #}
+			{% if False %}
+				<div>
+					<h2>Newsletter Sign Up</h2>
+					<form action="/newsletter" method="POST">
+						{% if er == "success" %}
+							<h2>Success</h2>
+							<div class="error"><h3>Email added to newsletter.</h3></div>
+						{% else %}
+							<div class="fancy-input">
+								<input id="email"  name="email" type="text" placeholder=" ">
+								<label for="email">Email Address</label>
+							</div>
+							{% if er == "email_invalid" %}
+								<div class="error"><h3 style="color: red;">Email Address is invalid.</h3></div>
+							{% endif %}
+							<div class="fancy-input">
+								<input type="submit" value="Sign Up">
+							</div>
+						{% endif %}
+					</form>
+				</div>
+			{% endif %}
+
 			{# socials #}
 			{% if True %}
 				<div class="socials">

@@ -218,8 +218,9 @@ div.main-section {
 			}
 		}
 
-		div {
+		> div {
 			@include theme(background-color, bg1);
+
 			padding: 1.5ch 2ch;
 			border-radius: 5px;
 
