@@ -13,17 +13,47 @@
 			<thead>
 				<tr>
 					<th>Item</th>
-					<th>Quantity</th>
+					<th>Online</th>
+					<th>At Door</th>
 				</tr>
 			</thead>
 			<tbody>
+				{% set ns = namespace(expected_total=0) %}
 				{% for key, value in data %}
+					{% set row_total = ({"Adult": 10, "Junior": 8, "Free": 0}.setdefault(key.split(" - ")[-1], 0)*(value+(pos_sum[key] or 0))) %}
+					{% set ns.expected_total = ns.expected_total + row_total %}
+					{% if key.split(" - ")[-1] != "wait listing" %}
+					{% if loop.index0 > 0 and " - ".join(loop.previtem[0].split(" - ")[:-1]) != " - ".join(key.split(" - ")[:-1]) %}
+						<tr>
+							<td><hr></td>
+							<td><hr></td>
+							<td><hr></td>
+							<td><hr></td>
+						</tr>
+					{% endif %}
 					<tr>
 						<td>{{ key }}</td>
 						<td>{{ value }}</td>
+						<td>{{ pos_sum[key] or 0 }}</td>
+						<td>£{{ '%0.2f' % row_total }}</td>
 					</tr>
+					{% endif %}
 				{% endfor %}
+				<tr>
+					<td><hr></td>
+					<td><hr></td>
+					<td><hr></td>
+					<td><hr></td>
+				</tr>
 			</tbody>
+			<tfoot>
+				<tr>
+					<td></td>
+					<td></td>
+					<td>Sub Total:</td>
+					<td>£{{ '%0.2f' % ns.expected_total }}</td>
+				</tr>
+			</tfoot>
 		</table>
 	{% endif %}
 	{% if totals is not none %}
@@ -31,8 +61,27 @@
 		<table>
 			<tbody>
 				<tr>
-					<th>Total</th>
+					<th>Square Income</th>
 					<td>£{{ '%0.2f' % (totals["paid"]/100.0) }}</td>
+				</tr>
+				{% if totals["expected_refunds"] != totals["actual_refunds"] %}
+					<tr>
+						<th>Expected Refunds</th>
+						<td>£{{ '%0.2f' % (totals["expected_refunds"]/100.0) }}</td>
+					</tr>
+					<tr>
+						<th>Square Refunds</th>
+						<td>£{{ '%0.2f' % (totals["actual_refunds"]/100.0) }}</td>
+					</tr>
+				{% else %}
+					<tr>
+						<th>Refunds</th>
+						<td>£{{ '%0.2f' % (totals["actual_refunds"]/100.0) }}</td>
+					</tr>
+				{% endif %}
+				<tr>
+					<th>Sub Total</th>
+					<td>£{{ '%0.2f' % ns.expected_total }}</td>
 				</tr>
 				<tr>
 					<th>Fees</th>
@@ -42,10 +91,12 @@
 					<th>Net</th>
 					<td>£{{ '%0.2f' % (totals["net"]/100.0) }}</td>
 				</tr>
-				<tr>
-					<th>Errors</th>
-					<td>{{ errors }}</td>
-				</tr>
+				{% if errors %}
+					<tr>
+						<th>Errors</th>
+						<td>{{ errors }}</td>
+					</tr>
+				{% endif %}
 			</tbody>
 		</table>
 	{% endif %}

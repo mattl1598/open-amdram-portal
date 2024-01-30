@@ -110,16 +110,19 @@ def get_ticket_types():
 				"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
 			}
 	).body.get("items") or []):
-		if item["item_data"]["ecom_visibility"] == "VISIBLE":
+		# print(item["item_data"]["ecom_visibility"], "-", item["item_data"]["name"])
+		if item["item_data"]["ecom_visibility"] in ["VISIBLE", "HIDDEN"]:
 			ticket_types.append(item["item_data"]["name"])
 
 	perf_tree = {}
+	print(ticket_types)
 	for ticket_type in ticket_types:
-		keys = ticket_type.split(" - ", 2)
-		if perf_tree.get(keys[0]) is None:
-			perf_tree[keys[0]] = {}
-		if perf_tree[keys[0]].get(keys[1]) is None:
-			perf_tree[keys[0]][keys[1]] = {}
+		if ticket_type.count("-") == 2:
+			keys = ticket_type.split(" - ", 2)
+			if perf_tree.get(keys[0]) is None:
+				perf_tree[keys[0]] = {}
+			if perf_tree[keys[0]].get(keys[1]) is None:
+				perf_tree[keys[0]][keys[1]] = {}
 
 	return perf_tree
 
@@ -242,12 +245,16 @@ def collect_orders():
 								remaining_quantity = remaining_quantity - (quantity := mods[mod_num].change_quantity)
 
 							if quantity != 0:
+								if mod_num >= len(mods):
+									note = ""
+								else:
+									note = mods[mod_num].note
 								tickets_info = {
 									"ticket_type": to_item,
 									"ticket_quantity": quantity,
 									"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
 									"note": " ".join(
-										[order["fulfillments"][0]["pickup_details"]["note"], mods[mod_num].note or ""]),
+										[order["fulfillments"][0]["pickup_details"]["note"], note or ""]),
 									"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
 									"id": order["id"],
 									"ref": i
@@ -426,8 +433,12 @@ def historic_sales():
 	if show_id is not None:
 		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 		show = Show.query.get(show_id)
-		end_date = show.date
-		start_date = Show.query.filter(Show.date < end_date).order_by(Show.date.desc()).first().date + timedelta(days=1)
+		if (end_date := show.date + timedelta(days=2)) > datetime.utcnow():
+			end_date = show.date
+		# end_date = show.date
+		print(end_date)
+		start_date = Show.query.filter(Show.date < show.date).order_by(Show.date.desc()).first().date + timedelta(days=2)
+		print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
 
 		results = app.square.orders.search_orders(
 			body={
@@ -467,21 +478,71 @@ def historic_sales():
 			}
 		)
 		sums = {}
+		refund_sums = {}
 		payment_ids = []
+		refunds = []
 		if results.is_error():
 			print("Error:", results.errors)
 			abort(500)
 		else:
-			flag = True
 			for order in (results.body.get("orders") or []):
-				for item in order["line_items"]:
-					sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
+				if "returned_quantities" in order.keys():
+					for refund in order["returned_quantities"]:
+						refunds.append((refund.get("refunded_money") or {}).get("amount"))
+				valid_payment = True
 				try:
 					for tender in order["tenders"]:
-						payment_ids.append(tender["id"])
+						if (tender.get("card_details") or {}).get("status") == "CAPTURED":
+							payment_ids.append(tender["id"])
+						else:
+							valid_payment = False
 				except KeyError as e:
 					print("KeyError:", e)
 					pprint(order)
+				if valid_payment:
+					print(order["id"])
+					for item in order["line_items"]:
+						if "returned_quantities" in item.keys():
+							# print(order["id"])
+							for refund in item["returned_quantities"]:
+								refunds.append((refund.get("refunded_money") or {}).get("amount"))
+						sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
+
+
+		mods = BookingModifications.query.filter(
+			end_date > BookingModifications.datetime,
+			BookingModifications.datetime > start_date
+		).all() or []
+
+		expected_refunds = 0
+
+		for mod in mods:
+			if mod.to_item and mod.from_item and mod.from_item != mod.to_item:
+				if mod.from_item.split(" - ", 2)[-1] == "Adult" and mod.to_item.split(" - ", 2)[-1] == "Junior":
+					# change from adult to junior with partial refund
+					from_value = {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.from_item.split(" - ")[-1]) * mod.change_quantity
+					to_value = {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * mod.change_quantity
+					expected_refunds += from_value - to_value
+			if mod.ref_num >= 0 and mod.from_item and mod.change_quantity > 0:
+				# change performance
+				sums[mod.from_item] = (sums.get(mod.from_item) or 0) - int(mod.change_quantity)
+				sums[mod.to_item] = (sums.get(mod.to_item) or 0) + int(mod.change_quantity)
+			elif mod.ref_num >= 0 and not mod.from_item and mod.change_quantity > 0:
+				# adding free ticket to existing order
+				item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+				sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
+			elif mod.ref_num < 0:
+				# free ticket(s) with no existing Square order
+				item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+				sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
+			elif mod.change_quantity < 0 and (mod.from_item == mod.to_item or not mod.from_item):
+				# full ticket refund
+				if mod.from_item == mod.to_item:
+					# option for changing paid ticket to free one.
+					item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+					sums[item_name] = (sums.get(item_name) or 0) + abs(int(mod.change_quantity))
+				sums[mod.to_item] = (sums.get(mod.to_item) or 0) + int(mod.change_quantity)
+				expected_refunds += {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * abs(mod.change_quantity)
 
 		payments = []
 		flag = True
@@ -505,23 +566,27 @@ def historic_sales():
 				errors += 1
 				flag = False
 			else:
-				payments += list(result.body.get("payments"))
+				payments += list(result.body.get("payments") or [])
 				if not (cursor := result.body.get("cursor")):
 					flag = False
 
 		totals = {
 			"paid": 0,
 			"fees": 0,
+			"expected_refunds": expected_refunds,
+			"actual_refunds": sum(refunds),
 			"net": 0
 		}
+		print("PAYMENTS")
+		other_sum = 0
+		point_of_sale_order_ids = []
 		for payment in payments:
 			if payment["id"] in payment_ids:
+				# print(payment["id"])
 				if payment["status"] == "COMPLETED":
 					try:
 						totals["paid"] += int(payment["amount_money"]["amount"])
-						totals["net"] += int(payment["amount_money"]["amount"])
 						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
-						totals["net"] -= int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
 
 					except KeyError as e:
 						errors += 1
@@ -529,15 +594,53 @@ def historic_sales():
 						print(e)
 				else:
 					print(payment["status"])
+			else:
+				if payment["status"] == "COMPLETED" and payment["application_details"] == {'square_product': 'SQUARE_POS'} and payment["amount_money"]["amount"] > 0:
+					try:
+						totals["paid"] += int(payment["amount_money"]["amount"])
+						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+						point_of_sale_order_ids.append(payment.get("order_id"))
+					except KeyError as e:
+						errors += 1
+						pprint(payment)
+						print(e)
+				elif payment["status"] == "COMPLETED" and payment["amount_money"]["amount"] > 0:
+					print(payment["id"])
+					# other_ids.append(payment.get("order_id"))
+					other_sum += payment["amount_money"]["amount"]
+		print("other sum", other_sum)
+		# pprint(other_ids)
+
+		print("POS")
+		pos_sums = {}
+		result = app.square.orders.batch_retrieve_orders(
+			body={
+				"location_id": "0W6A3GAFG53BH",
+				"order_ids": point_of_sale_order_ids
+			}
+		)
+		if result.is_success():
+			print(result.body)
+			for order in result.body.get("orders"):
+				for line_item in order.get("line_items"):
+					pos_sums[line_item["name"]] = (pos_sums.get(line_item["name"]) or 0) + int(line_item["quantity"])
+					print(line_item["name"], line_item["total_money"]["amount"])
+
+		elif result.is_error():
+			print(result.errors)
+
 
 		data = sorted(list(sums.items()), key=lambda tup: extract_numbers(tup[0]))
 		print([extract_numbers(i[0]) for i in data])
 		data = sorted(data, key=lambda tup: extract_month(tup[0]))
 
+		totals["net"] = totals["paid"] - totals["fees"] - totals["expected_refunds"]
+
 	return render_template(
 		"members/historic_sales.html",
 		data=data,
 		totals=totals,
+		pos_sum=pos_sums,
 		id=show_id,
 		errors=errors,
 		shows=Show.query.order_by(Show.date.desc()).all(),
