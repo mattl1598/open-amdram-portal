@@ -429,6 +429,7 @@ def historic_sales():
 	show_id = request.args.get("show_id")
 	data = None
 	totals = None
+	pos_sums = {}
 	errors = 0
 	if show_id is not None:
 		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -436,9 +437,9 @@ def historic_sales():
 		if (end_date := show.date + timedelta(days=2)) > datetime.utcnow():
 			end_date = show.date
 		# end_date = show.date
-		print(end_date)
+		# print(end_date)
 		start_date = Show.query.filter(Show.date < show.date).order_by(Show.date.desc()).first().date + timedelta(days=2)
-		print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
+		# print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
 
 		results = app.square.orders.search_orders(
 			body={
@@ -482,7 +483,7 @@ def historic_sales():
 		payment_ids = []
 		refunds = []
 		if results.is_error():
-			print("Error:", results.errors)
+			# print("Error:", results.errors)
 			abort(500)
 		else:
 			for order in (results.body.get("orders") or []):
@@ -498,9 +499,9 @@ def historic_sales():
 							valid_payment = False
 				except KeyError as e:
 					print("KeyError:", e)
-					pprint(order)
+					# pprint(order)
 				if valid_payment:
-					print(order["id"])
+					# print(order["id"])
 					for item in order["line_items"]:
 						if "returned_quantities" in item.keys():
 							# print(order["id"])
@@ -577,7 +578,7 @@ def historic_sales():
 			"actual_refunds": sum(refunds),
 			"net": 0
 		}
-		print("PAYMENTS")
+		# print("PAYMENTS")
 		other_sum = 0
 		point_of_sale_order_ids = []
 		for payment in payments:
@@ -590,10 +591,11 @@ def historic_sales():
 
 					except KeyError as e:
 						errors += 1
-						pprint(payment)
+						# pprint(payment)
 						print(e)
 				else:
-					print(payment["status"])
+					# print(payment["status"])
+					pass
 			else:
 				if payment["status"] == "COMPLETED" and payment["application_details"] == {'square_product': 'SQUARE_POS'} and payment["amount_money"]["amount"] > 0:
 					try:
@@ -602,17 +604,16 @@ def historic_sales():
 						point_of_sale_order_ids.append(payment.get("order_id"))
 					except KeyError as e:
 						errors += 1
-						pprint(payment)
+						# pprint(payment)
 						print(e)
 				elif payment["status"] == "COMPLETED" and payment["amount_money"]["amount"] > 0:
-					print(payment["id"])
+					# print(payment["id"])
 					# other_ids.append(payment.get("order_id"))
 					other_sum += payment["amount_money"]["amount"]
-		print("other sum", other_sum)
+		# print("other sum", other_sum)
 		# pprint(other_ids)
 
-		print("POS")
-		pos_sums = {}
+		# print("POS")
 		result = app.square.orders.batch_retrieve_orders(
 			body={
 				"location_id": "0W6A3GAFG53BH",
@@ -620,15 +621,15 @@ def historic_sales():
 			}
 		)
 		if result.is_success():
-			print(result.body)
+			# print(result.body)
 			for order in result.body.get("orders"):
 				for line_item in order.get("line_items"):
 					pos_sums[line_item["name"]] = (pos_sums.get(line_item["name"]) or 0) + int(line_item["quantity"])
 					print(line_item["name"], line_item["total_money"]["amount"])
 
 		elif result.is_error():
-			print(result.errors)
-
+			# print(result.errors)
+			pass
 
 		data = sorted(list(sums.items()), key=lambda tup: extract_numbers(tup[0]))
 		print([extract_numbers(i[0]) for i in data])
