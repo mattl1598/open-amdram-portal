@@ -1,7 +1,7 @@
 import json
 import re
 from os import walk
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 import markdown as markdown
 import requests
@@ -95,6 +95,7 @@ def create_app():
 				"tw_icon": tw_icon,
 				"ig_icon": ig_icon,
 				"other_icon": other_icon,
+				"email_icon": email_icon,
 				"blog_icon": blog_icon,
 				"search": magnify,
 				"eye": eye,
@@ -134,7 +135,14 @@ def create_app():
 			socials = []
 
 			for i in raw_socials:
-				if "facebook" in i:
+				if "|" in i:
+					a, b = i.split("|", 1)
+					if "newsletter" in a.lower():
+						icon = email_icon
+					else:
+						icon = other_icon
+					socials.append({"type": "other", "link": b, "text": unquote(a), "icon": icon})
+				elif "facebook" in i:
 					socials.append({"type": "facebook", "link": i, "text": "Facebook", "icon": fb_icon})
 				elif "twitter" in i:
 					socials.append({"type": "twitter", "link": i, "text": "Twitter", "icon": tw_icon})
