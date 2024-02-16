@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   test-public:
-    # runs-on: ubuntu-22.04
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
+    #runs-on: self-hosted
     environment: PYTEST
 
     steps:
@@ -36,8 +36,8 @@ jobs:
         pytest --auth=public
 
   test-member:
-    # runs-on: ubuntu-22.04
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
+    #runs-on: self-hosted
     environment: PYTEST
 
     steps:
@@ -58,8 +58,8 @@ jobs:
         pytest --auth=member
 
   test-author:
-    # runs-on: ubuntu-22.04
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
+    #runs-on: self-hosted
     environment: PYTEST
 
     steps:
@@ -80,8 +80,8 @@ jobs:
         pytest --auth=author
 
   test-admin:
-    # runs-on: ubuntu-22.04
-    runs-on: self-hosted
+    runs-on: ubuntu-22.04
+    #runs-on: self-hosted
     environment: PYTEST
 
     steps:
