@@ -5,6 +5,36 @@
 			<h2>{{ show.title }} - {{ show.subtitle }}</h2>
 			<h4>{{ show.season }} - {{ show.date.strftime('%B %Y') }}</h4>
 			<span>Type: {{ show.show_type }} {{ show.genre }}</span>
+			{% if directors %}
+				<span>Directed by:
+					{% for director in directors %}
+						{% if len(directors) > 1 %}{% if loop.last %}& {% elif not loop.first %}, {% endif %}{% endif %}
+						<a href="{{ director.get_link() }}">
+							{% if director.has_diff %}
+								{{ director.firstname }} {{ director.lastname }} (as {{ director.as_firstname }} {{ director.as_lastname }})
+							{% else %}
+								{{ director.firstname }} {{ director.lastname }}
+							{% endif %}
+							<br>
+						</a>
+					{% endfor %}
+				</span>
+			{% endif %}
+			{% if producers %}
+				<span>Produced by:
+					{% for producer in producers %}
+						{% if len(producers) > 1 %}{% if loop.last %}& {% elif not loop.first %}, {% endif %}{% endif %}
+						<a href="{{ producer.get_link() }}">
+							{% if producer.has_diff %}
+								{{ producer.firstname }} {{ producer.lastname }} (as {{ producer.as_firstname }} {{ producer.as_lastname }})
+							{% else %}
+								{{ producer.firstname }} {{ producer.lastname }}
+							{% endif %}
+							<br>
+						</a>
+					{% endfor %}
+				</span>
+			{% endif %}
 			<span>Written by: {{ show.author }}</span>
 			{% if show.noda_review %}
 				<span><a target="_blank" href="{{ show.noda_review }}">Read the NODA Review</a></span>

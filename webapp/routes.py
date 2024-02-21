@@ -394,6 +394,8 @@ def past_show_page(show_id, test):
 		.order_by(MSL.order_val) \
 		.all()
 	cast = {}
+	directors = []
+	producers = []
 	for member in raw_cast:
 		user = User.query.filter_by(id=member.associated_user).first()
 		cast.setdefault(member.role_name, []).append(MemberRenderer(member, user))
@@ -416,6 +418,12 @@ def past_show_page(show_id, test):
 	for member in raw_crew:
 		user = User.query.filter_by(id=member.associated_user).first()
 		crew.setdefault(member.role_name, []).append(MemberRenderer(member, user))
+		if member.role_name == "Director":
+			directors.append(MemberRenderer(member, user))
+		elif member.role_name == "Producer":
+			producers.append(MemberRenderer(member, user))
+
+	print(directors)
 
 	photos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="photo").all()
 	videos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="video").all()
@@ -428,6 +436,8 @@ def past_show_page(show_id, test):
 			crew=crew,
 			photos=photos,
 			videos=videos,
+			directors=directors,
+			producers=producers,
 			title=show.title,
 			css="past_show_page.css",
 			js="past_show_page.js"
@@ -441,6 +451,8 @@ def past_show_page(show_id, test):
 			crew=crew,
 			photos=photos,
 			videos=videos,
+			directors=directors,
+			producers=producers,
 			title=show.title,
 			css="past_show_page.css",
 			js="past_show_page.js"
