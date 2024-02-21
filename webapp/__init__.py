@@ -122,7 +122,8 @@ def create_app():
 				{"title": "Past Shows", "link": "/past-shows", "is_active": False},
 				{"title": "Auditions", "link": "/auditions", "is_active": False},
 				{"title": "About Us", "link": "/about-us", "is_active": False},
-				{"title": "Members", "link": "/members", "is_active": False}
+				{"title": "Members", "link": "/members", "is_active": False},
+				{"title": "Search", "link": "/search", "is_active": False}
 			]
 			if request.url_rule is not None:
 				route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]

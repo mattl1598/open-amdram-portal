@@ -48,9 +48,12 @@
 	</div>
 	<div class="nav">
 		{% for item in nav %}
-			<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
+			{% if item["title"] == "Search" %}
+				<a href="/search" class="search {{ "active" if item["is_active"] }}"><svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg></a>
+			{% else %}
+				<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
+			{% endif %}
 		{% endfor %}
-		<a href="/search" class="search"><svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg></a>
 		<a onclick="expand()" class="hamburger">
 			<svg class="expand-icon collapsed search" id="menu-icon" viewBox="0 0 70 70"
 			     preserveAspectRatio="xMidYMin">
