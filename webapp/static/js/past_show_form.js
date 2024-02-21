@@ -71,7 +71,11 @@ function addCast(prefill_role="", members=[]) {
 		hideSelected: true,
 		items:members,
 		hidePlaceholder:true,
-		create: function(input, callback) {
+		onItemAdd: function(){
+			this.setTextboxValue('');
+			this.refreshOptions();
+		},
+		create: function(input) {
 			let id=""
 		    // Split the name into an array of words
 		    let nameArray = input.split(" ")
@@ -89,8 +93,22 @@ function addCast(prefill_role="", members=[]) {
 		    .then(response => response.json())
 		    .then(data => {
 		        // Return the ID value that the API sends back
-			    console.log(data.id)
-			    callback({value:id,text:input})
+                id = data.id
+				// Create a new option element
+			    let select1 = document.getElementById('cast_memberstemplate');
+				let select2 = document.getElementById('crew_memberstemplate');
+				let newOption = document.createElement('option');
+
+				// Set the text and value for the new option
+				newOption.text = input;
+				newOption.value = id;
+
+				// Add the new option to the first select element
+				select1.add(newOption.cloneNode(true));
+
+				// Add the new option to the second select element
+				select2.add(newOption);
+			    return {value:id, text:input}
 		    })
 		    .catch(error => {
 		        console.error(error)
@@ -121,6 +139,10 @@ function addCrew(prefill_role="", members=[]) {
 		hideSelected: true,
 		items:members,
 		hidePlaceholder:true,
+		onItemAdd: function(){
+			this.setTextboxValue('');
+			this.refreshOptions();
+		},
 		create: function(input, callback) {
 			let id=""
 		    // Split the name into an array of words
@@ -140,6 +162,21 @@ function addCrew(prefill_role="", members=[]) {
 		    .then(data => {
 		        // Return the ID value that the API sends back
 			    console.log(data.id)
+			    id = data.id
+				// Create a new option element
+			    let select1 = document.getElementById('cast_memberstemplate');
+				let select2 = document.getElementById('crew_memberstemplate');
+				let newOption = document.createElement('option');
+
+				// Set the text and value for the new option
+				newOption.text = input;
+				newOption.value = id;
+
+				// Add the new option to the first select element
+				select1.add(newOption.cloneNode(true));
+
+				// Add the new option to the second select element
+				select2.add(newOption);
 			    callback({value:id,text:input})
 		    })
 		    .catch(error => {
@@ -155,7 +192,11 @@ function addCrew(prefill_role="", members=[]) {
 		valueField: 'value',
 		labelField: 'value',
 		searchField: 'value',
-		create: true
+		create: true,
+		onItemAdd: function(){
+			this.setTextboxValue('');
+			this.refreshOptions();
+		}
 	})
 }
 
