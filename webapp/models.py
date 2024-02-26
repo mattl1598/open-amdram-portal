@@ -230,6 +230,8 @@ class ShowPhotos(db.Model, NewIdGetter):
 	photo_url = db.Column(db.Text)
 	photo_type = db.Column(db.String(30))
 	photo_desc = db.Column(db.Text)
+	cache_url = db.Column(db.Text)
+	cache_expires = db.Column(db.DateTime)
 
 	def __repr__(self):
 		return f"ShowPhotos('{self.id}', '{self.show_id}', '{self.photo_url}', '{self.photo_type}', '{self.photo_desc}')"

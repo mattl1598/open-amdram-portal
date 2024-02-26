@@ -2,6 +2,8 @@ import io
 import json
 import time
 import urllib
+import math
+from datetime import datetime
 
 from flask_login import current_user, login_required
 from PIL import Image
@@ -12,6 +14,7 @@ from corha import corha
 from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify
 from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
 from flask import current_app as app
+from sqlalchemy import or_
 bp = Blueprint("photos_routes", __name__)
 
 
@@ -45,12 +48,72 @@ def update_access_token():
 			"client_secret": app.config['g_client_secret'],
 			"grant_type": "refresh_token"
 		}
-		x = app.requests_session.post(url=url, data=data).json()
-		# x = requests.post(url=url, data=data).json()
+		# x = app.requests_session.post(url=url, data=data).json()
+		x = requests.post(url=url, data=data).json()
 		# pprint(x)
 		session["access_token"] = x.get("access_token")
 		session["access_token_expires"] = int(x.get("expires_in")) + int(time.time())
 		session.modified = True
+
+
+def batch_get(item_ids):
+	update_access_token()
+	item_ids = list(item_ids)
+	id_lists = []
+	max_len = 50
+	for i in range(math.ceil(len(item_ids) / max_len)):
+		if i * max_len + max_len < len(item_ids):
+			id_lists.append(item_ids[i * max_len:i * max_len + max_len])
+		else:
+			id_lists.append(item_ids[i * max_len:])
+	outputA = {}
+	for id_list in id_lists:
+		headers = {"Authorization": f"Bearer {session.get('access_token')}"}
+
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems:batchGet"
+		params = f"?fields=mediaItemResults(mediaItem(id,baseUrl)){'&mediaItemIds='.join([''] + id_list)}&access_token={session.get('access_token')}"
+		x = requests.get(url=url+params).json()
+		for y in x.get("mediaItemResults") or []:
+			if (item := y.get("mediaItem")) is not None:
+				outputA[item.get("id")] = item.get("baseUrl") + "?d"
+
+	return outputA
+
+
+def batch_get_show_media(show_id, media_type):
+	now = datetime.utcnow()
+	item_ids = {
+		i[1]: i[0]
+		for i in ShowPhotos.query
+			.filter(or_(ShowPhotos.cache_expires < now, ShowPhotos.cache_expires.is_(None)))
+			.filter_by(show_id=show_id, photo_type=media_type)
+			.order_by(ShowPhotos.id.asc())
+			.with_entities(ShowPhotos.id, ShowPhotos.photo_url)
+			.all()
+	}
+	cached_items = {
+		i[0]: i[1]
+		for i in ShowPhotos.query
+			.filter(ShowPhotos.cache_expires >= now)
+			.filter_by(show_id=show_id, photo_type=media_type)
+			.order_by(ShowPhotos.id.asc())
+			.with_entities(ShowPhotos.id, ShowPhotos.cache_url)
+			.all()
+	}
+	new = batch_get(item_ids.keys())
+	for item in new.items():
+		photo = ShowPhotos.query.get(item_ids.get(item[0]))
+		if photo is not None:
+			photo.cache_url = item[1]
+			photo.cache_expires = now
+	db.session.commit()
+	return cached_items | new
+
+
+@app.route("/phototest")
+@login_required
+def phototest():
+	return jsonify(batch_get_show_media("2ExG1dp2H77RpEd", "photo"))
 
 
 @bp.route("/members/manage_media", methods=["POST", "GET"])
@@ -241,13 +304,13 @@ def manage_media(**kwargs):
 def get_photo(media_id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
 
-	start = time.time()
+	# start = time.time()
 	update_access_token()
 
 	if route in ["photo", "video"]:
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_id}?access_token={session.get('access_token')}"
-		x = app.requests_session.get(url=url).json()
-		# x = requests.get(url=url).json()
+		# x = app.requests_session.get(url=url).json()
+		x = requests.get(url=url).json()
 		# response = urllib.request.urlopen(url)
 		# data = response.read()
 		# x = json.loads(data)
@@ -257,26 +320,26 @@ def get_photo(media_id, **kwargs):
 				# 	f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}"
 				# )
 				return redirect(
-					f"{x.get('baseUrl')}=w1000-h1000"
+					f"{x.get('baseUrl')}=d"
 				)
 			elif route == "video":
 				return redirect(f"{x.get('baseUrl')}=dv")
 		else:
 			abort(404)
 	elif route == "media":
-		pprint(time.time()-start)
+		# pprint(time.time()-start)
 		item = StaticMedia.query.filter_by(id=media_id, filename=kwargs["filename"]).first_or_404()
-		pprint(time.time()-start)
+		# pprint(time.time()-start)
 		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
 			f"access_token={session.get('access_token')}"
-		pprint(time.time()-start)
-		print(url)
-		x = app.requests_session.get(url=url).json()
-		# x = requests.get(url=url).json()
+		# pprint(time.time()-start)
+		# print(url)
+		# x = app.requests_session.get(url=url).json()
+		x = requests.get(url=url).json()
 		# response = urllib.request.urlopen(url)
 		# data = response.read()
 		# x = json.loads(data)
-		pprint(time.time()-start)
+		# pprint(time.time()-start)
 		if x.get('baseUrl') is not None:
 			return redirect(
 				f"{x.get('baseUrl')}=d"
@@ -473,4 +536,4 @@ def choose_album():
 
 		db.session.commit()
 
-		return redirect(url_for("past_show_redirect", show_id=request.form.get("show")))
+		return redirect(url_for("routes.past_show_redirect", show_id=request.form.get("show")))

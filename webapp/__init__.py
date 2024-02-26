@@ -30,8 +30,8 @@ def create_app():
 	app = Flask(__name__, static_folder=None)
 	with app.app_context():
 		app.envs = corha.credentials_loader(".env")
-		app.requests_session = requests.Session()
-		app.requests_session.get("https://photoslibrary.googleapis.com/v1/mediaItems/")
+		# app.requests_session = requests.Session()
+		# app.requests_session.get("https://photoslibrary.googleapis.com/v1/mediaItems/")
 		git = ["git", "/usr/bin/git"][platform.system() == "Linux"]
 		output = subprocess.run([
 						git, '-C', os.getcwd(),
