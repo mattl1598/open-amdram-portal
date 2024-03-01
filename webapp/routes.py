@@ -72,6 +72,7 @@ def frontpage():
 
 	all_photos = ShowPhotos.query \
 		.filter_by(show_id=latest_show.id) \
+		.order_by(ShowPhotos.photo_url.desc()) \
 		.all()
 
 	photos = []
@@ -423,10 +424,8 @@ def past_show_page(show_id, test):
 		elif member.role_name == "Producer":
 			producers.append(MemberRenderer(member, user))
 
-	print(directors)
-
-	photos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="photo").all()
-	videos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="video").all()
+	photos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="photo").order_by(ShowPhotos.id.asc()).all()
+	videos = ShowPhotos.query.filter_by(show_id=show_id, photo_type="video").order_by(ShowPhotos.id.asc()).all()
 
 	if "embedded" in request.args.keys():
 		return render_template(
