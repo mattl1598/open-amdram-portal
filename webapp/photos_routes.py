@@ -3,7 +3,8 @@ import json
 import time
 import urllib
 import math
-from datetime import datetime
+from time import sleep
+from datetime import datetime, timedelta
 
 from flask_login import current_user, login_required
 from PIL import Image
@@ -11,7 +12,7 @@ from pprint import pprint
 
 import requests
 from corha import corha
-from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context
 from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
 from flask import current_app as app
 from sqlalchemy import or_
@@ -110,10 +111,10 @@ def batch_get_show_media(show_id, media_type):
 	return cached_items | new
 
 
-@app.route("/phototest")
-@login_required
-def phototest():
-	return jsonify(batch_get_show_media("2ExG1dp2H77RpEd", "photo"))
+# @app.route("/phototest")
+# @login_required
+# def phototest():
+# 	return jsonify(batch_get_show_media("2ExG1dp2H77RpEd", "photo"))
 
 
 @bp.route("/members/manage_media", methods=["POST", "GET"])
@@ -303,49 +304,78 @@ def manage_media(**kwargs):
 @bp.route("/media/<media_id>/<filename>")
 def get_photo(media_id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
+	refresh = "refresh" in request.args.keys()
 
 	# start = time.time()
 	update_access_token()
 
 	if route in ["photo", "video"]:
-		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_id}?access_token={session.get('access_token')}"
+		item = ShowPhotos.query.filter(or_(ShowPhotos.id == media_id, ShowPhotos.photo_url == media_id)).first_or_404()
+		if not refresh and item.cache_expires and item.cache_url and item.cache_expires > datetime.now():
+			return redirect(item.cache_url)
+
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.photo_url}?access_token={session.get('access_token')}"
 		# x = app.requests_session.get(url=url).json()
 		x = requests.get(url=url).json()
 		# response = urllib.request.urlopen(url)
 		# data = response.read()
 		# x = json.loads(data)
 		if x.get('baseUrl') is not None:
+			new_base_url = "/"
 			if route == "photo":
-				# return redirect(
-				# 	f"{x.get('baseUrl')}?w={x.get('mediaMetadata').get('width')}&h={x.get('mediaMetadata').get('height')}"
-				# )
-				return redirect(
-					f"{x.get('baseUrl')}=d"
-				)
+				new_base_url = f"{x.get('baseUrl')}=d"
 			elif route == "video":
-				return redirect(f"{x.get('baseUrl')}=dv")
+				new_base_url = f"{x.get('baseUrl')}=dv"
+
+			response = redirect(
+				new_base_url
+			)
+
+			@response.call_on_close
+			@copy_current_request_context
+			def process_after_request():
+				item.cache_url = new_base_url
+				item.cache_expires = datetime.now() + timedelta(hours=1)
+				db.session.add(item)
+				db.session.commit()
+
+			return response
 		else:
 			abort(404)
 	elif route == "media":
 		# pprint(time.time()-start)
 		item = StaticMedia.query.filter_by(id=media_id, filename=kwargs["filename"]).first_or_404()
-		# pprint(time.time()-start)
-		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
-			f"access_token={session.get('access_token')}"
-		# pprint(time.time()-start)
-		# print(url)
-		# x = app.requests_session.get(url=url).json()
-		x = requests.get(url=url).json()
-		# response = urllib.request.urlopen(url)
-		# data = response.read()
-		# x = json.loads(data)
-		# pprint(time.time()-start)
-		if x.get('baseUrl') is not None:
-			return redirect(
-				f"{x.get('baseUrl')}=d"
-			)
+		if not refresh and item.cache_expires and item.cache_url and item.cache_expires > datetime.now():
+			return redirect(item.cache_url)
 		else:
-			abort(404)
+			# pprint(time.time()-start)
+			url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.item_id}?" \
+				f"access_token={session.get('access_token')}"
+			# pprint(time.time()-start)
+			# print(url)
+			# x = app.requests_session.get(url=url).json()
+			x = requests.get(url=url).json()
+			# response = urllib.request.urlopen(url)
+			# data = response.read()
+			# x = json.loads(data)
+			# pprint(time.time()-start)
+			if x.get('baseUrl') is not None:
+				new_base_url = f"{x.get('baseUrl')}=d"
+				response = redirect(
+					new_base_url
+				)
+
+				@response.call_on_close
+				@copy_current_request_context
+				def process_after_request():
+					item.cache_url = new_base_url
+					item.cache_expires = datetime.now() + timedelta(hours=1)
+					db.session.add(item)
+					db.session.commit()
+
+				return response
+			else:
+				abort(404)
 	else:
 		abort(404)
 
@@ -537,3 +567,18 @@ def choose_album():
 		db.session.commit()
 
 		return redirect(url_for("routes.past_show_redirect", show_id=request.form.get("show")))
+
+
+@bp.route("/teardown")
+def teardown_test():
+	print("Start")
+	sleep(0.5)
+	print("response")
+	response = make_response("Test")
+	x = 1
+
+
+
+	return response
+
+

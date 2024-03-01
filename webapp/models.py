@@ -244,6 +244,8 @@ class StaticMedia(db.Model, NewIdGetter):
 	filename = db.Column(db.Text)
 	item_type = db.Column(db.String(30))
 	item_dim = db.Column(db.Text)
+	cache_url = db.Column(db.Text)
+	cache_expires = db.Column(db.DateTime)
 
 
 class AnalyticsLog(db.Model, NewIdGetter):
