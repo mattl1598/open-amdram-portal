@@ -1,6 +1,6 @@
 import collections
 
-from flask import abort, Blueprint, render_template, request, session
+from flask import abort, Blueprint, render_template, request, session, copy_current_request_context
 from flask_login import current_user, login_required
 import datetime
 import distinctipy as distinctipy
@@ -24,31 +24,35 @@ def before_app_request():
 
 @bp.after_app_request
 def after_app_request(response):
-	ignored_endpoints = [
-		"routes.css",
-		"routes.js",
-		"photos_routes.get_photo",
-		"routes.favicon"
-	]
-	if request.endpoint not in ignored_endpoints and "None" not in request.url and response.status_code != 302:
-		if current_user.is_authenticated:
-			email = current_user.email
-		else:
-			email = None
+	@response.call_on_close
+	@copy_current_request_context
+	def process_after_request():
+		ignored_endpoints = [
+			"routes.css",
+			"routes.js",
+			"photos_routes.get_photo",
+			"routes.favicon"
+		]
+		if request.endpoint not in ignored_endpoints and "None" not in request.url and response.status_code != 302:
+			if current_user.is_authenticated:
+				email = current_user.email
+			else:
+				email = None
 
-		new_log = AnalyticsLog(
-			id=AnalyticsLog.get_new_id(),
-			date=datetime.utcnow().isoformat(),
-			server=request.root_url,
-			session_id=session["session_id"],
-			session_email=email,
-			request_origin=request.referrer,
-			request_destination=request.url,
-			user_agent=request.user_agent.string,
-			code=response.status_code
-		)
-		db.session.add(new_log)
-		db.session.commit()
+			new_log = AnalyticsLog(
+				id=AnalyticsLog.get_new_id(),
+				date=datetime.utcnow().isoformat(),
+				server=request.root_url,
+				session_id=session["session_id"],
+				session_email=email,
+				request_origin=request.referrer,
+				request_destination=request.url,
+				user_agent=request.user_agent.string,
+				code=response.status_code
+			)
+
+			db.session.add(new_log)
+			db.session.commit()
 
 	db.session.commit()
 	return response

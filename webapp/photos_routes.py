@@ -567,18 +567,3 @@ def choose_album():
 		db.session.commit()
 
 		return redirect(url_for("routes.past_show_redirect", show_id=request.form.get("show")))
-
-
-@bp.route("/teardown")
-def teardown_test():
-	print("Start")
-	sleep(0.5)
-	print("response")
-	response = make_response("Test")
-	x = 1
-
-
-
-	return response
-
-
