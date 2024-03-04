@@ -124,6 +124,7 @@ class SubsPayment(db.Model, NewIdGetter):
 	e_con_phone = db.Column(db.String(13))
 	order_id = db.Column(db.String(192))
 	payment_id = db.Column(db.String(192))
+	source = db.Column(db.String(6))
 
 
 class BookingModifications(db.Model, NewIdGetter):
