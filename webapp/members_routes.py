@@ -1485,85 +1485,86 @@ def subs_payment():
 
 
 @bp.route("/members/update_subs")
-@login_required
 def update_subs():
-	"""admin"""
-	if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK":
-		latest_square_date = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).first().datetime
-		latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
+	latest_square_date = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).first().datetime
+	latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
 
-		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
-		results = app.square.orders.search_orders(
-			body={
-				"location_ids": [
-					"0W6A3GAFG53BH"
-				],
-				"query": {
-					"filter": {
-						"date_time_filter": {
-							"created_at": {
-								"start_at": latest_square_date.strftime(square_date_format)
-							}
-						},
-						"source_filter": {
-							"source_names": [
-								"Checkout Link"
-							]
-						},
-						"state_filter": {
-							"states": [
-								"OPEN",
-								"COMPLETED"
-							]
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	results = app.square.orders.search_orders(
+		body={
+			"location_ids": [
+				"0W6A3GAFG53BH"
+			],
+			"query": {
+				"filter": {
+					"date_time_filter": {
+						"created_at": {
+							"start_at": latest_square_date.strftime(square_date_format)
 						}
+					},
+					"source_filter": {
+						"source_names": [
+							"Checkout Link"
+						]
+					},
+					"state_filter": {
+						"states": [
+							"OPEN",
+							"COMPLETED"
+						]
 					}
 				}
 			}
-		)
-		if results.is_error():
-			print("Error:", results.errors)
-			abort(500)
+		}
+	)
+	if results.is_error():
+		print("Error:", results.errors)
+		if request.user_agent.string == "OADP_Scheduler":
+			resp.status_code = 500
+			return make_response(jsonify({
+				"Error": "Square API Error"
+			}), 500)
 		else:
-			type_regex = re.compile(fr"{'|'.join(json.loads(KeyValue.query.get('subs_levels').value).keys())}")
-			details_regex = re.compile(r"\((A|B|C|D|E)\): (.*)")
-			for result in results.body.get("orders") or []:
-				if result.get("id") == latest_known_order_id:
-					break
-				for line_item in result.get("line_items") or []:
-					if type_regex.search(line_item.get("name").lower()):
-						details = {}
-						for modifier in line_item.get("modifiers") or []:
-							deets = details_regex.search(modifier["name"])
-							details[deets.group(1)] = deets.group(2)
-						if list(details.keys()) == ['A', 'B', 'C', 'D', 'E']:
-							pprint(details)
-							try:
-								user_id = User.query.filter_by(email=details.get('C')).with_entities(User.id).first().id
-							except AttributeError:
-								user_id = None
-							new_sub = SubsPayment(
-								id=SubsPayment.get_new_id(),
-								user_id=user_id,
-								membership_type=type_regex.search(line_item.get("name").lower()).group(0),
-								amount_paid=line_item["total_money"]["amount"],
-								datetime=result.get("created_at") or datetime.utcnow(),
-								name=details.get('A'),
-								email=details.get('C'),
-								phone_number=details.get('B'),
-								e_con_name=details.get('D'),
-								e_con_phone=details.get('E'),
-								order_id=result.get("id"),
-								payment_id=result["tenders"][0].get("id"),
-								source="square"
-							)
-							db.session.add(new_sub)
-
-			sq_updated = KeyValue.query.get("square_subs_updated")
-			sq_updated.value = datetime.utcnow()
-			db.session.commit()
-			return redirect(url_for("members_routes.get_subs"))
+			abort(500)
 	else:
-		abort(403)
+		type_regex = re.compile(fr"{'|'.join(json.loads(KeyValue.query.get('subs_levels').value).keys())}")
+		details_regex = re.compile(r"\((A|B|C|D|E)\): (.*)")
+		for result in results.body.get("orders") or []:
+			if result.get("id") == latest_known_order_id:
+				break
+			for line_item in result.get("line_items") or []:
+				if type_regex.search(line_item.get("name").lower()):
+					details = {}
+					for modifier in line_item.get("modifiers") or []:
+						deets = details_regex.search(modifier["name"])
+						details[deets.group(1)] = deets.group(2)
+					if list(details.keys()) == ['A', 'B', 'C', 'D', 'E']:
+						pprint(details)
+						try:
+							user_id = User.query.filter_by(email=details.get('C')).with_entities(User.id).first().id
+						except AttributeError:
+							user_id = None
+						new_sub = SubsPayment(
+							id=SubsPayment.get_new_id(),
+							user_id=user_id,
+							membership_type=type_regex.search(line_item.get("name").lower()).group(0),
+							amount_paid=line_item["total_money"]["amount"],
+							datetime=result.get("created_at") or datetime.utcnow(),
+							name=details.get('A'),
+							email=details.get('C'),
+							phone_number=details.get('B'),
+							e_con_name=details.get('D'),
+							e_con_phone=details.get('E'),
+							order_id=result.get("id"),
+							payment_id=result["tenders"][0].get("id"),
+							source="square"
+						)
+						db.session.add(new_sub)
+
+		sq_updated = KeyValue.query.get("square_subs_updated")
+		sq_updated.value = datetime.utcnow()
+		db.session.commit()
+		return redirect(url_for("members_routes.get_subs"))
 
 
 @bp.route("/members/get_subs")

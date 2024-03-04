@@ -184,12 +184,13 @@ def create_app():
 				m_shows=m_shows
 			)
 
-		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes
+		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes
 		app.register_blueprint(routes.bp)
 		app.register_blueprint(members_routes.bp)
 		app.register_blueprint(photos_routes.bp)
 		app.register_blueprint(analytics_routes.bp)
 		app.register_blueprint(tickets_routes.bp)
+		app.register_blueprint(scheduler_routes.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():

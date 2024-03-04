@@ -124,7 +124,6 @@ def frontpage():
 				)\
 				.all()
 		]
-	print(files)
 	return render_template(
 		"frontpage.html",
 		latest_show=latest_show,

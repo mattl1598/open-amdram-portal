@@ -259,3 +259,24 @@ class AnalyticsLog(db.Model, NewIdGetter):
 	request_destination = db.Column(db.Text)
 	user_agent = db.Column(db.Text)
 	code = db.Column(db.Integer)
+
+
+class Scheduler(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	target_endpoint = db.Column(db.Text)
+	enabled = db.Column(db.Boolean)
+	is_running = db.Column(db.Boolean)
+	last_response_code = db.Column(db.Integer)
+	last_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	interval = db.Column(db.Interval)
+	next_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+
+	scheduler_log = db.relationship('SchedulerLog', backref='Scheduler', lazy=True)
+
+
+class SchedulerLog(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	job_id = db.Column(db.String(16), db.ForeignKey('scheduler.id'))
+	datetime = db.Column(db.DateTime)
+	response_code = db.Column(db.Integer)
+	response_json = db.Column(db.Text)
