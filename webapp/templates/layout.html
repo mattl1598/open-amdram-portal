@@ -24,7 +24,7 @@
 {#	<meta name="theme-color" content="#000000">#}
 
 	<script type="text/javascript" src="/js/nav.js"></script>
-	<script type="text/javascript" src="/js/img.js"></script>
+{#	<script type="text/javascript" src="/js/img.js"></script>#}
 
 	{% with messages = get_flashed_messages() %}
 	   {% if messages %}
@@ -408,6 +408,14 @@
 		</div>
 	</div>
 </div>
+	<script>
+		let image_elements = document.querySelectorAll("img")
+		for (let elem of image_elements) {
+			elem.addEventListener('error', function(){
+				elem.src = elem.src + "?refresh"
+			}, {once: true})
+		}
+	</script>
 </body>
 	{% if modules is defined %}
 		{% if modules["wysiwyg"] %}
