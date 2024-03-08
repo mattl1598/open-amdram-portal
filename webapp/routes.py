@@ -81,7 +81,8 @@ def frontpage():
 		if size[0] > size[1]:
 			photos.append(i)
 
-		if len(photos) == (5 - int(KeyValue.query.filter_by(key="tickets-active").first().value)):
+		# if len(photos) == (5 - int(KeyValue.query.filter_by(key="tickets-active").first().value)):
+		if len(photos) == 5:
 			break
 
 	post = Post.query \
@@ -97,7 +98,8 @@ def frontpage():
 			Post.type,
 			Post.linked_files,
 			Show.title.label("show_title"),
-			Show.subtitle.label("show_subtitle")
+			Show.subtitle.label("show_subtitle"),
+			Show.banner.label("show_banner")
 		) \
 		.first()
 
@@ -108,7 +110,8 @@ def frontpage():
 			.order_by(Show.date.asc()) \
 			.with_entities(
 				Show.title.label("show_title"),
-				Show.subtitle.label("show_subtitle")
+				Show.subtitle.label("show_subtitle"),
+				Show.banner.label("show_banner"),
 			) \
 			.first()
 	else:
@@ -118,12 +121,16 @@ def frontpage():
 				title=i.name,
 				date=i.date,
 				post_type="file"
-			) for i in Files.query\
+			) for i in Files.query
 				.filter(
 					Files.id.in_(post.linked_files["files"])
-				)\
+				)
 				.all()
 		]
+	tickets_active = KeyValue.query.filter_by(key="tickets-active").first().value
+	if not post.show_banner and tickets_active == "1" and len(photos) % 2:
+		photos.pop()
+
 	return render_template(
 		"frontpage.html",
 		latest_show=latest_show,

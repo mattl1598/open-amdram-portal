@@ -68,14 +68,17 @@
 {% endfor %}
 
 <script>setMobile()</script>
-
-{% if frontpage is defined %}
-	<div class="carousel" id="slider-container-outer">
-		<div id="slider-container" class="slider-container-transition">
+{% if frontpage is defined and post is defined and web_config.get("tickets-active") == "1" and post.show_banner %}
+	<div class="hero">
+		<a href="/tickets"><img src="{{ post.show_banner }}" alt="Banner Poster for {{ post.show_title }}"></a>
+	</div>
+{% elif frontpage is defined %}
+	<div class="carousel" id="carousel-container-outer">
+		<div id="carousel-container" class="carousel-container-transition">
 			{% set hero_count = namespace(value=0) %}
 			{% for photo in photos %}
 				{% set hero_count.value = hero_count.value + 1 %}
-				<div class="slider-item link" data-position="{{ hero_count.value }}"
+				<div class="carousel-item link" data-position="{{ hero_count.value }}"
 				     style="background-image: url('/photo/{{ photo.photo_url }}');"
 					>
 					<div class="item-layout">
@@ -98,7 +101,7 @@
 			{% endfor %}
 			{% if web_config.get("tickets-active") == "1" %}
 				{% set hero_count.value = hero_count.value + 1 %}
-				<div class="slider-item link" data-position="{{ hero_count.value }}"
+				<div class="carousel-item link" data-position="{{ hero_count.value }}"
 				     style="background-image: url('{{ web_config.get('tickets-hero-photo').value }}');"
 					>
 					<div class="item-layout">
@@ -349,6 +352,49 @@
 				</div>
 			{% endif %}
 
+			{# last show #}
+			{% if web_config.get("last_show") is not none %}
+				<div class="generic_link">
+					<h2>Our Last Show</h2>
+					<a class="generic_link" href="{{ web_config.get("last_show")[1] }}">
+						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>
+						<span class="text">{{ web_config.get("last_show")[0] }}</span>
+					</a>
+					{% if frontpage is defined and post is defined and web_config.get("tickets-active") == "1" and post.show_banner %}
+						<div class="carousel" id="carousel-container-outer">
+							<div id="carousel-container" class="carousel-container-transition">
+								{% set hero_count = namespace(value=0) %}
+								{% for photo in photos %}
+									{% set hero_count.value = hero_count.value + 1 %}
+									<div class="carousel-item link" data-position="{{ hero_count.value }}"
+									     style="background-image: url('/photo/{{ photo.photo_url }}');"
+										>
+										<div class="item-layout">
+{#											<div>#}
+{#												<h2><span>Our Last Show:<br></span>#}
+{#													<a href="{{ web_config.get("last_show")[1] }}">#}
+{#														{{ latest_show.title }}<br>#}
+{#														<span>(More	Photos)</span>#}
+{#													</a>#}
+{#												</h2>#}
+{#											</div>#}
+											<div class="img-container">
+												<a class="carousel-image-link" href="{{ web_config.get("last_show")[1] }}">
+													<img id="photo{{ hero_count.value }}"
+												        src="/photo/{{ photo.photo_url }}"
+												        alt="Photo"
+													>
+												</a>
+											</div>
+										</div>
+									</div>
+								{% endfor %}
+							</div>
+						</div>
+					{% endif %}
+				</div>
+			{% endif %}
+
 			{# latest blog #}
 			{% if web_config.get("latest_blog") is not none %}
 				<div class="generic_link">
@@ -357,17 +403,6 @@
 					<a class="generic_link" href="/blog/latest">
 						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>
 						<span class="text">{{ web_config.get("latest_blog")[1] }}</span>
-					</a>
-				</div>
-			{% endif %}
-
-			{# last show #}
-			{% if web_config.get("last_show") is not none %}
-				<div class="generic_link">
-					<h2>Our Last Show</h2>
-					<a class="generic_link" href="{{ web_config.get("last_show")[1] }}">
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>
-						<span class="text">{{ web_config.get("last_show")[0] }}</span>
 					</a>
 				</div>
 			{% endif %}

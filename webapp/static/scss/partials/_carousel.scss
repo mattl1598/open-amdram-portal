@@ -1,0 +1,146 @@
+
+#carousel-container-outer {
+	//overflow: hidden;
+	@include not-mobile {
+		width: 70%;
+		padding: 1rem 0;
+	}
+	@include mobile {
+		width: calc(100% - 2rem);
+		//margin: 0 2rem;
+		padding-top: 0.5rem;
+	}
+	margin: auto;
+
+	.sidebar & {
+		overflow: hidden;
+	}
+}
+
+#carousel-container {
+	display: flex;
+	flex-wrap: nowrap;
+	flex-direction: row;
+	justify-content: center;
+}
+
+/* CSS transition applied when translation of items happen */
+.carousel-container-transition {
+	transition: transform 1s ease-in-out;
+}
+@include not-mobile {
+	.sidebar #carousel-container-outer {
+		width: initial;
+	}
+
+	.sidebar .carousel-item {
+		width: calc(100% - 0.4rem);
+		margin: 0 0.5rem;
+		border: 0.2rem solid;
+	}
+}
+
+.carousel-item {
+	@include not-mobile {
+		//min-width: 40%;
+		//max-width: 70%;
+
+		width: 70%;
+		margin: 0 2rem;
+	}
+	@include mobile {
+		width: 100%;
+		margin: 0 2rem;
+	}
+
+
+	//max-width: 70%;
+	flex-shrink: 0;
+	flex-grow:1;
+	min-height: 30vh;
+	max-height: 40vh;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+
+	border-radius: 1.5rem;
+	border: 1rem solid;
+	@include theme(border-color, bg4);
+
+	overflow: hidden;
+
+	/* Center and scale the image nicely */
+	background: no-repeat center center;
+	background-size: cover;
+	//filter: blur(10px);
+
+	//@include theme(background-color, bg4);
+
+	object-fit: contain;
+
+	div.item-layout {
+		height: 100%;
+		width: 100%;
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
+
+		@include not-mobile {
+			flex-direction: row;
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+		}
+		@include mobile {
+			//flex-direction: column-reverse;
+			div:not(.img-container) {
+				backdrop-filter: blur(0.5rem);
+				-webkit-backdrop-filter: blur(0.5rem);
+			}
+			img {
+				opacity: 0;
+			}
+		}
+
+		border-radius: .5rem;
+
+		div:not(.img-container) {
+			flex-basis: 0;
+			flex-grow: 0;
+			@include theme(color, text);
+			background-color: #7f7f7fBB;
+			@include theme-adjust(background-color, bg2, rgba, 0.5);
+
+			padding: 1rem;
+			border-radius: .5rem;
+
+			margin: 0 0.5rem;
+			white-space: nowrap;
+
+			h1, h2, h3, h4 {
+				margin: 0;
+			}
+		}
+
+		.img-container {
+		    display: flex;
+			justify-content: end;
+			//display: inline-block;
+			direction: rtl;
+			flex-basis: 0;
+			flex-grow: 10;
+			width: 70%;
+			height: calc(100% - 0rem);
+			object-fit: contain;
+			z-index: 100;
+		}
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			z-index: 100;
+		}
+	}
+}

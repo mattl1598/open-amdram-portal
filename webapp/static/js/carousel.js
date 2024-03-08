@@ -1,13 +1,13 @@
 const FlexSlider = {
 	// total no of items
-	num_items: document.querySelectorAll(".slider-item").length,
+	num_items: document.querySelectorAll(".carousel-item").length,
 
 	// position of current item in view
 	current: 1,
 
 	init: function() {
 		// set CSS order of each item initially
-		document.querySelectorAll(".slider-item").forEach(function(element, index) {
+		document.querySelectorAll(".carousel-item").forEach(function(element, index) {
 			element.style.order = (index + 1).toString(10);
 		});
 
@@ -15,15 +15,14 @@ const FlexSlider = {
 	},
 
 	addEvents: function() {
-		// let that = this;
-
+		console.log("events");
 		// click on move item button
-		document.querySelector("#slider-container-outer").addEventListener('click', () => {
+		document.querySelector("#carousel-container-outer").addEventListener('click', () => {
 			this.gotoNext();
 		});
 
 		// after each item slides in, slider container fires transitionend event
-		document.querySelector("#slider-container").addEventListener('transitionend', () => {
+		document.querySelector("#carousel-container").addEventListener('transitionend', () => {
 			this.changeOrder();
 		});
 	},
@@ -39,33 +38,36 @@ const FlexSlider = {
 
 		// change order from current position till last
 		for(let i=this.current; i<=this.num_items; i++) {
-			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order.toString(10);
+			document.querySelector(".carousel-item[data-position='" + i + "']").style.order = order.toString(10);
 			order++;
 		}
 
 		// change order from first position till current
 		for(let i=1; i<this.current; i++) {
-			document.querySelector(".slider-item[data-position='" + i + "']").style.order = order.toString(10);
+			document.querySelector(".carousel-item[data-position='" + i + "']").style.order = order.toString(10);
 			order++;
 		}
 
 		// translate back to 0 from -100%
 		// we don't need transitionend to fire for this translation, so remove transition CSS
-		document.querySelector("#slider-container").classList.remove('slider-container-transition');
-		document.querySelector("#slider-container").style.transform = 'translateX(0)';
+		document.querySelector("#carousel-container").classList.remove('carousel-container-transition');
+		document.querySelector("#carousel-container").style.transform = 'translateX(0)';
 	},
 
 	gotoNext: function() {
+		console.log("click")
 		// translate from 0 to -100%
 		// we need transitionend to fire for this translation, so add transition CSS
-		document.querySelector("#slider-container").classList.add('slider-container-transition');
-		let width = 0 - document.querySelector(".slider-item[style*='order: 3;']").offsetWidth
-		document.querySelector("#slider-container").style.transform = `translateX(calc(${width}px - 4rem))`;
+		document.querySelector("#carousel-container").classList.add('carousel-container-transition');
+		let item = document.querySelector(".carousel-item[style*='order: 3;']")
+		let style = window.getComputedStyle(item)
+		let width = 0 - item.offsetWidth - parseInt(style.marginLeft, 10) - parseInt(style.marginRight, 10);
+		document.querySelector("#carousel-container").style.transform = `translateX(calc(${width}px))`;
 	}
 };
 
 FlexSlider.init();
 
 window.setInterval(function(){
-  document.querySelector("#slider-container-outer").click()
+  document.querySelector("#carousel-container-outer").click()
 }, 5000);
