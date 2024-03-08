@@ -47,7 +47,7 @@ def create_app():
 		app.config['FLASK_ENV'] = "development"
 		app.config['SQLALCHEMY_DATABASE_URI'] = app.envs.postgresql
 		app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-		app.config['MAX_CONTENT_LENGTH'] = 5 * 1000 * 1000
+		app.config['MAX_CONTENT_LENGTH'] = 50 * 1000 * 1000
 
 		from webapp.models import db, login_manager
 		db.init_app(app)
