@@ -29,13 +29,31 @@
 	{% with messages = get_flashed_messages() %}
 	   {% if messages %}
 	      {% for message in messages %}
-		      <script>alert("{{ message }}")</script>
+{#		      <script>alert("{{ message }}")</script>#}
 	      {% endfor %}
 	   {% endif %}
 	{% endwith %}
 </head>
 
 <body id="body" class="{{ session.get("fontsize", "font_single") }}">
+
+<div id="alerts"></div>
+<script>
+	{% with messages = get_flashed_messages() %}
+		const globalInitialAlerts = [
+			{% for alert in alerts %}
+				{ title: "{{ alert.title }}", content: "{{ alert.content }}" },
+			{% endfor %}
+			{% if messages %}
+				{% for message in messages %}
+					{ title: "{{ message }}", content: "" },
+				{% endfor %}
+			{% endif %}
+		]
+	{% endwith %}
+
+</script>
+
 {% for x in ["title-tape-measure", "title-bar"] %}
 <div id="{{ x }}" class="title-bar">
 	<div class="title">
@@ -470,4 +488,14 @@
 			<script type="text/javascript" src="/js/{{ file }}"></script>
 		{% endfor %}
 	{% endif %}
+	{% if env == "development" %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+	{% else %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.production.min.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
+	{% endif %}
+	{% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
+	<script src="/react/alert.js" type="{{ react_mimetype }}"></script>
 </html>

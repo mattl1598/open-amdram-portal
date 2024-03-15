@@ -1,0 +1,95 @@
+@import "variables";
+
+div#alerts {
+	//display: block;
+	position: fixed;
+	right: 2rem;
+	z-index: 20000;
+
+	@include mobile {
+		bottom: calc(4.625rem);
+	}
+	@include not-mobile {
+		top: calc(4.625rem);
+	}
+
+	display: flex;
+	flex-direction: column;
+	gap: .875rem;
+}
+
+
+
+div.alert {
+	max-width: 25rem;
+
+	border: .125rem solid;
+	border-radius: 0.3rem;
+	@include theme(border-color, bg4);
+
+	@include theme(background-color, bg1);
+	@include theme(color, text);
+
+	@keyframes alert-close {
+		from {
+			opacity: 100%;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+
+	&:first-child {
+		animation-name: alert-close;
+		animation-duration: 2s;
+		animation-delay: 10s;
+		animation-timing-function: linear;
+		animation-iteration-count: 1;
+		animation-fill-mode: forwards;
+
+		&:hover {
+			animation-play-state: paused;
+
+			div.progress {
+				animation-play-state: paused;
+			}
+		}
+
+		div.progress {
+			animation-name: finish-progress;
+			animation-duration: 10s;
+			animation-timing-function: linear;
+			animation-iteration-count: 1;
+			animation-fill-mode: forwards;
+			animation-play-state: running;
+		}
+	}
+
+	div {
+		padding: .325rem .625rem .75rem;
+	}
+
+	div.progress {
+		padding: 0;
+		border-bottom: .325rem solid;
+		@include theme(border-bottom-color, accent1);
+
+		@keyframes finish-progress {
+			from {
+				width: 100%;
+			}
+			to {
+				width: 0;
+			}
+		}
+
+	}
+
+	h2 {
+		margin: .5rem 0;
+	}
+
+	p {
+		margin: 0;
+	}
+}

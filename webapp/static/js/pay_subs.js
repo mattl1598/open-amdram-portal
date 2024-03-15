@@ -277,7 +277,7 @@ function payByCard() {
 	form_valid &= card_postcode_regex.test(document.querySelector('input#card_postcode').value)
 
 	if (!form_valid) {
-		alert('Please fill out all fields.')
+		displayAlerts({title:"Form Incomplete", content: "Please fill out all fields."})
 	} else {
 		// process payment
 		console.log("doPayment")

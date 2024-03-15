@@ -15,7 +15,6 @@ const FlexSlider = {
 	},
 
 	addEvents: function() {
-		console.log("events");
 		// click on move item button
 		document.querySelector("#carousel-container-outer").addEventListener('click', () => {
 			this.gotoNext();
@@ -55,7 +54,6 @@ const FlexSlider = {
 	},
 
 	gotoNext: function() {
-		console.log("click")
 		// translate from 0 to -100%
 		// we need transitionend to fire for this translation, so add transition CSS
 		document.querySelector("#carousel-container").classList.add('carousel-container-transition');

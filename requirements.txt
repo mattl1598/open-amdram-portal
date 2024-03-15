@@ -1,6 +1,7 @@
 corha
 distinctipy
 dotmap
+dukpy
 Werkzeug==2.3.7
 Flask
 Flask-Login

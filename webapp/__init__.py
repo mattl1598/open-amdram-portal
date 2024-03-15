@@ -1,6 +1,6 @@
 import json
 import re
-from os import walk
+from os import walk, getcwd
 from urllib.parse import urlparse, unquote
 
 import markdown as markdown
@@ -10,6 +10,7 @@ from flask_qrcode import QRcode
 from square.client import Client as SquareClient
 # noinspection PyPackageRequirements
 from sass import compile
+import dukpy
 import corha
 import os
 import subprocess
@@ -49,6 +50,8 @@ def create_app():
 		app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 		app.config['MAX_CONTENT_LENGTH'] = 50 * 1000 * 1000
 
+		app.root_dir = getcwd()
+
 		from webapp.models import db, login_manager
 		db.init_app(app)
 		login_manager.init_app(app)
@@ -76,7 +79,27 @@ def create_app():
 			environment=app.envs.square_environment
 		)
 
-		compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
+		if app.envs.app_environment != "development":
+			# compile scss to css
+			compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
+
+			# compile jsx to js
+			react_path = "webapp/static/react/"
+			if not os.path.isdir(react_path):
+				os.mkdir(react_path)
+
+			for (_, _, files) in walk("webapp/static/reactx/"):
+				for file in files:
+					with open("webapp/static/reactx/" + file, "r") as f:
+						output = dukpy.jsx_compile(
+							f.read(),
+							plugins=[
+								"transform-es2015-destructuring",
+								"transform-object-rest-spread"
+							]
+						)
+					with open(react_path + file.replace(".jsx", ".js"), "w") as w:
+						w.write(output)
 
 		app.jinja_env.globals.update(
 			md=markdown.markdown,
@@ -85,7 +108,8 @@ def create_app():
 			type=type,
 			list=list,
 			datetime=datetime,
-			json=json
+			json=json,
+			env=app.envs.app_environment
 		)
 
 		@app.context_processor

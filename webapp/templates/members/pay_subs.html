@@ -22,7 +22,8 @@
 				<div class="subheading">Renewable on the 1st July each year.</div>
 				{% for name, details in subs_levels.items() %}
 					<div class="subheading"
-						{% if details.get("desc") != None %}title="{{ details['desc'] }}" onclick="alert(this.title)"{% endif %}
+						{% if details.get("desc") != None %}title="{{ details['desc'] }}"
+						 onclick="displayAlerts({title: this.title, content: ''})"{% endif %}
 					>
 						Annual {{ name.capitalize() }} Memberships: £{{ details["amount"] }}
 					</div>

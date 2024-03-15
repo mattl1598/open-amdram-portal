@@ -5,6 +5,7 @@ import psycopg2
 import sqlalchemy
 from lorem_text import lorem as lorem_func
 import pyotp
+import sass
 
 from flask import abort, Blueprint, make_response, redirect, jsonify, \
 	render_template, Response, send_file, send_from_directory, url_for, request, session
@@ -935,15 +936,44 @@ def js(filename):
 		abort(404)
 
 
-@bp.route("/css/<string:filename>", methods=["GET"])
-def css(filename):
-	fp = 'static/css/' + filename
+@bp.route("/react/<string:filename>", methods=["GET"])
+def react(filename):
+	if app.envs.app_environment == "development":
+		fp = 'static/reactx/' + filename.replace('.js', '.jsx')
+		mimetype = 'text/jsx'
+	else:
+		fp = 'static/react/' + filename
+		mimetype = 'text/js'
 	try:
 		response = make_response(send_file(fp.replace("\\", "/")))
-		response.headers['mimetype'] = 'text/css'
+		response.headers['mimetype'] = mimetype
 		return response
 	except OSError:
 		abort(404)
+
+
+@bp.route("/css/<string:filename>", methods=["GET"])
+def css(filename):
+	if app.envs.app_environment != "development":
+		fp = 'static/css/' + filename
+		try:
+			response = make_response(send_file(fp.replace("\\", "/")))
+			response.headers['mimetype'] = 'text/css'
+			return response
+		except OSError:
+			abort(404)
+	else:
+		fp = 'webapp/static/scss/' + filename.replace(".css", ".scss")
+		try:
+			output = sass.compile(filename=fp.replace("\\", "/"))
+			response = Response(
+				output,
+				mimetype='text/css'
+			)
+			return response
+		except OSError as e:
+			print(e)
+			abort(404)
 
 
 # noinspection PyUnresolvedReferences

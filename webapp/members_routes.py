@@ -1169,7 +1169,7 @@ def admin_settings():
 			KeyValue.query.filter_by(key=key).first().value = value
 
 		db.session.commit()
-		flash("Done!")
+		flash("Settings Successfully Updated")
 
 		return redirect(url_for("members_routes.admin_settings"))
 

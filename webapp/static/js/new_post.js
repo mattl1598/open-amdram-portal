@@ -54,7 +54,7 @@ function upload_photo() {
 						// append new element after the parent div
 						parentDiv.parentNode.insertBefore(newElement, parentDiv.nextSibling)
 					} else {
-						alert("Upload failed")
+						displayAlerts({title:"Upload failed", content: ""})
 					}
 				}
 			)

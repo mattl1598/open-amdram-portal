@@ -19,3 +19,13 @@ function expand() {
 }
 
 window.addEventListener("resize", setMobile)
+
+function reloadCss(){
+    var links = document.getElementsByTagName("link");
+    for (var cl in links)
+    {
+        var link = links[cl];
+        if (link.rel === "stylesheet")
+            link.href += "";
+    }
+}
