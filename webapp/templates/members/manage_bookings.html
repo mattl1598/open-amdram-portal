@@ -3,17 +3,19 @@
 	<h1>Manage Bookings</h1>
 	<table>
 	<thead>
-		<th>ID</th>
-		<th>Ref#</th>
-		<th>From</th>
-		<th>Quantity</th>
-		<th>New Item</th>
-		<th>Note</th>
-		<th>Reserved?</th>
+		<tr>
+			<td>ID</td>
+			<td>Ref#</td>
+			<td>From</td>
+			<td>Quantity</td>
+			<td>New Item</td>
+			<td>Note</td>
+			<td>Reserved?</td>
+		</tr>
 	</thead>
 	{% for mod in mods %}
 		<tr>
-			<td class="info" title="{{ mod.id }}"><span class="icon"><svg viewbox="0 0 50 50">{{ icons["important"] | safe }}</svg></span></td>
+			<td class="info" title="{{ mod.id }}"><react-icon icon="important"></react-icon></td>
 			<td class="center">{{ mod.ref_num }}</td>
 			<td>{{ mod.from_item or "" }}</td>
 			<td class="center">{{ mod.change_quantity }}</td>

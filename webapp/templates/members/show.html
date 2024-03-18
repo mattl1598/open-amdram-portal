@@ -68,12 +68,13 @@
 		<div class="posts">
 			<a class="post heading" href="">
 				<span class="date"></span>
-				<span class="icon">
-				<svg class="icon" viewbox="0 0 50 50">
-					<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
-					<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
-				</svg>
-			</span>
+				<react-icon icon="circle" timeline="down"></react-icon>
+{#				<span class="icon">#}
+{#					<svg class="icon" viewbox="0 0 50 50">#}
+{#						<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>#}
+{#						<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>#}
+{#					</svg>#}
+{#				</span>#}
 				<div>
 					<span class="title"><h2>Announcements</h2></span>
 				</div>
@@ -81,17 +82,18 @@
 			{% for post in posts %}
 				<div class="post showpage">
 					<span class="date">{{ post.date.strftime("%d %b") }}<br>{{ post.date.strftime("%Y") }}</span>
-					<span class="icon">
-					<svg class="icon" viewbox="0 0 50 50">
-						{{ post.icon | safe }}
-						<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
-					</svg>
-						{% if not loop.last %}
-							<svg class="line" preserveAspectRatio="none" viewbox="0 0 50 50">
-							<path shape-rendering="crispEdges" d="m24.5 50 0-50 1 0 0 50-1 0z"></path>
-						</svg>
-						{% endif %}
-				</span>
+					<react-icon icon="{{ post.icon }}" timeline="up"></react-icon>
+{#					<span class="icon">#}
+{#						<svg class="icon" viewbox="0 0 50 50">#}
+{#							{{ post.icon | safe }}#}
+{#							<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>#}
+{#						</svg>#}
+{#							{% if not loop.last %}#}
+{#								<svg class="line" preserveAspectRatio="none" viewbox="0 0 50 50">#}
+{#								<path shape-rendering="crispEdges" d="m24.5 50 0-50 1 0 0 50-1 0z"></path>#}
+{#							</svg>#}
+{#							{% endif %}#}
+{#					</span>#}
 					<div class="text">
 						<a href="{{ post.link }}" class="title"><h3>{{ post.title }}</h3></a>
 						<div class="fulltext">{{ md(post.text) | safe }}</div>

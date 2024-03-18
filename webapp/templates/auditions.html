@@ -14,24 +14,26 @@
 		{% if len(files) %}
 			<div class="posts">
 				<a class="post heading" href="">
-					<span class="icon">
-						<svg class="icon" viewbox="0 0 50 50">
-							<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>
-							<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
-						</svg>
-					</span>
+					<react-icon icon="circle" timeline="down"></react-icon>
+{#					<span class="icon">#}
+{#						<svg class="icon" viewbox="0 0 50 50">#}
+{#							<path d="M25 15A10 10 0 0 0 15 25 10 10 0 0 0 25 35 10 10 0 0 0 35 25 10 10 0 0 0 25 15Z"></path>#}
+{#							<path shape-rendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>#}
+{#						</svg>#}
+{#					</span>#}
 					<div>
 						<span class="title"><h3>Audition Files</h3></span>
 					</div>
 				</a>
 				{% for post in files %}
 					<a class="post" href="{{ post.link }}">
-						<span class="icon">
-							<svg class="icon" viewbox="0 0 50 50">
-								{{ post.icon | safe }}
-								<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
-							</svg>
-						</span>
+						<react-icon icon="{{ post.icon }}" timeline="up"></react-icon>
+{#						<span class="icon">#}
+{#							<svg class="icon" viewbox="0 0 50 50">#}
+{#								{{ post.icon | safe }}#}
+{#								<path shape-rendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>#}
+{#							</svg>#}
+{#						</span>#}
 						<div class="text">
 							{% if post.show_title %}
 								<span class="show"><h4>{{ post.show_title }}</h4></span>
@@ -46,6 +48,6 @@
 	{% else %}
 		<h1>Auditions</h1>
 		<h2>There are no upcoming auditions event scheduled.</h2>
-		<h3>Check back here or follow us on our socials to find out when the next auditions are happening.</h3>
+		<h3>Check back here later or follow us on our socials to find out when the next auditions are happening.</h3>
 	{% endif %}
 {% endblock %}
