@@ -29,7 +29,7 @@
 			@include theme(border-color, accent2);
 		}
 
-		span.icon {
+		span.icon, react-icon {
 			display: flex;
 			font-size: inherit;
 			flex-direction: column;

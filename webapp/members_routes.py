@@ -87,15 +87,18 @@ class MemberPost:
 
 		if self.type == 'file':
 			ext = self.title.lower().rsplit(".", 1)[1]
-			self.icon = self.icon_set["file"]
+			# self.icon = self.icon_set["file"]
+			self.icon = "file"
 			for key in self.icon_set.keys():
 				if key in ext:
-					self.icon = self.icon_set[key]
+					# self.icon = self.icon_set[key]
+					self.icon = key
 					break
 
 			self.text = f"{ext.upper()} file"
 		else:
-			self.icon = self.icon_set["msg"]
+			# self.icon = self.icon_set["msg"]
+			self.icon = "msg"
 			self.text = text
 
 	def __repr__(self):

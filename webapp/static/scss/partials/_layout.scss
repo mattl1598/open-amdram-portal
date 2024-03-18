@@ -268,7 +268,7 @@ div.main-section {
 				justify-content: flex-start;
 				align-items: center;
 
-				span.icon {
+				span.icon, react-icon {
 					display: flex;
 					font-size: inherit;
 					flex-direction: column;
@@ -339,7 +339,7 @@ div.main-section {
 				justify-content: flex-start;
 				align-items: center;
 
-				span.icon {
+				span.icon, react-icon {
 					display: flex;
 					font-size: inherit;
 					flex-direction: column;
@@ -519,11 +519,15 @@ div.nav {
 			}
 		}
 
-		svg {
+		> svg, react-icon {
 			width: 5ch;
 			padding: 0 1ch;
 			margin: auto 0;
 			@include theme(fill, text);
+
+			> svg {
+				display: block;
+			}
 		}
 	}
 }
@@ -583,7 +587,7 @@ div.title {
 		}
 	}
 
-	span.icon {
+	span.icon, react-icon {
 		display: inline-flex;
 		font-size: inherit;
 		flex-direction: column;

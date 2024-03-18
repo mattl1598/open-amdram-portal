@@ -190,7 +190,7 @@ div.posts {
 			justify-content: flex-end;
 			align-self: flex-start;
 		}
-		span.icon {
+		span.icon, react-icon {
 			align-items: flex-start;
 			justify-content: flex-start;
 		}
@@ -212,7 +212,7 @@ div.posts {
 		text-align: right;
 	}
 
-	span.icon {
+	span.icon, react-icon {
 		flex-grow: 0;
 		flex-shrink: 0;
 		align-self: stretch;

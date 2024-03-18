@@ -163,18 +163,18 @@ def create_app():
 				if "|" in i:
 					a, b = i.split("|", 1)
 					if "newsletter" in a.lower():
-						icon = email_icon
+						icon = "email_icon"
 					else:
-						icon = other_icon
+						icon = "other_icon"
 					socials.append({"type": "other", "link": b, "text": unquote(a), "icon": icon})
 				elif "facebook" in i:
-					socials.append({"type": "facebook", "link": i, "text": "Facebook", "icon": fb_icon})
+					socials.append({"type": "facebook", "link": i, "text": "Facebook", "icon": "fb_icon"})
 				elif "twitter" in i:
-					socials.append({"type": "twitter", "link": i, "text": "Twitter", "icon": tw_icon})
+					socials.append({"type": "twitter", "link": i, "text": "Twitter", "icon": "tw_icon"})
 				elif "instagram" in i:
-					socials.append({"type": "instagram", "link": i, "text": "Instagram", "icon": ig_icon})
+					socials.append({"type": "instagram", "link": i, "text": "Instagram", "icon": "ig_icon"})
 				else:
-					socials.append({"type": "other", "link": i, "text": urlparse(i).netloc, "icon": other_icon})
+					socials.append({"type": "other", "link": i, "text": urlparse(i).netloc, "icon": "other_icon"})
 
 			web_config = {
 				"site-name": KeyValue.query.filter_by(key="site-name").first().value,

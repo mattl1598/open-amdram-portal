@@ -68,7 +68,10 @@
 	<div class="nav">
 		{% for item in nav %}
 			{% if item["title"] == "Search" %}
-				<a href="/search" class="search {{ "active" if item["is_active"] }}"><svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg></a>
+				<a href="/search" class="search {{ "active" if item["is_active"] }}">
+					<react-icon icon="search"></react-icon>
+{#					<svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg>#}
+				</a>
 			{% else %}
 				<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
 			{% endif %}
@@ -149,13 +152,15 @@
         <div class="portal-nav ham">
             <a href="/members/dashboard">
                 <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["dashboard"] | safe }}</svg></span>
+	                <react-icon icon="dashboard"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["dashboard"] | safe }}</svg></span>#}
 			        Dashboard
                 </h3>
 			</a>
             <a href="/members/shows">
 	            <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>
+		            <react-icon icon="drama"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>#}
 		            Shows
 	            </h3>
             </a>
@@ -168,7 +173,8 @@
             {% if current_user.role in ["author", "admin"] %}
 	            <a href="/members/manage-blog">
 	                <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>
+		                <react-icon icon="blog_icon"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>#}
 			            Manage Blog
 	                </h3>
 	            </a>
@@ -177,7 +183,8 @@
             {% if current_user.role == "admin" %}
 	            <a href="/members/admin">
 		            <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>
+			            <react-icon icon="admin"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>#}
 			            Admin Tools
 		            </h3>
 	            </a>
@@ -193,13 +200,15 @@
 
 	        <a href="/members/account_settings">
 		        <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["person"] | safe }}</svg></span>
+			        <react-icon icon="person"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["person"] | safe }}</svg></span>#}
 			        Account Settings
 		        </h3>
 	        </a>
             <a href="/members/help" target="_blank">
 	            <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["help"] | safe }}</svg></span>
+		            <react-icon icon="help"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["help"] | safe }}</svg></span>#}
 			        Help & Feedback
 	            </h3>
             </a>
@@ -213,7 +222,8 @@
 {#            {% endif %}#}
 			<a href="/members/logout">
 				<h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["logout"] | safe }}</svg></span>
+					<react-icon icon="logout"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["logout"] | safe }}</svg></span>#}
 			        Logout
 				</h3>
 			</a>
@@ -228,13 +238,15 @@
         <div class="portal-nav side">
             <a href="/members/dashboard">
                 <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["dashboard"] | safe }}</svg></span>
+	                <react-icon icon="dashboard"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["dashboard"] | safe }}</svg></span>#}
 			        Dashboard
                 </h3>
 			</a>
             <a href="/members/shows">
 	            <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>
+		            <react-icon icon="drama"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>#}
 		            Shows
 	            </h3>
             </a>
@@ -247,7 +259,8 @@
             {% if current_user.role in ["author", "admin"] %}
 	            <a href="/members/manage-blog">
 	                <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>
+		                <react-icon icon="blog_icon"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>#}
 			            Manage Blog
 	                </h3>
 	            </a>
@@ -256,7 +269,8 @@
             {% if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK" %}
 	            <a href="/members/get_subs">
 		            <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["membership"] | safe }}</svg></span>
+			            <react-icon icon="membership"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["membership"] | safe }}</svg></span>#}
 			            Get Subs
 		            </h3>
 	            </a>
@@ -265,13 +279,15 @@
             {% if current_user.role == "admin" %}
 	            <a href="/members/bookings">
 		            <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["ticket"] | safe }}</svg></span>
+			            <react-icon icon="ticket"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["ticket"] | safe }}</svg></span>#}
 			            Manage Bookings
 		            </h3>
 	            </a>
 	            <a href="/members/admin">
 		            <h3>
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>
+			            <react-icon icon="admin"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>#}
 			            Admin Tools
 		            </h3>
 	            </a>
@@ -287,19 +303,22 @@
 
 	        <a href="/members/docs">
 		        <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["note"] | safe }}</svg></span>
+			        <react-icon icon="note"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["note"] | safe }}</svg></span>#}
 			        Member Docs
 		        </h3>
 	        </a>
 	        <a href="/members/account_settings">
 		        <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["person"] | safe }}</svg></span>
+			        <react-icon icon="person"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["person"] | safe }}</svg></span>#}
 			        Account Settings
 		        </h3>
 	        </a>
             <a href="{{ web_config.get("user_feedback_link") }}" target="_blank">
 	            <h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["help"] | safe }}</svg></span>
+		            <react-icon icon="help"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["help"] | safe }}</svg></span>#}
 			        Help & Feedback
 	            </h3>
             </a>
@@ -311,7 +330,8 @@
             </ul>
 			<a href="/members/logout">
 				<h3>
-					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["logout"] | safe }}</svg></span>
+					<react-icon icon="logout"></react-icon>
+{#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["logout"] | safe }}</svg></span>#}
 			        Logout
 				</h3>
 			</a>
@@ -327,9 +347,12 @@
 		<div class="sidebar {{ "m" if no_portal }}">
 			{# tickets #}
 			{% if web_config.get("tickets-active") == "1" %}
-				<div class="tickets">
+				<div class="generic_link tickets">
 					<h2>Tickets Available:</h2>
-					<a href="/tickets" target="_blank">Purchase Tickets</a>
+					<a class="generic_link" href="/tickets" target="_blank">
+						<react-icon icon="ticket"></react-icon>
+						<span class="text">Purchase Tickets</span>
+					</a>
 				</div>
 			{% endif %}
 
@@ -363,7 +386,8 @@
 					<h2>Socials:</h2>
 					{% for link in socials %}
 						<a class="{{ link["type"] }}" href="https://{{ link["link"] }}" target="_blank" rel="noopener noreferrer">
-							<span class="icon"><svg viewbox="0 0 50 50">{{ link["icon"] | safe }}</svg></span>
+							<react-icon icon="{{ link["icon"] }}"></react-icon>
+{#							<span class="icon"><svg viewbox="0 0 50 50">{{ link["icon"] | safe }}</svg></span>#}
 							<span class="text">{{ link["text"] }}</span>
 						</a>
 					{% endfor %}
@@ -375,7 +399,8 @@
 				<div class="generic_link">
 					<h2>Our Last Show</h2>
 					<a class="generic_link" href="{{ web_config.get("last_show")[1] }}">
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>
+						<react-icon icon="drama"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>#}
 						<span class="text">{{ web_config.get("last_show")[0] }}</span>
 					</a>
 					{% if frontpage is defined and post is defined and web_config.get("tickets-active") == "1" and post.show_banner %}
@@ -419,7 +444,8 @@
 					<h2>Latest Blog: {{ web_config.get("latest_blog")[0] }}</h2>
 {#					<a href="/blog/latest"><h3></h3></a>#}
 					<a class="generic_link" href="/blog/latest">
-						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>
+						<react-icon icon="blog_icon"></react-icon>
+{#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>#}
 						<span class="text">{{ web_config.get("latest_blog")[1] }}</span>
 					</a>
 				</div>
@@ -497,5 +523,6 @@
 		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
 	{% endif %}
 	{% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
+	<script src="/react/icon.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/alert.js" type="{{ react_mimetype }}"></script>
 </html>
