@@ -598,14 +598,6 @@ def tickets():
 	)
 
 
-@bp.route("/icons")
-def icons():
-	return render_template(
-		"test.html",
-		css="frontpage.css"
-	)
-
-
 @bp.route("/prizedraw", methods=["GET", "POST"])
 def prizedraw():
 	if request.method == "POST":
