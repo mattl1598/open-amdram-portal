@@ -64,38 +64,50 @@
 
 	{% if len(photos) != 0 %}
 		<h3>Photos</h3>
-		<div class="gallery-container">
-			<div class="gallery-images">
+		<script>
+			const galleryImages = [
 				{% for photo in photos %}
-					{% if loop.index <= 3 or loop.revindex <= 2 %}
-						<div id="div{{ loop.index }}">
-							<img id="photo{{ loop.index }}"
-							     class="{% if not loop.first %}img-hidden{% endif %}"
-							     src="/photo/{{ photo.photo_url }}"
-							     alt="Photo"
-							>
-						</div>
-					{% else %}
-						<div id="div{{ loop.index }}">
-							<img id="photo{{ loop.index }}"
-							     class="{% if not loop.first %}img-hidden{% endif %}"
-							     data-data-src="/photo/{{ photo.photo_url }}"
-{#							     src="/photo/{{ photo.photo_url }}"#}
-							     alt="Photo"
-							>
-						</div>
-					{% endif %}
-
-					{% if loop.last %}
-						<script>const photoMax = {{ loop.index }};</script>
-					{% endif %}
+					["/photo/{{ photo.photo_url }}", {{ photo.photo_desc }}],
 				{% endfor %}
-			</div>
-			<div class="arrow" onclick="galleryIncr(-1)"><</div>
-			<div class="counter"><span id="photocount">1</span>/{{ len(photos) }}</div>
-			<div class="arrow" onclick="galleryIncr(1)">></div>
-		</div>
+			]
+		</script>
+		<div id="gallery"></div>
 	{% endif %}
+
+{#	{% if len(photos) != 0 %}#}
+{#		<h3>Photos</h3>#}
+{#		<div class="gallery-container">#}
+{#			<div class="gallery-images">#}
+{#				{% for photo in photos %}#}
+{#					{% if loop.index <= 3 or loop.revindex <= 2 %}#}
+{#						<div id="div{{ loop.index }}">#}
+{#							<img id="photo{{ loop.index }}"#}
+{#							     class="{% if not loop.first %}img-hidden{% endif %}"#}
+{#							     src="/photo/{{ photo.photo_url }}"#}
+{#							     alt="Photo"#}
+{#							>#}
+{#						</div>#}
+{#					{% else %}#}
+{#						<div id="div{{ loop.index }}">#}
+{#							<img id="photo{{ loop.index }}"#}
+{#							     class="{% if not loop.first %}img-hidden{% endif %}"#}
+{#							     data-data-src="/photo/{{ photo.photo_url }}"#}
+{#							     src="/photo/{{ photo.photo_url }}"#}
+{#							     alt="Photo"#}
+{#							>#}
+{#						</div>#}
+{#					{% endif %}#}
+{##}
+{#					{% if loop.last %}#}
+{#						<script>const photoMax = {{ loop.index }};</script>#}
+{#					{% endif %}#}
+{#				{% endfor %}#}
+{#			</div>#}
+{#			<div class="arrow" onclick="galleryIncr(-1)"><</div>#}
+{#			<div class="counter"><span id="photocount">1</span>/{{ len(photos) }}</div>#}
+{#			<div class="arrow" onclick="galleryIncr(1)">></div>#}
+{#		</div>#}
+{#	{% endif %}#}
 
 	<div class="cast_crew">
 		<div class="cast">
@@ -144,8 +156,4 @@
 			</table>
 		</div>
 	</div>
-
-
-
-
 {% endblock %}

@@ -377,11 +377,11 @@ def bookings():
 		new_mod = BookingModifications(
 			id=BookingModifications.get_new_id(),
 			datetime=datetime.utcnow(),
-			ref_num=request.form.get("ref_num"),
+			ref_num=int(request.form.get("ref_num")),
 			from_item=request.form.get("from_item"),
-			change_quantity=request.form.get("change_quantity"),
+			change_quantity=int(request.form.get("change_quantity")),
 			to_item=request.form.get("to_item"),
-			is_reservation=request.form.get("is_reservation"),
+			is_reservation=(request.form.get("is_reservation") == 'on'),
 			note=request.form.get("note")
 		)
 		db.session.add(new_mod)
