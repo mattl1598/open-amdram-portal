@@ -73,7 +73,32 @@ div.cast_crew {
 	}
 }
 
+// remove scrollbar mouse blocking region when in full screen
+body:has(div.gallery-container.fullscreen) {
+	&::-webkit-scrollbar {
+	  display: none;
+	}
+
+	/* Hide scrollbar for IE, Edge and Firefox */
+	-ms-overflow-style: none;  /* IE and Edge */
+	scrollbar-width: none;  /* Firefox */
+}
+
+div#gallery {
+	p.mobile-instructions {
+		text-align: center;
+		display: none;
+	}
+	@media (pointer:coarse) {
+		p.mobile-instructions {
+			display: block;
+		}
+	}
+}
+
 div.gallery-container {
+	touch-action: pan-y;
+	outline:none;
 	&.fullscreen {
 		position: fixed;
 		top: 0;
@@ -88,11 +113,62 @@ div.gallery-container {
 		justify-content: flex-end;
 		align-items: stretch;
 
+		@media (orientation: landscape) {
+			//font-size: 100% !important;
+			font-size: unset;
+			flex-direction: row;
+			div.gallery-controls {
+				flex-direction: column;
+				flex-grow: 0;
+				max-width: 4rem;
+				align-items: stretch;
+
+				div {
+					padding: .2rem;
+				}
+
+				.counter span {
+					text-align: center;
+					display: inline-block;
+				}
+			}
+		}
+
+		@media (orientation: portrait) {
+			font-size: unset;
+			flex-direction: column;
+			div.gallery-controls {
+				flex-direction: row;
+				align-items: center;
+			}
+		}
+
+		div.gallery-controls {
+			font-size: 1rem;
+			flex-basis: 0;
+			text-align: center;
+			justify-content: stretch;
+
+			div {
+				flex-grow: 0;
+
+				&.arrow:not(.fullscreen) {
+					flex-grow: 1;
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+				}
+			}
+		}
+
 		div.gallery-images {
-			flex: 1;
+			flex-grow: 1;
+			flex-basis: 0;
 			min-height: 0;
+			min-width: 0;
 			display: grid;
 			object-fit: contain;
+			z-index: 20;
 
 			div {
 				//background-color: blue;
@@ -134,6 +210,8 @@ div.gallery-container {
 	justify-content: space-around;
 	//flex-wrap: wrap;
 
+	overflow: hidden;
+
 	@include theme(background, bg0);
 	width: 100%;
 	//max-height: 60vh;
@@ -154,6 +232,8 @@ div.gallery-container {
 		align-items: center;
 		justify-content: space-around;
 		width: 100%;
+		z-index: 30;
+		@include theme(background, bg0)
 	}
 
 	div.counter {

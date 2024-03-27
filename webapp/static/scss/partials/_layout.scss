@@ -82,15 +82,26 @@ html,body
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+
+	-moz-text-size-adjust: none;
+	-webkit-text-size-adjust: none;
+	text-size-adjust: none;
 }
 
 @include not-mobile {
 
 }
 @include mobile {
-	@media (min-resolution: 1.5dppx) {
+	@media (min-resolution: 1.5dppx) and (orientation: portrait) {
 		body {
 			font-size: 200%;
+		}
+	}
+	@media (min-resolution: 1.5dppx) and (orientation: landscape) {
+		body {
+			p, h1, h2, h3, td {
+				font-size: 120%;
+			}
 		}
 	}
 }
