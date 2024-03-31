@@ -218,6 +218,7 @@ class Show(db.Model, NewIdGetter):
 
 	member_show_link = db.relationship('MemberShowLink', backref='show', lazy=True)
 	show_photos = db.relationship('ShowPhotos', backref='show', lazy=True)
+	performance = db.relationship('Performance', backref='show', lazy=True)
 	# files = db.relationship('Files', backref='show', lazy=True)
 
 	def __repr__(self):
@@ -237,6 +238,14 @@ class ShowPhotos(db.Model, NewIdGetter):
 
 	def __repr__(self):
 		return f"ShowPhotos('{self.id}', '{self.show_id}', '{self.photo_url}', '{self.photo_type}', '{self.photo_desc}')"
+
+
+class Performance(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	layout = db.Column(db.JSON)
+	seat_assignments = db.Column(db.JSON)
 
 
 class StaticMedia(db.Model, NewIdGetter):

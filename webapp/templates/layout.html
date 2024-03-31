@@ -17,6 +17,14 @@
 		{% endfor %}
 	{% endif %}
 
+	{% if env == "development" %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+	{% else %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.production.min.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
+	{% endif %}
 
 	<!--suppress HtmlUnknownTarget -->
 	<link rel=”mask-icon” href=”/favicon.svg” color=”#000000">
@@ -514,16 +522,10 @@
 			<script type="text/javascript" src="/js/{{ file }}"></script>
 		{% endfor %}
 	{% endif %}
-	{% if env == "development" %}
-		<script crossorigin src="https://unpkg.com/react@latest/umd/react.development.js"></script>
-		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
-		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-	{% else %}
-		<script crossorigin src="https://unpkg.com/react@latest/umd/react.production.min.js"></script>
-		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
-	{% endif %}
+
 	{% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
 	<script src="/react/icon.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/alert.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/gallery.js" type="{{ react_mimetype }}"></script>
+	<script src="/react/seatingplan.js" type="{{ react_mimetype }}"></script>
 </html>

@@ -26,18 +26,18 @@ $light: (
 @mixin theme($element, $colour, $extra_bits: "") {
 	@media all and (prefers-color-scheme: light) {
 		html.auto &, html.light & {
-			#{$element}: #{$extra_bits} colour($light, $colour);
+			#{$element}: colour($light, $colour) #{$extra_bits};
 		}
 		html.dark & {
-			#{$element}: #{$extra_bits} colour($dark, $colour);
+			#{$element}: colour($dark, $colour) #{$extra_bits};
 		}
 	}
 	@media all and (prefers-color-scheme: dark) {
 		html.auto &, html.dark & {
-			#{$element}: #{$extra_bits} colour($dark, $colour);
+			#{$element}: colour($dark, $colour) #{$extra_bits};
 		}
 		html.light & {
-			#{$element}: #{$extra_bits} colour($light, $colour);
+			#{$element}: colour($light, $colour) #{$extra_bits};
 		}
 	}
 }
@@ -45,18 +45,18 @@ $light: (
 @mixin theme-adjust($element, $colour, $adjust, $arg, $extra_bits: "") {
 	@media all and (prefers-color-scheme: light) {
 		html.auto &, html.light & {
-			#{$element}: #{$extra_bits} call(get-function($adjust), colour($light, $colour), $arg);
+			#{$element}: call(get-function($adjust), colour($light, $colour), $arg) #{$extra_bits};
 		}
 		html.dark & {
-			#{$element}: #{$extra_bits} call(get-function($adjust), colour($dark, $colour), $arg);
+			#{$element}: call(get-function($adjust), colour($dark, $colour), $arg) #{$extra_bits};
 		}
 	}
 	@media all and (prefers-color-scheme: dark) {
 		html.auto &, html.dark & {
-			#{$element}: #{$extra_bits} call(get-function($adjust), colour($dark, $colour), $arg);
+			#{$element}: call(get-function($adjust), colour($dark, $colour), $arg) #{$extra_bits};
 		}
 		html.light & {
-			#{$element}: #{$extra_bits} call(get-function($adjust), colour($light, $colour), $arg);
+			#{$element}: call(get-function($adjust), colour($light, $colour), $arg) #{$extra_bits};
 		}
 	}
 }

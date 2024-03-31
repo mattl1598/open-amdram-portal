@@ -649,6 +649,18 @@ def historic_sales():
 	)
 
 
+@bp.route("/members/bookings/seating")
+def seating_planner():
+
+	return render_template(
+		"members/tickets/seating_planner.html",
+		modules={
+			"wysiwyg": False,
+			"tom-select": True
+		},
+		css="seatingplan.css"
+	)
+
 # tickets seat number formatting
 # test = "A7, A9, A10, A11, A12, B7, B8, B9, B10, B11, B12, C7, C8, C9, C10, C11, C12, D7, D8, D9, D10, D12"
 def group_seats(string):

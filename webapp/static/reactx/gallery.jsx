@@ -2,21 +2,26 @@
 
 // const dims = [...imageDims]
 const lazyLoadDistance = 5
-const root = ReactDOM.createRoot(document.getElementById('gallery'))
-root.render(<Gallery/>)
+const gallery = document.getElementById('gallery')
+if (gallery) {
+	const root = ReactDOM.createRoot(gallery)
+	root.render(<Gallery/>)
 
-const images = []
-for (let i = 0; i <galleryImages.length; i++) {
-	let classname = "img-hidden"
-	let load = false
-	if (i === 0) {
-		classname = ""
+	const images = []
+	for (let i = 0; i <galleryImages.length; i++) {
+		let classname = "img-hidden"
+		let load = false
+		if (i === 0) {
+			classname = ""
+		}
+		if (i < 0 + lazyLoadDistance || i > galleryImages.length - 0 - lazyLoadDistance){
+			load = true
+		}
+		images.push(<Image src={galleryImages[i][0]} width={galleryImages[i][1]} height={galleryImages[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
 	}
-	if (i < 0 + lazyLoadDistance || i > galleryImages.length - 0 - lazyLoadDistance){
-		load = true
-	}
-	images.push(<Image src={galleryImages[i][0]} width={galleryImages[i][1]} height={galleryImages[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
 }
+
+
 
 function Gallery() {
 	const [imgNum, setImgNum] = React.useState(0)

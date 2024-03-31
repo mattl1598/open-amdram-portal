@@ -37,6 +37,7 @@ function AlertsContainer({ initialAlerts = [] }) {
 	}
 
 	function handleNewAlerts(event) {
+		console.log("alert?!")
 		let newAlerts = JSON.parse(event.target.value)
 		for (let i = 0; i < newAlerts.length; i++) {
 			addNewAlert(counter + i, newAlerts[i].title, newAlerts[i].content)
