@@ -65,13 +65,28 @@ div.orders {
 
 		display: grid;
 		grid-template-columns: 3em 1fr;
-		grid-template-rows: repeat(2, 1fr);
+		&.has_note {
+			grid-template-rows: repeat(3, 1fr);
+			grid-template-areas:
+				"num name"
+				"num seats"
+				"num note"
+			;
+			.seats {
+				padding-bottom: 0;
+			}
+		}
+		&:not(.has_note) {
+			grid-template-rows: repeat(2, 1fr);
+			grid-template-areas:
+				"num name"
+				"num seats"
+			;
+			.note {
+				display: none;
+			}
+		}
 		gap: .25rem .5rem;
-
-		grid-template-areas:
-			"num name"
-			"num seats"
-		;
 
 		.num {
 			grid-area: num;
@@ -99,6 +114,13 @@ div.orders {
 		.seats {
 			grid-area: seats;
 			padding-bottom: .2rem;
+		}
+		.note {
+			grid-area: note;
+			padding-bottom: .2rem;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 	}
 }

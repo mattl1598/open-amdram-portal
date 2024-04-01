@@ -294,7 +294,7 @@ def orders_api(show, perf):
 		perf_tree = collect_orders()
 		if "<" in show or "<" in perf:
 			abort(404)
-		return jsonify(json.loads(json.dumps(list(perf_tree.get(show).get(perf).values()), default=OrderInfo.default)))
+		return jsonify(json.loads(json.dumps(list((perf_tree.get(show).get(perf) or {}).values()), default=OrderInfo.default)))
 	elif current_user.is_authenticated:
 		abort(403)
 	else:
@@ -649,17 +649,31 @@ def historic_sales():
 	)
 
 
-@bp.route("/members/bookings/seating")
+@bp.route("/members/bookings/seating", methods=["GET", "POST"])
 def seating_planner():
+	# performance = Performance.query.get("2olqqYkVemQmE7D")
+	performance = Performance.query.filter_by(id="2olqqYkVemQmE7D").join(Show, Show.id == Performance.show_id).first_or_404()
+	perf_day = int(performance.date.strftime("%d"))
+	perf_hour = str(int(performance.date.strftime("%I")))
+	perf_date = performance.date.strftime("%a ") + str(perf_day) + {1:'st',2:'nd',3:'rd'}.get(perf_day%20, 'th') + performance.date.strftime(" %B ") + perf_hour + performance.date.strftime(":%M%p").lower()
+	if request.method == "POST":
+		performance.layout = request.json.get("layout")
+		performance.seat_assignments = request.json.get("assignments")
 
-	return render_template(
-		"members/tickets/seating_planner.html",
-		modules={
-			"wysiwyg": False,
-			"tom-select": True
-		},
-		css="seatingplan.css"
-	)
+		db.session.commit()
+		return "Success"
+
+	else:
+		return render_template(
+			"members/tickets/seating_planner.html",
+			performance=performance,
+			perf_date=perf_date,
+			modules={
+				"wysiwyg": False,
+				"tom-select": True
+			},
+			css="seatingplan.css"
+		)
 
 # tickets seat number formatting
 # test = "A7, A9, A10, A11, A12, B7, B8, B9, B10, B11, B12, C7, C8, C9, C10, C11, C12, D7, D8, D9, D10, D12"
