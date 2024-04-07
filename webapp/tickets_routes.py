@@ -694,18 +694,7 @@ def seating_planner(perf_id=""):
 			db.session.commit()
 			return redirect(url_for("tickets_routes.seating_planner"))
 		else:
-			now = datetime.utcnow() - timedelta(days=1)
-			end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
-			performances = Performance.query.filter(Performance.date > end_of_last_show).order_by(Performance.date.asc()).all()
-			return render_template(
-				"members/tickets/seating_planner.html",
-				performances=performances,
-				modules={
-					"wysiwyg": False,
-					"tom-select": True
-				},
-				css="seatingplan.css"
-			)
+			return redirect(url_for("tickets_routes.bookings"))
 
 
 # tickets seat number formatting
@@ -738,8 +727,11 @@ def group_seats(string):
 	return output
 
 
-@bp.route("/members/api/order_webhook", methods=["POST"])
+@bp.route("/members/api/order_webhook", methods=["GET", "POST"])
 def new_order_webhook():
+	if request.method == "GET":
+		return redirect(url_for("routes.frontpage"))
+
 	payload = request.json
 
 	if payload.get("type") != "order.created":
