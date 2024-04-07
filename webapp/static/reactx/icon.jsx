@@ -46,9 +46,16 @@ for (let i = 0; i < tags.length; i++) {
 }
 
 function Icon({icon, timeline}) {
+	let d = iconPaths[icon]
+	if (icon === "siteLogo") {
+		return (
+			<span className={"icon"} dangerouslySetInnerHTML={{__html: logoSVG}}></span>
+		)
+	}
+
 	return (
 		<svg className="icon" viewBox="0 0 50 50">
-			<path d={ iconPaths[icon] }></path>
+			<path d={ d }></path>
 			{timeline === "up" ? (
 				<path shapeRendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
 				) : null

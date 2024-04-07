@@ -26,6 +26,11 @@
 		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
 	{% endif %}
 
+	<script>
+		const siteName = "{{ web_config["site-name"] }}";
+		const logoSVG = `{{ web_config.get("site_logo").value | safe }}`;
+	</script>
+
 	<!--suppress HtmlUnknownTarget -->
 	<link rel=”mask-icon” href=”/favicon.svg” color=”#000000">
 	<link rel="icon" href="/favicon.svg" type="image/svg+xml">

@@ -247,6 +247,12 @@ class Performance(db.Model, NewIdGetter):
 	layout = db.Column(db.JSON)
 	seat_assignments = db.Column(db.JSON)
 
+	def get_date_string(self):
+		perf_day = int(self.date.strftime("%d"))
+		perf_hour = str(int(self.date.strftime("%I")))
+		perf_date = self.date.strftime("%a ") + str(perf_day) + {1: 'st', 2: 'nd', 3: 'rd'}.get(perf_day % 20, 'th') + self.date.strftime(" %B ") + perf_hour + self.date.strftime(":%M%p").lower()
+		return perf_date
+
 
 class StaticMedia(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)

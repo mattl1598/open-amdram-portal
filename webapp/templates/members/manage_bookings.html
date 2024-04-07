@@ -1,5 +1,23 @@
 {% extends "members/members_layout.html" %}
 {% block portal_content %}
+	<div>
+		<h1>Performances:</h1>
+		{% set ns = namespace(assigned_seats=0, seats=0) %}
+		<ul>
+			{% for perf in performances %}
+				<li>
+					<a href="/members/bookings/seating/{{ perf.id }}">
+						<h2>{{ perf.get_date_string() }}</h2>
+						{% set ns.assigned_seats = ns.assigned_seats + len(perf.seat_assignments.values()) + perf.layout.get("newSeats") %}
+						{% set ns.seats = ns.seats + perf.layout.get("rowCount")*12 - len(perf.layout.get("hiddenSeats")) %}
+						<h3>Seats: {{ len(perf.seat_assignments.values()) }}/{{ perf.layout.get("rowCount")*12 - len(perf.layout.get("hiddenSeats")) }} ({{ perf.layout.get("newSeats") or 0 }} new)</h3>
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+		<h3>Total: {{ ns.assigned_seats }}/{{ ns.seats }}</h3>
+	</div>
+	<hr/>
 	<h1>Manage Bookings</h1>
 	<table>
 	<thead>
@@ -57,4 +75,12 @@
 	<div class="fancy-input">
 		<a href="/members/get_orders" class="button">Download Orders File</a>
 	</div>
+	{% if current_user.role == 'admin' %}
+		<hr/>
+		<form action="/members/bookings/seating" method="POST">
+			<h1>Add New Performance: </h1>
+			<label for="date"><input name="date" type="datetime-local"></label>
+			<input type="submit" value="Submit">
+		</form>
+	{% endif %}
 {% endblock %}

@@ -1,7 +1,11 @@
 import json
 import re
 from io import BytesIO
+
+import dateutil
+import requests
 from pprint import pprint
+from dateutil import parser
 
 import xlsxwriter
 from flask import Blueprint, make_response, redirect, render_template, request, session, abort, jsonify, url_for
@@ -412,9 +416,12 @@ def bookings():
 
 	items = sorted(items, key=extract_numbers)
 
+	performances = Performance.query.filter(Performance.date > end_of_last_show).order_by(Performance.date.asc()).all()
+
 	return render_template(
 			"members/manage_bookings.html",
 			mods=mods,
+			performances=performances,
 			items=items,
 			css="bookings.css"
 		)
@@ -650,30 +657,56 @@ def historic_sales():
 
 
 @bp.route("/members/bookings/seating", methods=["GET", "POST"])
-def seating_planner():
+@bp.route("/members/bookings/seating/<perf_id>", methods=["GET", "POST"])
+def seating_planner(perf_id=""):
 	# performance = Performance.query.get("2olqqYkVemQmE7D")
-	performance = Performance.query.filter_by(id="2olqqYkVemQmE7D").join(Show, Show.id == Performance.show_id).first_or_404()
-	perf_day = int(performance.date.strftime("%d"))
-	perf_hour = str(int(performance.date.strftime("%I")))
-	perf_date = performance.date.strftime("%a ") + str(perf_day) + {1:'st',2:'nd',3:'rd'}.get(perf_day%20, 'th') + performance.date.strftime(" %B ") + perf_hour + performance.date.strftime(":%M%p").lower()
-	if request.method == "POST":
-		performance.layout = request.json.get("layout")
-		performance.seat_assignments = request.json.get("assignments")
+	if perf_id:
+		performance = Performance.query.filter_by(id=perf_id).join(Show, Show.id == Performance.show_id).first_or_404()
 
-		db.session.commit()
-		return "Success"
+		if request.method == "POST":
+			performance.layout = request.json.get("layout")
+			performance.seat_assignments = request.json.get("assignments")
 
+			db.session.commit()
+			return "Success"
+
+		else:
+			return render_template(
+				"members/tickets/seating_planner.html",
+				performance=performance,
+				modules={
+					"wysiwyg": False,
+					"tom-select": True
+				},
+				css="seatingplan.css"
+			)
 	else:
-		return render_template(
-			"members/tickets/seating_planner.html",
-			performance=performance,
-			perf_date=perf_date,
-			modules={
-				"wysiwyg": False,
-				"tom-select": True
-			},
-			css="seatingplan.css"
-		)
+		if request.method == "POST":
+			next_show = Show.query.filter(Show.date > datetime.utcnow()).order_by(Show.date.asc()).first().id
+			new_perf = Performance(
+				id=Performance.get_new_id(),
+				show_id=next_show,
+				date=request.form.get("date"),
+				layout={"rowCount": 1, "hiddenSeats": [], "newSeats": 0, "fullWidth":  12},
+				seat_assignments={}
+			)
+			db.session.add(new_perf)
+			db.session.commit()
+			return redirect(url_for("tickets_routes.seating_planner"))
+		else:
+			now = datetime.utcnow() - timedelta(days=1)
+			end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
+			performances = Performance.query.filter(Performance.date > end_of_last_show).order_by(Performance.date.asc()).all()
+			return render_template(
+				"members/tickets/seating_planner.html",
+				performances=performances,
+				modules={
+					"wysiwyg": False,
+					"tom-select": True
+				},
+				css="seatingplan.css"
+			)
+
 
 # tickets seat number formatting
 # test = "A7, A9, A10, A11, A12, B7, B8, B9, B10, B11, B12, C7, C8, C9, C10, C11, C12, D7, D8, D9, D10, D12"
@@ -703,3 +736,85 @@ def group_seats(string):
 				output.append(temp)
 
 	return output
+
+
+@bp.route("/members/api/order_webhook", methods=["POST"])
+def new_order_webhook():
+	payload = request.json
+
+	if payload.get("type") != "order.created":
+		abort(400)
+
+	# TODO: should also do verification isFromSquare
+	# TODO: should probably store these for de-duplication
+	payload.get("event_id")
+
+	if data := payload.get("data"):
+		if obj := data.get("object"):
+			if detail := obj.get("order_created"):
+				if detail.get("state") == "COMPLETED":
+					result = app.square.orders.retrieve_order(
+						order_id=detail.get("order_id")
+					)
+					order = {}
+					if result.is_success():
+						order = result.body.get("order")
+					elif result.is_error():
+						abort(500)
+					if webhook := KeyValue.query.get("alerts_webhook"):
+						url = webhook.value
+						headers = {
+							'Content-type': 'application/json'
+						}
+						for item in order.get('line_items'):
+							print(item.get("name"))
+							if len(name_split := item.get("name").split(" - ")):
+								try:
+									perf_date = parser.parse(name_split[1])
+									if perf_date < datetime.utcnow():
+										perf_date = perf_date.replace(year=perf_date.year+1)
+								except (dateutil.parser._parser.ParserError, IndexError):
+									perf_date = False
+								if perf_date:
+									perf = Performance.query.filter_by(date=perf_date).first()
+									layout = perf.layout.copy()
+									if perf is None:
+										data = {
+											"content": "",
+											"embeds": [
+												{
+													"type": "rich",
+													"title": "New Order",
+													"description":
+														f"{item.get('name')} x {item.get('quantity')}\n"
+														f"but performance was not found in database.",
+													"color": 0xcd4a46,
+													"url": "https://silchesterplayers.org/members/bookings",
+												}
+											],
+											"type": 1
+										}
+									else:
+										layout["newSeats"] += int(item.get('quantity'))
+										data = {
+											"content": "",
+											"embeds": [
+												{
+													"type": "rich",
+													"title": "New Order",
+													"description":
+														f"{item.get('name')} x {item.get('quantity')}\n"
+														f"Performance now has {layout['newSeats']} unassigned seats.\n"
+														f"Sold: {layout['newSeats'] + len(perf.seat_assignments.values())}/{layout['rowCount']*layout['fullWidth']}",
+													"color": 0x3CB5B9,
+													"url": "https://silchesterplayers.org/members/bookings",
+												}
+											],
+											"type": 1
+										}
+										perf.layout = layout
+										db.session.add(perf)
+										db.session.commit()
+									requests.post(url=url, data=json.dumps(data), headers=headers)
+
+	return make_response("Success", 200)
