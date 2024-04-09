@@ -596,38 +596,38 @@ function Seat({
 }
 
 function Ticket({groupName, showName, authors, showDate, name, seats}) {
-	console.log("seats: ", seats)
-	console.log("seats type: ", typeof(seats))
 	let shortSeats = []
 	let temp = ""
 
-	for (let i=0; i<seats.length; i++) {
-		if (temp === "") {
-			temp = seats[i]
-		}
-		let row = seats[i][0]
-		let seat = int(seats[i].substring(1))
-		let next_seat = `${row}${seat+1}`
-		if (i < seats.length-1) {
-			if (next_seat !== seats[i+1]) {
+	if (seats.length > 2) {
+		for (let i=0; i<seats.length; i++) {
+			if (temp === "") {
+				temp = seats[i]
+			}
+			let row = seats[i][0]
+			let seat = int(seats[i].substring(1))
+			let next_seat = `${row}${seat+1}`
+			if (i < seats.length-1) {
+				if (next_seat !== seats[i+1]) {
+					if (temp !== seats[i]) {
+						shortSeats.push(`${temp}-${seats[i]}`)
+					} else {
+						shortSeats.push(temp)
+					}
+					temp = ""
+				}
+			} else {
 				if (temp !== seats[i]) {
 					shortSeats.push(`${temp}-${seats[i]}`)
 				} else {
 					shortSeats.push(temp)
 				}
-				temp = ""
-			}
-		} else {
-			if (temp !== seats[i]) {
-				if (temp !== seats[i]) {
-					shortSeats.push(`${temp}-${seats[i]}`)
-				} else {
-					shortSeats.push(temp)
-				}
-				temp = ""
 			}
 		}
+	} else {
+		shortSeats = seats
 	}
+
 
 	return (
 		<div className={"ticket"}>
