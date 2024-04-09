@@ -744,7 +744,7 @@ def new_order_webhook():
 	if data := payload.get("data"):
 		if obj := data.get("object"):
 			if detail := obj.get("order_created"):
-				if detail.get("state") == "COMPLETED":
+				if detail.get("state") in ["OPEN", "COMPLETED"]:
 					result = app.square.orders.retrieve_order(
 						order_id=detail.get("order_id")
 					)
@@ -753,7 +753,7 @@ def new_order_webhook():
 						order = result.body.get("order")
 					elif result.is_error():
 						abort(500)
-					if webhook := KeyValue.query.get("alerts_webhook"):
+					if webhook := KeyValue.query.get("alerts_webhook") and (order.get("net_amount_due_money") or {}).get("amount") == 0:
 						url = webhook.value
 						headers = {
 							'Content-type': 'application/json'
