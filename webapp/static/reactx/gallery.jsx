@@ -3,11 +3,12 @@
 // const dims = [...imageDims]
 const lazyLoadDistance = 5
 const gallery = document.getElementById('gallery')
+const images = []
+
 if (gallery) {
 	const root = ReactDOM.createRoot(gallery)
 	root.render(<Gallery/>)
 
-	const images = []
 	for (let i = 0; i <galleryImages.length; i++) {
 		let classname = "img-hidden"
 		let load = false
@@ -20,7 +21,6 @@ if (gallery) {
 		images.push(<Image src={galleryImages[i][0]} width={galleryImages[i][1]} height={galleryImages[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
 	}
 }
-
 
 
 function Gallery() {
