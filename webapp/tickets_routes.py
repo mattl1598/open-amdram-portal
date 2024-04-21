@@ -812,6 +812,7 @@ def new_order_webhook():
 		return make_response("Success", 200)
 	except BaseException as e:
 		discord_notif_error("Error", str(e))
+		abort(500)
 
 
 def discord_notif_error(title, msg):

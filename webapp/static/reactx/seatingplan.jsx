@@ -167,7 +167,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 				"Content-Type": "application/json",
 		    },
 			body: JSON.stringify({
-				layout: {rowCount: rowCount, hiddenSeats: hiddenSeats, newSeats: newSeats},
+				layout: {rowCount: rowCount, hiddenSeats: hiddenSeats, newSeats: newSeats, fullWidth: fullWidth},
 				assignments: assignments
 			})
 		}).then(() => {
