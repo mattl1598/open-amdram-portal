@@ -752,6 +752,7 @@ def new_order_webhook():
 					if result.is_success():
 						order = result.body.get("order")
 					elif result.is_error():
+						discord_notif_error("Invalid Order (New Order Webhook)", result.errors)
 						abort(500)
 					if webhook := KeyValue.query.get("alerts_webhook") and (order.get("net_amount_due_money") or {}).get("amount") == 0:
 						url = webhook.value
@@ -759,7 +760,6 @@ def new_order_webhook():
 							'Content-type': 'application/json'
 						}
 						for item in order.get('line_items'):
-							print(item.get("name"))
 							if len(name_split := item.get("name").split(" - ")):
 								try:
 									perf_date = parser.parse(name_split[1])
@@ -810,3 +810,26 @@ def new_order_webhook():
 									requests.post(url=url, data=json.dumps(data), headers=headers)
 
 	return make_response("Success", 200)
+
+
+def discord_notif_error(title, msg):
+	if webhook := KeyValue.query.get("alerts_webhook"):
+		url = webhook.value
+		headers = {
+			'Content-type': 'application/json'
+		}
+		data = {
+			"content": "",
+			"embeds": [
+				{
+					"type": "rich",
+					"title": f"{title}",
+					"description":
+						f"{msg}",
+					"color": 0xff0000,
+					"url": "https://silchesterplayers.org/members/bookings",
+				}
+			],
+			"type": 1
+		}
+		requests.post(url=url, data=json.dumps(data), headers=headers)

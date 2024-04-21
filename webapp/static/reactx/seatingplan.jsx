@@ -199,7 +199,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 						seats: order.tickets_count,
 						note: order.note,
 						adults: order.tickets.Adult !== undefined ? order.tickets.Adult : 0,
-						children: order.tickets.Children !== undefined ? order.tickets.Children : 0
+						children: order.tickets.Junior !== undefined ? order.tickets.Junior : 0
 					}
 				}
 				setOrders({
@@ -346,7 +346,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 				{assignedOrders}
 			</div>
 
-			<div className={"tickets"}>
+			<div className={"tickets"} style={{width: `calc(${fullWidth + 2} * 5.7rem - sqrt(2)*2rem)`}}>
 				{tickets}
 			</div>
 		</div>
@@ -436,7 +436,7 @@ function Row({
 	}
 
 	return (
-		<div className={"row"} style={{gridTemplateColumns: `repeat(${fullWidth + 2}, 1fr)`}} onDragOver={(e) => handleDragOver(e)}>
+		<div className={"row"} style={{gridTemplateColumns: `repeat(${fullWidth + 2}, 5.7rem)`}} onDragOver={(e) => handleDragOver(e)}>
 			{ seats }
 		</div>
 	)

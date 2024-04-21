@@ -6,7 +6,7 @@
 		<ul>
 			{% for perf in performances %}
 				<li>
-					<a href="/members/bookings/seating/{{ perf.id }}">
+					<a href="/members/bookings/seating/{{ perf.id }}#">
 						<h2>{{ perf.get_date_string() }}</h2>
 						{% set ns.assigned_seats = ns.assigned_seats + len(perf.seat_assignments.values()) + perf.layout.get("newSeats") %}
 						{% set ns.seats = ns.seats + perf.layout.get("rowCount")*12 - len(perf.layout.get("hiddenSeats")) %}

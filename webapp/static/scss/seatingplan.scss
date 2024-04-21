@@ -152,7 +152,8 @@ div.row {
 	//flex-direction: row;
 	//align-items: center;
 	//justify-content: space-evenly;
-	grid-template-columns: repeat(12, 1fr);
+	//grid-template-columns: repeat(12, 1fr);
+	grid-template-columns: repeat(12, 5.7rem);
 	grid-template-rows: 1fr;
 	//gap: .5rem;
 }
