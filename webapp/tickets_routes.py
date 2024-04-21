@@ -731,85 +731,87 @@ def group_seats(string):
 def new_order_webhook():
 	if request.method == "GET":
 		return redirect(url_for("routes.frontpage"))
+	try:
+		payload = request.json
 
-	payload = request.json
+		if payload.get("type") != "order.created":
+			abort(400)
 
-	if payload.get("type") != "order.created":
-		abort(400)
+		# TODO: should also do verification isFromSquare
+		# TODO: should probably store these for de-duplication
+		payload.get("event_id")
 
-	# TODO: should also do verification isFromSquare
-	# TODO: should probably store these for de-duplication
-	payload.get("event_id")
+		if data := payload.get("data"):
+			if obj := data.get("object"):
+				if detail := obj.get("order_created"):
+					if detail.get("state") in ["OPEN", "COMPLETED"]:
+						result = app.square.orders.retrieve_order(
+							order_id=detail.get("order_id")
+						)
+						order = {}
+						if result.is_success():
+							order = result.body.get("order")
+						elif result.is_error():
+							discord_notif_error("Invalid Order (New Order Webhook)", result.errors)
+							abort(500)
+						if (webhook := KeyValue.query.get("alerts_webhook")) and (order.get("net_amount_due_money") or {}).get("amount") == 0:
+							url = webhook.value
+							headers = {
+								'Content-type': 'application/json'
+							}
+							for item in order.get('line_items'):
+								if len(name_split := item.get("name").split(" - ")):
+									try:
+										perf_date = parser.parse(name_split[1])
+										if perf_date < datetime.utcnow():
+											perf_date = perf_date.replace(year=perf_date.year+1)
+									except (dateutil.parser._parser.ParserError, IndexError):
+										perf_date = False
+									if perf_date:
+										perf = Performance.query.filter_by(date=perf_date).first()
+										layout = perf.layout.copy()
+										if perf is None:
+											data = {
+												"content": "",
+												"embeds": [
+													{
+														"type": "rich",
+														"title": "New Order",
+														"description":
+															f"{item.get('name')} x {item.get('quantity')}\n"
+															f"but performance was not found in database.",
+														"color": 0xcd4a46,
+														"url": "https://silchesterplayers.org/members/bookings",
+													}
+												],
+												"type": 1
+											}
+										else:
+											layout["newSeats"] += int(item.get('quantity'))
+											data = {
+												"content": "",
+												"embeds": [
+													{
+														"type": "rich",
+														"title": "New Order",
+														"description":
+															f"{item.get('name')} x {item.get('quantity')}\n"
+															f"Performance now has {layout['newSeats']} unassigned seats.\n"
+															f"Sold: {layout['newSeats'] + len(perf.seat_assignments.values())}/{layout['rowCount']*layout['fullWidth']}",
+														"color": 0x3CB5B9,
+														"url": "https://silchesterplayers.org/members/bookings",
+													}
+												],
+												"type": 1
+											}
+											perf.layout = layout
+											db.session.add(perf)
+											db.session.commit()
+										requests.post(url=url, data=json.dumps(data), headers=headers)
 
-	if data := payload.get("data"):
-		if obj := data.get("object"):
-			if detail := obj.get("order_created"):
-				if detail.get("state") in ["OPEN", "COMPLETED"]:
-					result = app.square.orders.retrieve_order(
-						order_id=detail.get("order_id")
-					)
-					order = {}
-					if result.is_success():
-						order = result.body.get("order")
-					elif result.is_error():
-						discord_notif_error("Invalid Order (New Order Webhook)", result.errors)
-						abort(500)
-					if webhook := KeyValue.query.get("alerts_webhook") and (order.get("net_amount_due_money") or {}).get("amount") == 0:
-						url = webhook.value
-						headers = {
-							'Content-type': 'application/json'
-						}
-						for item in order.get('line_items'):
-							if len(name_split := item.get("name").split(" - ")):
-								try:
-									perf_date = parser.parse(name_split[1])
-									if perf_date < datetime.utcnow():
-										perf_date = perf_date.replace(year=perf_date.year+1)
-								except (dateutil.parser._parser.ParserError, IndexError):
-									perf_date = False
-								if perf_date:
-									perf = Performance.query.filter_by(date=perf_date).first()
-									layout = perf.layout.copy()
-									if perf is None:
-										data = {
-											"content": "",
-											"embeds": [
-												{
-													"type": "rich",
-													"title": "New Order",
-													"description":
-														f"{item.get('name')} x {item.get('quantity')}\n"
-														f"but performance was not found in database.",
-													"color": 0xcd4a46,
-													"url": "https://silchesterplayers.org/members/bookings",
-												}
-											],
-											"type": 1
-										}
-									else:
-										layout["newSeats"] += int(item.get('quantity'))
-										data = {
-											"content": "",
-											"embeds": [
-												{
-													"type": "rich",
-													"title": "New Order",
-													"description":
-														f"{item.get('name')} x {item.get('quantity')}\n"
-														f"Performance now has {layout['newSeats']} unassigned seats.\n"
-														f"Sold: {layout['newSeats'] + len(perf.seat_assignments.values())}/{layout['rowCount']*layout['fullWidth']}",
-													"color": 0x3CB5B9,
-													"url": "https://silchesterplayers.org/members/bookings",
-												}
-											],
-											"type": 1
-										}
-										perf.layout = layout
-										db.session.add(perf)
-										db.session.commit()
-									requests.post(url=url, data=json.dumps(data), headers=headers)
-
-	return make_response("Success", 200)
+		return make_response("Success", 200)
+	except BaseException as e:
+		discord_notif_error("Error", str(e))
 
 
 def discord_notif_error(title, msg):
