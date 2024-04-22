@@ -741,12 +741,13 @@ def new_order_webhook():
 		body = request.data.decode('utf-8')
 		square_signature = request.headers.get('x-square-hmacsha256-signature')
 		signature_key = KeyValue.query.get("order_webhook_key").value
+		url = request.url.replace("http://", "https://")
 
 		is_from_square = is_valid_webhook_event_signature(body, square_signature, signature_key, request.url)
 
 		if not is_from_square:
 			# discord_notif_error("Is From Square Verification Failed", "403 Forbidden")
-			discord_notif_error("Is From Square Verification Failed", f"{body}, \n {square_signature}, \n {signature_key}, \n {request.url}")
+			discord_notif_error("Is From Square Verification Failed", f"{body}, \n {square_signature}, \n {signature_key}, \n {url}")
 			return make_response("403 Forbidden", 403)
 
 		# TODO: should probably store these for de-duplication
