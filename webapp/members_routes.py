@@ -1575,7 +1575,10 @@ def update_subs():
 def get_subs():
 	"""admin"""
 	if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK":
-		sq_updated = datetime.fromisoformat(KeyValue.query.get("square_subs_updated").value)
+		date_string = KeyValue.query.get("square_subs_updated").value
+		date_split = date_string.split(".")
+		date_split[-1].ljust(6 - len(date_split[-1]), "0")
+		sq_updated = datetime.fromisoformat(".".join(date_split))
 		current_date = datetime.now()
 
 		# Calculate the most recent July 1st that has passed
