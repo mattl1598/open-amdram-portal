@@ -6,6 +6,7 @@ import dateutil
 import requests
 from pprint import pprint
 from dateutil import parser
+from square.utilities.webhooks_helper import is_valid_webhook_event_signature
 
 import xlsxwriter
 from flask import Blueprint, make_response, redirect, render_template, request, session, abort, jsonify, url_for
@@ -738,6 +739,15 @@ def new_order_webhook():
 			abort(400)
 
 		# TODO: should also do verification isFromSquare
+		body = request.data.decode('utf-8')
+		square_signature = request.headers.get('x-square-hmacsha256-signature')
+		signature_key = KeyValue.query.get("order_webhook_key").value
+
+		is_from_square = is_valid_webhook_event_signature(body, square_signature, signature_key, request.url)
+
+		if not is_from_square:
+			abort(403)
+
 		# TODO: should probably store these for de-duplication
 		payload.get("event_id")
 
