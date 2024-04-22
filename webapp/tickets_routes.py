@@ -738,7 +738,6 @@ def new_order_webhook():
 		if payload.get("type") != "order.created":
 			abort(400)
 
-		# TODO: should also do verification isFromSquare
 		body = request.data.decode('utf-8')
 		square_signature = request.headers.get('x-square-hmacsha256-signature')
 		signature_key = KeyValue.query.get("order_webhook_key").value

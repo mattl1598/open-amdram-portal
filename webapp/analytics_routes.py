@@ -8,6 +8,7 @@ from datetime import timedelta  # , datetime
 from sqlalchemy import and_, extract, func, not_, or_, sql
 import re
 import tld as tld
+from tld.exceptions import TldDomainNotFound
 
 from webapp.models import *
 from flask import current_app as app
@@ -108,20 +109,23 @@ def analytics():
 	}
 
 	for result in raw_external_origins:
-		if ip_pattern.search(result[0]):
-			# external_origins["other_ips"] += result[1]
-			stripped = "other_ips"
-			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
-		elif "android-app://" in result[0]:
-			stripped = "http://" + ".".join(re.sub(r'android-app://', "", result[0]).split("/", 1)[0].split(".")[::-1])
+		try:
+			if ip_pattern.search(result[0]):
+				# external_origins["other_ips"] += result[1]
+				stripped = "other_ips"
+				external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+			elif "android-app://" in result[0]:
+				stripped = "http://" + ".".join(re.sub(r'android-app://', "", result[0]).split("/", 1)[0].split(".")[::-1])
 
-			stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
-			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
-		else:
-			stripped = "http://" + re.sub(r'http://|https://|www.', "", result[0]).split("/", 1)[0]
+				stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
+				external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+			else:
+				stripped = "http://" + re.sub(r'http://|https://|www.', "", result[0]).split("/", 1)[0]
 
-			stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
-			external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+				stripped = tld.get_fld(stripped).replace(tld.get_tld(stripped), "").rstrip(".")
+				external_origins[stripped] = external_origins.setdefault(stripped, 0) + result[1]
+		except TldDomainNotFound:
+			external_origins["Other Source"] = external_origins.setdefault("Other", 0) + result[1]
 	# noinspection PyTypeChecker
 	external_origins = collections.OrderedDict(sorted(external_origins.items(), key=lambda x: x[1])[::-1])
 
