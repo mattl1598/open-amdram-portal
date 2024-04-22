@@ -743,7 +743,7 @@ def new_order_webhook():
 		signature_key = KeyValue.query.get("order_webhook_key").value
 		url = request.url.replace("http://", "https://")
 
-		is_from_square = is_valid_webhook_event_signature(body, square_signature, signature_key, request.url)
+		is_from_square = is_valid_webhook_event_signature(body, square_signature, signature_key, url)
 
 		if not is_from_square:
 			# discord_notif_error("Is From Square Verification Failed", "403 Forbidden")
