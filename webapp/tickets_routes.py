@@ -745,7 +745,8 @@ def new_order_webhook():
 		is_from_square = is_valid_webhook_event_signature(body, square_signature, signature_key, request.url)
 
 		if not is_from_square:
-			abort(403)
+			discord_notif_error("Is From Square Verification Failed", "403 Forbidden")
+			return make_response("403 Forbidden", 403)
 
 		# TODO: should probably store these for de-duplication
 		payload.get("event_id")
