@@ -39,13 +39,13 @@
 	<script type="text/javascript" src="/js/nav.js"></script>
 {#	<script type="text/javascript" src="/js/img.js"></script>#}
 
-	{% with messages = get_flashed_messages() %}
-	   {% if messages %}
-	      {% for message in messages %}
+{#	{% with messages = get_flashed_messages() %}#}
+{#	   {% if messages %}#}
+{#	      {% for message in messages %}#}
 {#		      <script>alert("{{ message }}")</script>#}
-	      {% endfor %}
-	   {% endif %}
-	{% endwith %}
+{#	      {% endfor %}#}
+{#	   {% endif %}#}
+{#	{% endwith %}#}
 </head>
 
 <body id="body" class="{{ session.get("fontsize", "font_single") }}">

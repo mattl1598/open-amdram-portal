@@ -453,6 +453,11 @@ div.title-bar {
 		width: 100%;
 	}
 
+	div.gap {
+		flex-grow: 5;
+		width: 100%;
+	}
+
 	position: sticky;
 	top: 0;
 	left: 0;
@@ -512,6 +517,9 @@ div.nav {
 			@include mobile(#title-bar) {
 				display: flex;
 			}
+			&.show {
+				display: flex;
+			}
 			display: none;
 
 			flex-direction: row;
@@ -545,7 +553,7 @@ div.nav {
 
 div.title {
 	//margin: 1ch;
-	padding-left: 1ch;
+	padding: 0 1ch;
 	@include theme(color, text);
 	white-space: nowrap;
 	display: flex;

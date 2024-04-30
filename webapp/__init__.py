@@ -151,14 +151,14 @@ def create_app():
 				else:
 					socials.append({"type": "other", "link": i, "text": urlparse(i).netloc, "icon": "other_icon"})
 
-			web_config = {
-				"site-name": KeyValue.query.filter_by(key="site-name").first().value,
-				"site_logo": KeyValue.query.filter_by(key="site_logo").first(),
-				"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
-				"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value,
-				"tickets-hero-photo": KeyValue.query.filter_by(key="tickets-hero-photo").first(),
-				"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
-			}
+			# web_config = {
+			# 	"site-name": KeyValue.query.filter_by(key="site-name").first().value,
+			# 	"site_logo": KeyValue.query.filter_by(key="site_logo").first(),
+			# 	"tickets-active": KeyValue.query.filter_by(key="tickets-active").first().value,
+			# 	"tickets-link": KeyValue.query.filter_by(key="tickets-link").first().value,
+			# 	"tickets-hero-photo": KeyValue.query.filter_by(key="tickets-hero-photo").first(),
+			# 	"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
+			# }
 
 			keys = [
 				"site-name", "site_logo",

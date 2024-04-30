@@ -22,7 +22,8 @@
                             {{ post.date.strftime("%b %Y") }}
                             <span class="sep"></span>
 							<b>{{ post.views }}</b>
-							<svg viewBox="0 0 8 8">{{ icons["eye"] | safe }}</svg>
+							<react-icon icon="eye"></react-icon>
+{#							<svg viewBox="0 0 8 8">{{ icons["eye"] | safe }}</svg>#}
 						</span>
 					</div>
 					<hr/>
@@ -33,9 +34,10 @@
 	<div class="blurred hidden" id="popup-outer">
 		<div class="popup-bg">
 			<div class="popup_content">
-				<svg viewBox="0 0 20 20" class="popup_close" onclick="hidePopUp();">
-					{{ icons["x"] | safe }}
-				</svg>
+				<react-icon icon="x" class="popup_close" onclick="hidePopUp()"></react-icon>
+{#				<svg viewBox="0 0 20 20" class="popup_close" onclick="hidePopUp();">#}
+{#					{{ icons["x"] | safe }}#}
+{#				</svg>#}
 				<form action="" id="dropArea">
 					<div>
 						<h1>Drop File Here</h1>

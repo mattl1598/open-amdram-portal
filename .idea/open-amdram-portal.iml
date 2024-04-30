@@ -17,6 +17,11 @@
     <orderEntry type="library" name="react" level="application" />
     <orderEntry type="library" name="easymde" level="application" />
     <orderEntry type="library" name="tom-select" level="application" />
+    <orderEntry type="library" name="easymde" level="application" />
+    <orderEntry type="library" name="tom-select" level="application" />
+    <orderEntry type="library" name="react" level="application" />
+    <orderEntry type="library" name="react-dom" level="application" />
+    <orderEntry type="library" name="babel-standalone" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
