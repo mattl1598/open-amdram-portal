@@ -114,45 +114,20 @@ def create_app():
 
 		@app.context_processor
 		def inject_nav():
-			icons = {
-				"fb_icon": fb_icon,
-				"tw_icon": tw_icon,
-				"ig_icon": ig_icon,
-				"other_icon": other_icon,
-				"email_icon": email_icon,
-				"blog_icon": blog_icon,
-				"search": magnify,
-				"eye": eye,
-				"trash": trash,
-				"x": cross,
-				"drama": drama,
-				"noda": noda,
-				"note": note,
-				"person": person,
-				"admin": admin,
-				"dashboard": dash,
-				"help": help_icon,
-				"logout": logout_icon,
-				"copy_icon": copy_icon,
-				"important": important,
-				"ticket": ticket,
-				"membership": membership
-			}
-
-			nav = [
-				{"title": "Home", "link": "/", "is_active": False},
-				# {"title": "Lorem", "link": "/lorem", "is_active": False},
-				{"title": "Blog", "link": "/blog", "is_active": False},
-				{"title": "Past Shows", "link": "/past-shows", "is_active": False},
-				{"title": "Auditions", "link": "/auditions", "is_active": False},
-				{"title": "About Us", "link": "/about-us", "is_active": False},
-				{"title": "Members", "link": "/members", "is_active": False},
-				{"title": "Search", "link": "/search", "is_active": False}
-			]
-			if request.url_rule is not None:
-				route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
-				for i in range(0, len(nav)):
-					nav[i].__setitem__("is_active", route_split[0] == nav[i]["link"])
+			# nav = [
+			# 	{"title": "Home", "link": "/", "is_active": False},
+			# 	# {"title": "Lorem", "link": "/lorem", "is_active": False},
+			# 	{"title": "Blog", "link": "/blog", "is_active": False},
+			# 	{"title": "Past Shows", "link": "/past-shows", "is_active": False},
+			# 	{"title": "Auditions", "link": "/auditions", "is_active": False},
+			# 	{"title": "About Us", "link": "/about-us", "is_active": False},
+			# 	{"title": "Members", "link": "/members", "is_active": False},
+			# 	{"title": "Search", "link": "/search", "is_active": False}
+			# ]
+			# if request.url_rule is not None:
+			# 	route_split = ["/" + i for i in request.url_rule.rule[1:].split("/")]
+			# 	for i in range(0, len(nav)):
+			# 		nav[i].__setitem__("is_active", route_split[0] == nav[i]["link"])
 
 			raw_socials = KeyValue.query.filter_by(key="socials").first().value.translate(
 				str.maketrans('', '', string.whitespace)).replace("https://", "").replace("http://", "").split(",")
@@ -185,6 +160,18 @@ def create_app():
 				"user_feedback_link": KeyValue.query.filter_by(key="user_feedback_link").first().value
 			}
 
+			keys = [
+				"site-name", "site_logo",
+				"tickets-active", "tickets-link", "tickets-hero-photo",
+				"user_feedback_link",
+				"socials"
+			]
+			kvs = KeyValue.query.filter(KeyValue.key.in_(keys)).all()
+			web_config = {
+				kv.key: kv.value
+				for kv in kvs
+			}
+
 			if (db_latest_blog := Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(Post.date.desc()).first()) is not None:
 				web_config["latest_blog"] = (db_latest_blog.date.strftime("%b %Y"), db_latest_blog.title,)
 
@@ -201,10 +188,8 @@ def create_app():
 
 			return dict(
 				app=app,
-				nav=nav,
 				socials=socials,
 				web_config=web_config,
-				icons=icons,
 				m_shows=m_shows
 			)
 

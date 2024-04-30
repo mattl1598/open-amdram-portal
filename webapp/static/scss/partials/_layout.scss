@@ -548,6 +548,10 @@ div.title {
 	padding-left: 1ch;
 	@include theme(color, text);
 	white-space: nowrap;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
 
 	a {
 		text-decoration: none;
@@ -557,6 +561,13 @@ div.title {
 		flex-direction: row;
 		justify-content: flex-start;
 		align-items: center;
+
+		span.icon {
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+		}
 
 		svg {
 			display: inline-block;

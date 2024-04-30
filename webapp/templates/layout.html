@@ -28,7 +28,7 @@
 
 	<script>
 		const siteName = "{{ web_config["site-name"] }}";
-		const logoSVG = `{{ web_config.get("site_logo").value | safe }}`;
+		const logoSVG = `{{ web_config.get("site_logo") | safe }}`;
 	</script>
 
 	<!--suppress HtmlUnknownTarget -->
@@ -67,39 +67,41 @@
 
 </script>
 
-{% for x in ["title-tape-measure", "title-bar"] %}
-<div id="{{ x }}" class="title-bar">
-	<div class="title">
-		<a href="/" class="tooltip">
-			{% if web_config.get("site_logo") is not none %}
-				{{ web_config.get("site_logo").value | safe }}
-			{% endif %}
-			<h1>{{ web_config["site-name"] }}</h1>
-			<span class="tooltip-text">Home</span>
-		</a>
-	</div>
-	<div class="nav">
-		{% for item in nav %}
-			{% if item["title"] == "Search" %}
-				<a href="/search" class="search {{ "active" if item["is_active"] }}">
-					<react-icon icon="search"></react-icon>
+{#{% for x in ["title-tape-measure", "title-bar"] %}#}
+{#<div id="{{ x }}" class="title-bar">#}
+{#	<div class="title">#}
+{#		<a href="/" class="tooltip">#}
+{#			{% if web_config.get("site_logo") is not none %}#}
+{#				{{ web_config.get("site_logo") | safe }}#}
+{#			{% endif %}#}
+{#			<h1>{{ web_config["site-name"] }}</h1>#}
+{#			<span class="tooltip-text">Home</span>#}
+{#		</a>#}
+{#	</div>#}
+{#	<div class="nav">#}
+{#		{% for item in nav %}#}
+{#			{% if item["title"] == "Search" %}#}
+{#				<a href="/search" class="search {{ "active" if item["is_active"] }}">#}
+{#					<react-icon icon="search"></react-icon>#}
 {#					<svg viewbox="0 0 50 50">{{ icons["search"] | safe }}</svg>#}
-				</a>
-			{% else %}
-				<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>
-			{% endif %}
-		{% endfor %}
-		<a onclick="expand()" class="hamburger">
-			<svg class="expand-icon collapsed search" id="menu-icon" viewBox="0 0 70 70"
-			     preserveAspectRatio="xMidYMin">
-				<path class="line one" d="m 15 19 l 45 0"></path>
-				<path class="line two" d="m 15 35 l 45 0"></path>
-				<path class="line three" d="m 15 51 l 45 0"></path>
-			</svg>
-		</a>
-	</div>
-</div>
-{% endfor %}
+{#				</a>#}
+{#			{% else %}#}
+{#				<a href="{{ item["link"] }}" class="{{ "active" if item["is_active"] }}"><h3>{{ item["title"] }}</h3></a>#}
+{#			{% endif %}#}
+{#		{% endfor %}#}
+{#		<a onclick="expand()" class="hamburger">#}
+{#			<svg class="expand-icon collapsed search" id="menu-icon" viewBox="0 0 70 70"#}
+{#			     preserveAspectRatio="xMidYMin">#}
+{#				<path class="line one" d="m 15 19 l 45 0"></path>#}
+{#				<path class="line two" d="m 15 35 l 45 0"></path>#}
+{#				<path class="line three" d="m 15 51 l 45 0"></path>#}
+{#			</svg>#}
+{#		</a>#}
+{#	</div>#}
+{#</div>#}
+{#{% endfor %}#}
+
+<div id="nav"></div>
 
 <script>setMobile()</script>
 {% if frontpage is defined and post is defined and web_config.get("tickets-active") == "1" and post.show_banner %}
@@ -144,7 +146,7 @@
 								<a href="{{ web_config.get("tickets-link") }}">Buy Tickets Now</a></h2>
 						</div>
 						<img id="tickets-hero-photo"
-						     src="{{ web_config.get('tickets-hero-photo').value }}"
+						     src="{{ web_config.get('tickets-hero-photo') }}"
 						     alt="Photo"
 						>
 					</div>
@@ -470,7 +472,9 @@
 <div class="footer">
 	<div class="noda">
 		<a href="https://www.noda.org.uk" target="_blank">
-			<svg viewbox="0 0 50 26">{{ icons["noda"] | safe }}</svg>
+			<svg viewbox="0 0 50 26">
+				<image x="0" y="0" href="https://www.noda.org.uk/download/184/logo-noda-with-strapline-white-png" height="26" width="50"></image>
+			</svg>
 		</a>
 	</div>
 
@@ -530,6 +534,7 @@
 
 	{% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
 	<script src="/react/icon.js" type="{{ react_mimetype }}"></script>
+	<script src="/react/nav.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/alert.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/gallery.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/seatingplan.js" type="{{ react_mimetype }}"></script>
