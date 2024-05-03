@@ -18,7 +18,7 @@ function expand() {
 	document.querySelector("#body").classList.toggle("noscroll")
 }
 
-window.addEventListener("resize", setMobile)
+// window.addEventListener("resize", setMobile)
 
 function reloadCss(){
     var links = document.getElementsByTagName("link");
