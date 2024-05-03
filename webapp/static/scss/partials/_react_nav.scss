@@ -91,14 +91,15 @@ div.react-nav {
 	grid-template-areas:
 		"name nav"
 		"mobile-nav mobile-nav"
+		"members-nav members-nav"
 	;
 
 	&:has(div.mobile-nav.show) {
-		grid-template-rows: min-content 1fr;
+		grid-template-rows: min-content 1fr 1fr;
 		transition: all 500ms;
 	}
 	&:not(:has(div.mobile-nav.show)) {
-		grid-template-rows: min-content 0fr;
+		grid-template-rows: min-content 0fr 1fr;
 		transition: all 500ms;
 	}
 
@@ -144,7 +145,6 @@ div.nav, div.mobile-nav, div.hamburger {
 		@include theme(background-color, bg2);
 
         overflow: hidden;
-
 
 		&.hide {
 			display: none;
@@ -252,7 +252,7 @@ div.nav, div.mobile-nav, div.hamburger {
 			text-decoration: none;
 			border-left: 1px solid dimgrey;
 			white-space: nowrap;
-			@include theme(background-color, bg1);
+			//@include theme(background-color, bg1);
 			width: unset !important;
 			//border-bottom: 1px solid dimgrey;
 
@@ -311,6 +311,22 @@ div.title {
 		&:hover {
 			@include theme(color, accent1);
 			@include theme(fill, accent1);
+		}
+	}
+}
+
+div.member-nav {
+	grid-area: members-nav;
+
+	a {
+		display: flex;
+		align-items: center;
+		gap: .5rem;
+
+		svg.icon {
+			height: 1.85rem;
+			width: 1.85rem;
+			@include theme(fill, text);
 		}
 	}
 }
