@@ -250,106 +250,106 @@
 <div class="main-outer">
 
 	{% if test %}
-        <div class="portal-nav side">
-            <a href="/members/dashboard">
-                <h3>
-	                <react-icon icon="dashboard"></react-icon>
+        <div id="desktop_member_nav" class="portal-nav side">
+{#            <a href="/members/dashboard">#}
+{#                <h3>#}
+{#	                <react-icon icon="dashboard"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["dashboard"] | safe }}</svg></span>#}
-			        Dashboard
-                </h3>
-			</a>
-            <a href="/members/shows">
-	            <h3>
-		            <react-icon icon="drama"></react-icon>
+{#			        Dashboard#}
+{#                </h3>#}
+{#			</a>#}
+{#            <a href="/members/shows">#}
+{#	            <h3>#}
+{#		            <react-icon icon="drama"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["drama"] | safe }}</svg></span>#}
-		            Shows
-	            </h3>
-            </a>
-            <ul class="dashboard-shows">
-	            {% for m_show in m_shows %}
-	                <li><a href="/members/show/{{ m_show.id }}">{{ m_show.title }}</a></li>
-	            {% endfor %}
-            </ul>
-
-            {% if current_user.role in ["author", "admin"] %}
-	            <a href="/members/manage-blog">
-	                <h3>
-		                <react-icon icon="blog_icon"></react-icon>
+{#		            Shows#}
+{#	            </h3>#}
+{#            </a>#}
+{#            <ul class="dashboard-shows">#}
+{#	            {% for m_show in m_shows %}#}
+{#	                <li><a href="/members/show/{{ m_show.id }}">{{ m_show.title }}</a></li>#}
+{#	            {% endfor %}#}
+{#            </ul>#}
+{##}
+{#            {% if current_user.role in ["author", "admin"] %}#}
+{#	            <a href="/members/manage-blog">#}
+{#	                <h3>#}
+{#		                <react-icon icon="blog_icon"></react-icon>#}
 {#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["blog_icon"] | safe }}</svg></span>#}
-			            Manage Blog
-	                </h3>
-	            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK" %}
-	            <a href="/members/get_subs">
-		            <h3>
-			            <react-icon icon="membership"></react-icon>
+{#			            Manage Blog#}
+{#	                </h3>#}
+{#	            </a>#}
+{#            {% endif %}#}
+{##}
+{#            {% if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK" %}#}
+{#	            <a href="/members/get_subs">#}
+{#		            <h3>#}
+{#			            <react-icon icon="membership"></react-icon>#}
 {#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["membership"] | safe }}</svg></span>#}
-			            Get Subs
-		            </h3>
-	            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" %}
-	            <a href="/members/bookings">
-		            <h3>
-			            <react-icon icon="ticket"></react-icon>
+{#			            Get Subs#}
+{#		            </h3>#}
+{#	            </a>#}
+{#            {% endif %}#}
+{##}
+{#            {% if current_user.role == "admin" %}#}
+{#	            <a href="/members/bookings">#}
+{#		            <h3>#}
+{#			            <react-icon icon="ticket"></react-icon>#}
 {#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["ticket"] | safe }}</svg></span>#}
-			            Manage Bookings
-		            </h3>
-	            </a>
-	            <a href="/members/admin">
-		            <h3>
-			            <react-icon icon="admin"></react-icon>
+{#			            Manage Bookings#}
+{#		            </h3>#}
+{#	            </a>#}
+{#	            <a href="/members/admin">#}
+{#		            <h3>#}
+{#			            <react-icon icon="admin"></react-icon>#}
 {#						<span class="icon"><svg viewbox="0 0 50 50">{{ icons["admin"] | safe }}</svg></span>#}
-			            Admin Tools
-		            </h3>
-	            </a>
-	            <ul>
-		            <li><a href="/members/manage_media">Manage Media</a></li>
-		            <li><a href="/members/manage-shows">Manage Shows</a></li>
-		            <li><a href="/members/set_show_photos/oauth">Update Photos</a></li>
-		            <li><a href="/members/add-show-member">Add New Members</a></li>
-		            <li><a href="/members/manage_users">Manage Users</a></li>
-		            <li><a href="/members/admin_settings">Admin Settings</a></li>
-	            </ul>
-            {% endif %}
-
-	        <a href="/members/docs">
-		        <h3>
-			        <react-icon icon="note"></react-icon>
+{#			            Admin Tools#}
+{#		            </h3>#}
+{#	            </a>#}
+{#	            <ul>#}
+{#		            <li><a href="/members/manage_media">Manage Media</a></li>#}
+{#		            <li><a href="/members/manage-shows">Manage Shows</a></li>#}
+{#		            <li><a href="/members/set_show_photos/oauth">Update Photos</a></li>#}
+{#		            <li><a href="/members/add-show-member">Add New Members</a></li>#}
+{#		            <li><a href="/members/manage_users">Manage Users</a></li>#}
+{#		            <li><a href="/members/admin_settings">Admin Settings</a></li>#}
+{#	            </ul>#}
+{#            {% endif %}#}
+{##}
+{#	        <a href="/members/docs">#}
+{#		        <h3>#}
+{#			        <react-icon icon="note"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["note"] | safe }}</svg></span>#}
-			        Member Docs
-		        </h3>
-	        </a>
-	        <a href="/members/account_settings">
-		        <h3>
-			        <react-icon icon="person"></react-icon>
+{#			        Member Docs#}
+{#		        </h3>#}
+{#	        </a>#}
+{#	        <a href="/members/account_settings">#}
+{#		        <h3>#}
+{#			        <react-icon icon="person"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["person"] | safe }}</svg></span>#}
-			        Account Settings
-		        </h3>
-	        </a>
-            <a href="{{ web_config.get("user_feedback_link") }}" target="_blank">
-	            <h3>
-		            <react-icon icon="help"></react-icon>
+{#			        Account Settings#}
+{#		        </h3>#}
+{#	        </a>#}
+{#            <a href="{{ web_config.get("user_feedback_link") }}" target="_blank">#}
+{#	            <h3>#}
+{#		            <react-icon icon="help"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["help"] | safe }}</svg></span>#}
-			        Help & Feedback
-	            </h3>
-            </a>
-            <ul>
-                {% if web_config.get("user_feedback_link") %}
-	                <li><a href="{{ web_config.get('user_feedback_link') }}">Feedback Form</a></li>
-                {% endif %}
-	            <li><a href="https://github.com/mattl1598/open-amdram-portal/wiki">Help Docs</a></li>
-            </ul>
-			<a href="/members/logout">
-				<h3>
-					<react-icon icon="logout"></react-icon>
+{#			        Help & Feedback#}
+{#	            </h3>#}
+{#            </a>#}
+{#            <ul>#}
+{#                {% if web_config.get("user_feedback_link") %}#}
+{#	                <li><a href="{{ web_config.get('user_feedback_link') }}">Feedback Form</a></li>#}
+{#                {% endif %}#}
+{#	            <li><a href="https://github.com/mattl1598/open-amdram-portal/wiki">Help Docs</a></li>#}
+{#            </ul>#}
+{#			<a href="/members/logout">#}
+{#				<h3>#}
+{#					<react-icon icon="logout"></react-icon>#}
 {#					<span class="icon"><svg viewbox="0 0 50 50">{{ icons["logout"] | safe }}</svg></span>#}
-			        Logout
-				</h3>
-			</a>
+{#			        Logout#}
+{#				</h3>#}
+{#			</a>#}
 		</div>
 	{% endif %}
 

@@ -795,7 +795,7 @@ def csv_download():
 		abort(403)
 
 
-@bp.route("/members/manage-shows")
+@bp.route("/members/admin/manage-shows")
 @login_required
 def manage_shows():
 	"""admin"""
@@ -986,7 +986,7 @@ def edit_show(show_id):
 		return redirect(url_for("members_routes.manage_shows"))
 
 
-@bp.route("/members/add-show-member", methods=["GET", "POST"])
+@bp.route("/members/admin/add-show-member", methods=["GET", "POST"])
 @login_required
 def add_show_member():
 	"""admin"""
@@ -1067,7 +1067,7 @@ def add_show_member():
 		return redirect(url_for("members_routes.add_show_member"))
 
 
-@bp.route("/members/manage_users", methods=["GET", "POST"])
+@bp.route("/members/admin/manage_users", methods=["GET", "POST"])
 @login_required
 def manage_users():
 	"""admin"""
@@ -1149,7 +1149,7 @@ def admin_tools():
 	)
 
 
-@bp.route("/members/admin_settings", methods=["GET", "POST"])
+@bp.route("/members/admin/admin_settings", methods=["GET", "POST"])
 @login_required
 def admin_settings():
 	"""admin"""

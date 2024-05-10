@@ -117,7 +117,7 @@ def batch_get_show_media(show_id, media_type):
 # 	return jsonify(batch_get_show_media("2ExG1dp2H77RpEd", "photo"))
 
 
-@bp.route("/members/manage_media", methods=["POST", "GET"])
+@bp.route("/members/admin/manage_media", methods=["POST", "GET"])
 @login_required
 def manage_media(**kwargs):
 	"""admin"""
@@ -380,16 +380,16 @@ def get_photo(media_id, **kwargs):
 		abort(404)
 
 
-@bp.route("/members/set_show_photos/oauth")
+@bp.route("/members/admin/set_show_photos/oauth")
 @login_required
 def oauth():
 	"""admin"""
 	if current_user.role != "admin":
 		abort(403)
 	if "localhost" in request.url_root:
-		redirect_url = request.url_root + "members/set_show_photos/form"
+		redirect_url = request.url_root + "members/admin/set_show_photos/form"
 	else:
-		redirect_url = str(request.url_root + "members/set_show_photos/form").replace("http://", "https://")
+		redirect_url = str(request.url_root + "members/admin/set_show_photos/form").replace("http://", "https://")
 	refresh_time = KeyValue.query.filter_by(key="refresh_time").first()
 
 	if (refresh_time is not None) and (int(refresh_time.value) > int(time.time())):
@@ -413,7 +413,7 @@ def oauth():
 		return redirect(redirect_url)
 
 
-@bp.route("/members/set_show_photos/form", methods=["GET", "POST"])
+@bp.route("/members/admin/set_show_photos/form", methods=["GET", "POST"])
 @login_required
 def choose_album():
 	"""admin"""
