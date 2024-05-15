@@ -1,10 +1,14 @@
 div#nav {
 	min-height: 3.75rem;
+	position: sticky;
+	top: 0;
+	z-index: 100;
 }
 
 div.react-nav {
 	max-width: 100svw;
     overflow: hidden;
+
 
 	div.title, div.full-nav, div.hamburger {
 		position: sticky;

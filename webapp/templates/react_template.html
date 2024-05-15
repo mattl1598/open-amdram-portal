@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" class="{{ session.get("theme", "auto") }}">
+<head>
+	<meta charset="UTF-8">
+	<title>{{ web_config["site-name"] }}</title>
+	<script>
+		const siteName = "{{ web_config["site-name"] }}";
+		const logoSVG = `{{ web_config.get("site_logo") | safe }}`;
+	</script>
+{#	{% if css is defined %}#}
+{#		{% if type(css) == type("string") %}#}
+{#			{% set css = [css] %}#}
+{#		{% endif %}#}
+{#		{% for file in css %}#}
+{#			<link href="/css/{{ file }}" rel="stylesheet" type="text/css">#}
+{#		{% endfor %}#}
+{#	{% endif %}#}
+	<link href="/css/react.css" rel="stylesheet" type="text/css">
+	{% if env == "development" %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+		<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/2.0.1/remarkable.min.js" referrerpolicy="no-referrer"></script>
+		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+	{% else %}
+		<script crossorigin src="https://unpkg.com/react@latest/umd/react.production.min.js"></script>
+		<script crossorigin src="https://unpkg.com/react-dom@latest/umd/react-dom.production.min.js"></script>
+		<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/2.0.1/remarkable.min.js" referrerpolicy="no-referrer"></script>
+	{% endif %}
+	<link rel=”mask-icon” href="/favicon.svg" color=”#000000">
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+	<script>
+		console.log("TEST")
+		{% with messages = get_flashed_messages() %}
+			const globalInitialAlerts = [
+				{% for alert in alerts %}
+					{ title: "{{ alert.title }}", content: "{{ alert.content }}" },
+				{% endfor %}
+				{% if messages %}
+					{% for message in messages %}
+						{ title: "{{ message }}", content: "" },
+					{% endfor %}
+				{% endif %}
+			]
+		{% endwith %}
+	</script>
+</head>
+<body id="app" data-data="{{ json.dumps(data) }}" data-path="{{ request.path }}">
+</body>
+{% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
+<script src="/react/markdown.js" type="{{ react_mimetype }}"></script>
+<script src="/react/icon.js" type="{{ react_mimetype }}"></script>
+<script src="/react/nav.js" type="{{ react_mimetype }}"></script>
+<script src="/react/alert.js" type="{{ react_mimetype }}"></script>
+<script src="/react/gallery.js" type="{{ react_mimetype }}"></script>
+<script src="/react/seatingplan.js" type="{{ react_mimetype }}"></script>
+<script src="/react/sidebar.js" type="{{ react_mimetype }}"></script>
+<script src="/react/carousel.js" type="{{ react_mimetype }}"></script>
+<script src="/react/input.js" type="{{ react_mimetype }}"></script>
+<script src="/react/posts.js" type="{{ react_mimetype }}"></script>
+<script src="/react/search.js" type="{{ react_mimetype }}"></script>
+<script src="/react/router.js" type="{{ react_mimetype }}"></script>
+</html>

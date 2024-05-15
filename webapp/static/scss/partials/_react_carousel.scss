@@ -1,0 +1,69 @@
+div.react-carousel {
+	overflow: hidden;
+	width: 20rem;
+}
+
+div.react-carousel-inner {
+	width: 400%;
+	margin-left: calc(-100% + 0.15rem);;
+
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr 0fr;
+	grid-template-areas:
+		"E D C B A"
+	;
+
+	transition: grid-template-columns 1s ease 5s;
+
+	&.transitionA {
+		animation: slideLeft 1s ease-in-out 5s 1 both;
+		animation-delay: 5s;
+	}
+	&.transitionB {
+		animation: slideLeft1 1s ease-in-out 5s 1 both;
+		animation-delay: 5s;
+	}
+
+	@keyframes slideLeft {
+		0% {
+			grid-template-columns: 1fr 1fr 1fr 1fr 0fr;
+		}
+		100% {
+			grid-template-columns: 0fr 1fr 1fr 1fr 1fr;
+		}
+	}
+	@keyframes slideLeft1 {
+		0% {
+			grid-template-columns: 1fr 1fr 1fr 1fr 0fr;
+		}
+		100% {
+			grid-template-columns: 0fr 1fr 1fr 1fr 1fr;
+		}
+	}
+
+	div.react-carousel-item {
+		background: no-repeat center center;
+		background-size: cover;
+		object-fit: contain;
+		display: grid;
+		place-items: center;
+		box-sizing: border-box;
+
+		//width: calc(100% - 0.4rem);
+		border-radius: 1.5rem;
+		border: 0.2rem solid;
+		@include theme(border-color, bg4);
+		z-index: 11;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+
+		img {
+			max-width: unset;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			z-index: 10;
+		}
+	}
+}

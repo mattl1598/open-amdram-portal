@@ -22,6 +22,8 @@
     <orderEntry type="library" name="react" level="application" />
     <orderEntry type="library" name="react-dom" level="application" />
     <orderEntry type="library" name="babel-standalone" level="application" />
+    <orderEntry type="library" name="react-markdown" level="application" />
+    <orderEntry type="library" name="remarkable" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

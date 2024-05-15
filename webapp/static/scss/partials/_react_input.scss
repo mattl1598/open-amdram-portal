@@ -1,0 +1,150 @@
+@import "variables";
+
+div.react-fancy-input {
+	position: relative;
+	width: 100%;
+	display: flex;
+
+	@include mobile {
+		&:not(.no-margin){
+			margin-top: 2.5rem;
+		}
+		&.no-margin {
+			margin-top: 0.7rem;
+		}
+	}
+	@include not-mobile {
+		margin-top: 0.7rem;
+	}
+
+	select, input, textarea, a {
+		@include theme(background, bg3);
+		@include theme(color, text);
+		margin: 0.01ch;
+		width: 100%;
+		border: 2px solid grey;
+		position: relative;
+		top: 0;
+		left: 0;
+		z-index: 1;
+		padding: 12px 12px 12px 12px;
+		outline: 0;
+		box-sizing: border-box;
+		border-radius: 7px;
+
+		@media (min-resolution: 1.5dppx) {
+			font-size: 150%;
+		}
+
+		&[type=submit], &.button {
+			margin: auto;
+			width: auto;
+			padding: 0.5rem 2rem;
+			cursor: pointer;
+			border-width: 0.3rem;
+			font-size: 115%;
+		}
+
+		&[type=date]:invalid {
+			color: #00000000;
+		}
+
+
+		&[type="date"]::-webkit-calendar-picker-indicator {
+			background: transparent;
+			bottom: 0;
+			color: transparent;
+			cursor: pointer;
+			height: auto;
+			left: 0;
+			position: absolute;
+			right: 0;
+			top: 0;
+			width: auto;
+		}
+
+		&:focus,
+		&:not([type=text]):valid,
+		&[type=text]:not(:placeholder-shown),
+		&:not(.disabled).border_accent2 {
+			@include theme(border-color, accent2);
+		}
+
+		&.disabled {
+			user-select: none;
+			pointer-events: none;
+			text-decoration: line-through;
+		}
+
+		&:focus + label,
+		&:hover + label,
+		& + label:hover,
+		&:not([type=text]):valid + label,
+		&[type=text]:not(:placeholder-shown) + label {
+			@include theme(color, text);
+			font-size: 100%;
+			padding-top: 0 !important;
+			z-index: 2;
+			text-transform: uppercase;
+			bottom: 100%;
+			margin-top: -2ch;
+		}
+	}
+
+	@include mobile {
+		&:focus + label,
+		&:not([type=text]):valid + label,
+		&[type=text]:not(:placeholder-shown) + label {
+			font-size: 140%;
+		}
+	}
+	@include not-mobile {
+		&:focus + label,
+		&:not([type=text]):valid + label,
+		&[type=text]:not(:placeholder-shown) + label {
+			padding-left: 1.2ch;
+			font-size: 90%;
+		}
+	}
+
+	label {
+		transition:
+				background 0.2s,
+				color 0.2s,
+				top 0.2s,
+				bottom 0.2s,
+				right 0.2s,
+				left 0.2s,
+				padding 0.2s;
+		position: absolute;
+		//color: #999;
+		@include theme(color, text);
+		//padding-left: 1.5ch;
+		top: 0;
+		text-align: center;
+		margin: auto;
+		z-index: 2;
+
+		@include mobile {
+			padding-top: 0.6ch;
+			padding-left: 0.6ch;
+			font-size: 150%;
+		}
+		@include not-mobile {
+			padding-top: 1.4ch;
+			padding-left: 1.4ch;
+			font-size: 100%;
+		}
+
+		&.showme {
+			@include theme(color, text);
+			//font-size: 70%;
+			padding-left: 1.2ch;
+			padding-top: 0;
+			z-index: 2;
+			text-transform: uppercase;
+			bottom: 100%;
+			margin-top: -2ch;
+		}
+	}
+}

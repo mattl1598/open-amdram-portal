@@ -64,7 +64,7 @@ class MemberRenderer:
 
 
 # noinspection PyUnresolvedReferences
-@bp.route("/", methods=["GET"])
+# @bp.route("/frontpage", methods=["GET"])
 def frontpage():
 	latest_show = Show.query \
 		.filter(Show.date < datetime.now()) \
@@ -155,7 +155,7 @@ def links():
 
 
 # noinspection PyUnresolvedReferences
-@bp.route("/auditions", methods=["GET"])
+# @bp.route("/auditions", methods=["GET"])
 def auditions():
 	post = Post.query \
 		.filter_by(type="auditions") \
@@ -198,7 +198,7 @@ def auditions():
 	)
 
 
-@bp.route("/search", methods=["GET"])
+# @bp.route("/search", methods=["GET"])
 def search():
 	class Result:
 		def __init__(self, link, title, searchable_text, result_type):
@@ -315,7 +315,7 @@ def search():
 	)
 
 
-@bp.route("/blog", methods=["GET"])
+# @bp.route("/blog", methods=["GET"])
 def blogs():
 	posts = Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(Post.date.desc()).all()
 	return render_template(
@@ -333,7 +333,7 @@ def latest_blog():
 	return redirect("/".join(["/blog", post.id]))
 
 
-@bp.route("/blog/<post_id>", methods=["GET"])
+# @bp.route("/blog/<post_id>", methods=["GET"])
 def blog_post(post_id):
 	post = Post.query.filter_by(id=post_id).first_or_404()
 	author = User.query.filter_by(id=post.author).first()
@@ -580,7 +580,7 @@ def database():
 	return render_template("database.html", stats=stats, css="frontpage.css")
 
 
-@bp.route("/about-us")
+# @bp.route("/about-us")
 def about():
 	return render_template(
 		"about-us.html",
@@ -1007,7 +1007,6 @@ def favicon():
 #
 # 	return redirect(url_for("frontpage"))
 
-
 @bp.route("/accessibility")
 def accessibility():
 	if request.args.get('theme') is not None:
@@ -1018,7 +1017,6 @@ def accessibility():
 	session.modified = True
 
 	return redirect(request.referrer)
-
 
 @bp.route("/tempest")
 def tempest_redirect():

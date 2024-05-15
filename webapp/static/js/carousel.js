@@ -64,8 +64,10 @@ const FlexSlider = {
 	}
 };
 
-FlexSlider.init();
+// FlexSlider.init();
 
 window.setInterval(function(){
-  document.querySelector("#carousel-container-outer").click()
+	if (document.querySelector("#carousel-container-outer")) {
+		document.querySelector("#carousel-container-outer").click()
+	}
 }, 5000);

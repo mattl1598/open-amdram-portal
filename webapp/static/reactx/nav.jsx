@@ -31,8 +31,11 @@ const memberNavItems = [
 	{title: "Logout", link: "/members/logout", class: "", icon: "logout"},
 ]
 
-const navRoot = ReactDOM.createRoot(document.getElementById('nav'))
-navRoot.render(<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}/>)
+if (document.getElementById('nav') && !document.getElementById('app')) {
+	const navRoot = ReactDOM.createRoot(document.getElementById('nav'))
+	navRoot.render(<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}/>)
+}
+
 
 function Nav({navItems, siteName}) {
 	const navList = []
@@ -241,25 +244,25 @@ function NavItem({item, is_active, mobileNav, memberNav = false}) {
 	if (item.icon !== undefined) {
 		return (
 			<React.Fragment>
-				<a href={item.link}
+				<Link href={item.link}
 				   className={is_active ? `${item.class} active` : `${item.class}`}
 				   style={style}
 				>
 					<Icon icon={item.icon}></Icon>
 					<h3 className={"mobile"}>{item.title}</h3>
-				</a>
+				</Link>
 				{subNav}
 			</React.Fragment>
 		)
 	} else {
 		return (
 			<React.Fragment>
-				<a href={item.link}
+				<Link href={item.link}
 				   className={is_active ? `${item.class} active` : `${item.class}`}
 				   style={style}
 				>
 					<h3>{item.title}</h3>
-				</a>
+				</Link>
 				{subNav}
 			</React.Fragment>
 		)

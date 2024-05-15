@@ -1,10 +1,13 @@
-const alertsRoot = ReactDOM.createRoot(document.getElementById('alerts'))
+if (document.getElementById('alerts')) {
+	const alertsRoot = ReactDOM.createRoot(document.getElementById('alerts'))
 
-if (globalInitialAlerts === undefined) {
-	alertsRoot.render(<AlertsContainer/>)
-} else {
-	alertsRoot.render(<AlertsContainer initialAlerts={globalInitialAlerts}/>)
+	if (globalInitialAlerts === undefined) {
+		alertsRoot.render(<AlertsContainer/>)
+	} else {
+		alertsRoot.render(<AlertsContainer initialAlerts={globalInitialAlerts}/>)
+	}
 }
+
 
 function displayAlerts(obj) {
 	let newValue = JSON.stringify(obj)
