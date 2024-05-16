@@ -52,7 +52,7 @@ function App() {
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
-			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: siteJson.tickets_link, linkText: "Purchase Tickets", target: "_blank"})
+			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: "/testredirect", linkText: "Purchase Tickets", target: "_self"})
 		}
 		// SOCIALS
 		if (siteJson.socials) {
@@ -108,6 +108,12 @@ function App() {
 			getPostJson(path+"?react")
 		} else if (RegExp("^/blog", "i").test(path)) {
 			getPostJson("/blog?react")
+		} else if (path === "/tickets") {
+			setPostJson({
+				type: "redirect",
+				url: siteJson.tickets_link,
+				text: "Tickets Shop"
+			})
 		} else {
 			window.location.href = path
 		}
@@ -127,6 +133,13 @@ function App() {
 			tempSidebarExtras.push(<MapEmbed url={postJson.maps_url}></MapEmbed>)
 		} else if(postJson.type === "search") {
 			tempContent.push(<Search content={postJson}></Search>)
+		} else if (postJson.type === "redirect") {
+			if (postJson.url.includes(window.location.origin) || !postJson.url.includes("http")) {
+				window.history.pushState("", "", postJson.url)
+				setHistoryState(postJson.url)
+			} else {
+				tempContent.push(<Redirect url={postJson.url} text={postJson.text}></Redirect>)
+			}
 		}
 		setContent(tempContent)
 		setSidebarExtras(tempSidebarExtras)

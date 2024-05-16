@@ -47,8 +47,7 @@ def react():
 	else:
 		return render_template(
 			"react_template.html",
-			data=data,
-			css="frontpage.css"
+			data=data
 		)
 
 
@@ -77,8 +76,7 @@ def react_blog():
 	else:
 		return render_template(
 			"react_template.html",
-			data=json.dumps(data),
-			css="frontpage.css"
+			data=json.dumps(data)
 		)
 
 
@@ -99,8 +97,7 @@ def react_about():
 	else:
 		return render_template(
 			"react_template.html",
-			data=json.dumps(data),
-			css="frontpage.css"
+			data=json.dumps(data)
 		)
 
 
@@ -152,9 +149,24 @@ def react_search():
 	else:
 		return render_template(
 			"react_template.html",
-			data=json.dumps(data),
-			css="frontpage.css"
+			data=json.dumps(data)
 		)
+
+
+@bp.get("/tickets")
+def react_tickets():
+	db_info = {x.key: x.value for x in KeyValue.query.filter(KeyValue.key.in_(["tickets-active", "tickets-link"])).all()}
+	data = {
+		"type": "redirect",
+		"url": db_info["tickets-link"],
+		"condition": db_info["tickets-active"]
+	}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	return render_template(
+		"react_template.html",
+		data=data
+	)
 
 
 @bp.get("/sitedata")

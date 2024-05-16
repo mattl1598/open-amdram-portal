@@ -125,3 +125,15 @@ function MapEmbed({url}) {
 		</iframe>
 	)
 }
+
+function Redirect({url, text}) {
+	return (
+		<div className="content">
+			<h3>You will be redirected to the {text.toLowerCase()} in 5 seconds. If this doesn't work, press the button below</h3>
+			<button type="button" className="quick-button" onClick={() => {window.location.href=`${url}`}}>
+				Go to {text}
+			</button>
+			<meta httpEquiv="refresh" content={`0;url=${url}`}/>
+		</div>
+	)
+}
