@@ -37,7 +37,7 @@ if (document.getElementById('nav') && !document.getElementById('app')) {
 }
 
 
-function Nav({navItems, siteName}) {
+function Nav({navItems, siteName, children}) {
 	const navList = []
 	const memberNavList = []
 	const memberNavSubList = []
@@ -143,40 +143,51 @@ function Nav({navItems, siteName}) {
 	}
 
 	return (
-		<div id={"react-nav"} className={"react-nav"}>
-			<div className={"title"}>
-				<a href={"/"} className={"title"} title={"Home"}>
-					<Icon icon={"siteLogo"}></Icon>
-					<h1>{siteName}</h1>
-				</a>
-			</div>
-			<div className={"full-nav"}>
-				<div ref={gapRef} className={"gap"}></div>
-				<div className={"nav"}>
+		<React.Fragment>
+			<div id={"react-nav"} className={"react-nav"}>
+				<div className={"title"}>
+					<Link href={"/"} className={"title"} title={"Home"}>
+						<Icon icon={"siteLogo"}></Icon>
+						<h1>{siteName}</h1>
+					</Link>
+				</div>
+				<div className={"full-nav"}>
+					<div ref={gapRef} className={"gap"}></div>
+					<div className={"nav"}>
+						{navList}
+					</div>
+				</div>
+				<div className={`hamburger ${mobileNav ? "show" : "hide"}`} onClick={(e) => {
+					expand(e)
+				}}>
+					<a className={`hamburger`}>
+						<svg className={`expand-icon search ${mobileNav && expanded ? "" : "collapsed"}`} id="menu-icon"
+						     viewBox="0 0 70 70"
+						     preserveAspectRatio="xMidYMin">
+							<path className="line one" d="m 15 19 l 45 0"></path>
+							<path className="line two" d="m 15 35 l 45 0"></path>
+							<path className="line three" d="m 15 51 l 45 0"></path>
+						</svg>
+					</a>
+				</div>
+				<div className={`mobile-nav ${mobileNav && expanded ? "show" : "hide"}`}>
 					{navList}
 				</div>
+				{showMemberNav && mobileNav?
+					memberNav
+					: ""
+				}
 			</div>
-			<div className={`hamburger ${mobileNav ? "show" : "hide"}`} onClick={(e) => {expand(e)}}>
-				<a className={`hamburger`}>
-					<svg className={`expand-icon search ${mobileNav && expanded ? "" : "collapsed"}`} id="menu-icon" viewBox="0 0 70 70"
-					     preserveAspectRatio="xMidYMin">
-						<path className="line one" d="m 15 19 l 45 0"></path>
-						<path className="line two" d="m 15 35 l 45 0"></path>
-						<path className="line three" d="m 15 51 l 45 0"></path>
-					</svg>
-				</a>
+			<div className="main-outer">
+				<div id="desktop_member_nav" className="portal-nav side">
+				{showMemberNav && mobileNav?
+					"" :
+					memberNav
+				}
+				</div>
+				{children}
 			</div>
-			<div className={`mobile-nav ${mobileNav && expanded ? "show" : "hide"}`}>
-				{navList}
-			</div>
-			{showMemberNav ?
-				mobileNav ?
-					memberNav :
-					ReactDOM.createPortal(memberNav, document.querySelector("#desktop_member_nav"))
-				: ""
-			}
-
-		</div>
+		</React.Fragment>
 	)
 }
 

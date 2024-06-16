@@ -64,6 +64,10 @@
 					<th>Square Income</th>
 					<td>£{{ '%0.2f' % (totals["paid"]/100.0) }}</td>
 				</tr>
+				<tr>
+					<th>Cash Income</th>
+					<td>£{{ '%0.2f' % (totals["cash"]/100.0) }}</td>
+				</tr>
 				{% if totals["expected_refunds"] != totals["actual_refunds"] %}
 					<tr>
 						<th>Expected Refunds</th>

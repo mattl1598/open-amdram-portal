@@ -25,6 +25,7 @@ from flask import abort, Blueprint, flash, make_response, redirect, render_templ
 from flask_login import login_user, logout_user, current_user, login_required
 # noinspection PyPackageRequirements
 from sqlalchemy import and_, extract, func, not_, or_, sql
+from sqlalchemy.dialects.postgresql import array
 from flask import current_app as app
 
 # noinspection PyPep8Naming
@@ -113,8 +114,8 @@ def force_password_change():
 
 
 # noinspection PyUnresolvedReferences
-@bp.route("/members/dashboard")
-@login_required
+# @bp.route("/members/dashboard")
+# @login_required
 def dashboard():
 	"""member,author,admin"""
 	actions = []
@@ -188,8 +189,8 @@ def dashboard():
 
 
 # noinspection PyUnresolvedReferences
-@bp.route("/members/post/<post_id>")
-@login_required
+# @bp.route("/members/post/<post_id>")
+# @login_required
 def member_post(post_id):
 	"""member,author,admin"""
 	post = Post.query \
@@ -215,8 +216,8 @@ def member_post(post_id):
 	)
 
 
-@bp.route("/members/shows")
-@login_required
+# @bp.route("/members/shows")
+# @login_required
 def m_shows():
 	"""member,author,admin"""
 	shows = []
@@ -255,8 +256,8 @@ def m_shows():
 
 
 # noinspection PyUnresolvedReferences
-@bp.route("/members/show/<show_id>")
-@login_required
+# @bp.route("/members/show/<show_id>")
+# @login_required
 def m_show(show_id):
 	"""member,author,admin"""
 	show = Show.query \
@@ -667,11 +668,12 @@ def blog_editor():
 		return redirect(url_for("members_routes.manage_blog"))
 
 
-@bp.route("/members/file/<file_id>/<filename>", methods=["GET"])
+# @bp.route("/file/<file_id>/<filename>", methods=["GET"])
+# @bp.route("/members/file/<file_id>/<filename>", methods=["GET"])
 def file_direct(file_id, filename):
 	"""member,author,admin"""
 	file = Files.query \
-		.filter_by(id=file_id, name=filename) \
+		.filter_by(id=file_id, name=filename.replace("_", " ")) \
 		.first()
 
 	# Test fudging
@@ -686,20 +688,17 @@ def file_direct(file_id, filename):
 	else:
 		file.found = True
 
-	auditions = Post.query \
-		.filter_by(type="auditions") \
-		.join(Show, Post.show_id == Show.id) \
-		.filter(Show.date > datetime.now()) \
-		.order_by(Show.date.asc()) \
-		.order_by(Post.date.desc()) \
-		.first()
 
-	if auditions is not None:
-		auditions_files = auditions.linked_files.get("files")
-	else:
-		auditions_files = []
+	count = 1
+	if request.url_rule == "/file/<file_id>/<filename>":
+		count = db.session.query(
+			func.count(Post)
+		).filter(
+			Post.type != "private",
+			Post.linked_files['files'].has_any([file_id])
+		)
 
-	if current_user.is_authenticated or file.show_id == "members_public" or file.id in auditions_files:
+	if current_user.is_authenticated or file.show_id == "members_public" or count:
 		if file.found:
 			return send_file(io.BytesIO(file.content), download_name=file.name)
 		else:
@@ -1570,6 +1569,7 @@ def update_subs():
 		return redirect(url_for("members_routes.get_subs"))
 
 
+@bp.route("/members/api/get_subs")
 @bp.route("/members/get_subs")
 @login_required
 def get_subs():
@@ -1578,27 +1578,87 @@ def get_subs():
 		date_string = KeyValue.query.get("square_subs_updated").value
 		date_split = date_string.split(".")
 		date_split[-1].ljust(6 - len(date_split[-1]), "0")
+		print(".".join(date_split))
 		sq_updated = datetime.fromisoformat(".".join(date_split))
 		current_date = datetime.now()
 
-		# Calculate the most recent July 1st that has passed
-		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
-			most_recent_july_1st = datetime(current_date.year, 7, 1)
+		oldest_entry_year = db.session.query(
+			SubsPayment.datetime
+		).order_by(
+			SubsPayment.datetime.asc()
+		).limit(1).first().datetime.year
+
+		if "startyear" in request.args.keys():
+			year = int(request.args.get("startyear"))
+			most_recent_july_1st = datetime(year, 6, 1)
 		else:
-			most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+			# Calculate the most recent July 1st that has passed
+			if current_date.month > 6 or (current_date.month == 6 and current_date.day >= 1):
+				most_recent_july_1st = datetime(current_date.year, 6, 1)
+			else:
+				most_recent_july_1st = datetime(current_date.year - 1, 6, 1)
 
 		# Get the datestamp for midnight on the most recent July 1st
 		midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
 		paid = list(SubsPayment.query
 					.filter(SubsPayment.datetime > midnight_july_1st)
+					.filter(midnight_july_1st + timedelta(weeks=52) > SubsPayment.datetime)
 					.order_by(SubsPayment.datetime.asc())
-					.with_entities(SubsPayment.name)
-					.all()
+					.with_entities(
+						SubsPayment.name,
+						SubsPayment.membership_type,
+						SubsPayment.amount_paid,
+						SubsPayment.payment_fee,
+						SubsPayment.payment_id,
+						SubsPayment.refunded
+					).all()
 				)
+		detailed = "detailed" in request.args.keys()
+		results = []
+		types = {}
+		totals = {"total": 0, "fees": 0, "refunds": 0, "net": 0}
+		for entry in paid:
+			totals["total"] = totals["total"] + entry.amount_paid
+			totals["fees"] = totals["fees"] + entry.payment_fee
+			if entry.refunded:
+				totals["refunds"] = totals["refunds"] + entry.amount_paid
+				totals["net"] = totals["net"] + entry.amount_paid - entry.payment_fee - entry.amount_paid
+			else:
+				totals["net"] = totals["net"] + entry.amount_paid - entry.payment_fee
+			if detailed:
+				new_result = {
+					"name": entry.name,
+					"type": entry.membership_type,
+					"amount": entry.amount_paid,
+					"fee": entry.payment_fee
+				}
+				types[entry.membership_type] = types.get(entry.membership_type, 0) + 1
+				if entry.payment_fee is None:
+					sq_results = app.square.payments.get_payment(
+						payment_id=entry.payment_id,
+					)
+					if sq_results.is_success():
+						fees = sq_results.body.get("payment", {}).get("processing_fee", {})
+						for fee in fees:
+							new_result["fee"] = new_result.get("fee", 0) + fee.get("amount_money", {}).get("amount", 0)
+			else:
+				new_result = {
+					"name": entry.name
+				}
+			results.append(new_result)
+
+		if "api" in str(request.url_rule):
+			print(totals)
+			return jsonify({
+				'totals': totals
+			})
 
 		return render_template(
 			"members/get_subs.html",
-			paid=paid,
+			results=results,
+			types=types,
+			detailed=detailed,
+			oldest_entry_year=oldest_entry_year,
 			since=midnight_july_1st,
 			sq_updated=sq_updated,
 			css="m_dashboard.css"
@@ -1606,6 +1666,136 @@ def get_subs():
 	else:
 		abort(403)
 
+
+@bp.route("/members/api/get_sums")
+@bp.route("/members/get_sums")
+@login_required
+def get_sums():
+	"""admin"""
+	if current_user.role == "admin":
+		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+		current_date = datetime.now()
+		if "startyear" in request.args.keys():
+			year = int(request.args.get("startyear"))
+			start_date = datetime(year, 6, 1)
+		else:
+			# Calculate the most recent July 1st that has passed
+			if current_date.month > 6 or (current_date.month == 6 and current_date.day >= 1):
+				start_date = datetime(current_date.year, 6, 1)
+			else:
+				start_date = datetime(current_date.year - 1, 6, 1)
+		end_date = start_date + timedelta(weeks=52)
+
+		errors = 0
+		total_amounts = 0
+		total_refund_amounts = 0
+		total_refunds = 0
+		total_fees = 0
+		total_transactions = 0
+
+		result = app.square.locations.list_locations()
+		for location in result.body.get("locations"):
+			flag = True
+			test = True
+			cursor = ""
+			while flag:
+				if cursor:
+					result = app.square.payments.list_payments(
+						begin_time=start_date.strftime(square_date_format),
+						end_time=end_date.strftime(square_date_format),
+						location_id=location.get("id"),
+						cursor=cursor
+					)
+				else:
+					result = app.square.payments.list_payments(
+						begin_time=start_date.strftime(square_date_format),
+						end_time=end_date.strftime(square_date_format),
+						location_id=location.get("id")
+					)
+
+				if result.is_error():
+					# print(result.errors)
+					errors += 1
+					flag = False
+				else:
+					# payments += list(result.body.get("payments") or [])
+					for payment in (result.body.get("payments") or []):
+						if payment.get("source_type") in ["CARD", "BUY_NOW_PAY_LATER"] and payment.get("status") == "COMPLETED":
+							total_transactions += 1
+							total_amounts += payment.get("amount_money").get("amount")
+							fees = payment.get("processing_fee")
+							# if fees is None:
+							# 	print(payment)
+							for fee in fees:
+								total_fees += fee.get("amount_money").get("amount")
+					if not (cursor := result.body.get("cursor")):
+						flag = False
+
+
+		flag = True
+		test = True
+		cursor = ""
+		while flag:
+			if cursor:
+				result = app.square.refunds.list_payment_refunds(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format),
+					cursor=cursor
+				)
+			else:
+				result = app.square.refunds.list_payment_refunds(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format),
+				)
+
+			if result.is_error():
+				# print(result.errors)
+				errors += 1
+				flag = False
+			else:
+				# payments += list(result.body.get("payments") or [])
+				for refund in (result.body.get("refunds") or []):
+					if refund.get("status") == "COMPLETED":
+						total_refunds += 1
+						total_refund_amounts += refund.get("amount_money").get("amount")
+				if not (cursor := result.body.get("cursor")):
+					flag = False
+
+		shows = db.session.query(
+			Show.id,
+			Show.title
+		).filter(Show.date>start_date).filter(end_date>Show.date)
+
+		data = {
+			'type': 'accounting',
+			'sub_type': 'full_year_overview',
+			'title': 'Year Overview',
+			'year': request.args.get('startyear'),
+			'totals': {
+				'total_transactions': total_transactions,
+				'total_refunds': total_refunds,
+				'total_amounts': total_amounts,
+				'total_fees': total_fees,
+				'total_refund_amounts': total_refund_amounts,
+				'total_net': total_amounts - total_fees - total_refund_amounts
+			},
+			'shows': [
+				{
+					'id': show.id,
+					'title': show.title
+				} for show in shows
+			]
+		}
+		if "api" in str(request.url_rule) or "react" in request.args.keys():
+			return jsonify(data)
+		else:
+			data["initialData"] = True
+			return render_template(
+				"react_template.html",
+				data=data
+			)
+	else:
+		abort(403)
 
 @bp.route("/members/logout")
 @login_required

@@ -116,6 +116,7 @@ class SubsPayment(db.Model, NewIdGetter):
 	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
 	membership_type = db.Column(db.String(16))
 	amount_paid = db.Column(db.Integer)
+	payment_fee = db.Column(db.Integer)
 	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	name = db.Column(db.String(50))
 	email = db.Column(db.String(120))
@@ -125,17 +126,19 @@ class SubsPayment(db.Model, NewIdGetter):
 	order_id = db.Column(db.String(192))
 	payment_id = db.Column(db.String(192))
 	source = db.Column(db.String(6))
+	refunded = db.Column(db.Boolean, default=False)
 
 
 class BookingModifications(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 	ref_num = db.Column(db.Integer)
-	from_item = db.Column(db.Text())
+	from_item = db.Column(db.Text)
 	change_quantity = db.Column(db.Integer)
 	to_item = db.Column(db.Text)
 	is_reservation = db.Column(db.Boolean, default=False)
-	note = db.Column(db.Text())
+	mark_as_paid = db.Column(db.Text)
+	note = db.Column(db.Text)
 
 
 class Member(db.Model, NewIdGetter):
@@ -157,6 +160,8 @@ class MemberShowLink(db.Model, NewIdGetter):
 	role_name = db.Column(db.Text)
 	member_id = db.Column(db.String(16), db.ForeignKey('member.id'))
 	order_val = db.Column(db.Integer)
+
+	# show = db.relationship('Show', backref='member_show_link', lazy=True)
 
 	def __repr__(self):
 		return f"MSL('{self.id}', '{self.show_id}', '" \

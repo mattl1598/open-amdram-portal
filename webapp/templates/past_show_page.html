@@ -57,8 +57,8 @@
 
 	{% if len(videos) != 0 %}
 		<h3>Video</h3>
-		<video width="100%" controls>
-            <source src="/video/{{ videos[0].photo_url }}" type="video/mp4">
+		<video width="100%" controls src="blob:/video/{{ videos[0].photo_url }}">
+{#            <source src="blob:/video/{{ videos[0].photo_url }}" type="video/mp4">#}
 		</video>
 	{% endif %}
 

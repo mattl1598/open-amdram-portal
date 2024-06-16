@@ -43,11 +43,77 @@ function Frontpage({nextShow, children}) {
 	)
 }
 
+function Files({title, files}) {
+	if (files !== undefined) {
+		let fileTags = []
+
+		if (files) {
+			let file_route = "/file"
+			if (RegExp("^/members/", "i").test(window.location.pathname)) {
+				file_route = "/members/file"
+			}
+			for (let i=0; i<files.length; i++) {
+				fileTags.push(
+					<Link href={`${file_route}/${files[i].id}/${files[i].name.replaceAll(" ", "_")}`} className={"file"}>
+						<Icon icon={"pdf"} timeline={"up"}></Icon>
+						<div className="text">
+							<span className="title"><h3>{files[i].name}</h3></span>
+							<span className="text"><span>PDF file</span></span>
+						</div>
+					</Link>
+				)
+			}
+		}
+
+		return (
+			<div className={"timeline"}>
+				<span className="file heading">
+					<Icon icon={"circle"} timeline={"down"}></Icon>
+					<h2>{title}</h2>
+				</span>
+				{ fileTags }
+			</div>
+		)
+	}
+}
+
 function Post({content}) {
+	let date = new Date(content.date)
+	function handleBack(e) {
+		e.preventDefault()
+		history.back()
+	}
+
 	return (
 		<div className="content">
+			{
+				content.date && content.show_title ?
+					<h3 className={"details"}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
+				: ""
+			}
 			<h1>{content.title}</h1>
 			<Markdown className={"post_content"} content={content.content}></Markdown>
+			<Files title={"Auditions Files"} files={content.files}></Files>
+		</div>
+	)
+}
+
+function FilePage({content}) {
+	let date = new Date(content.date)
+	function handleBack(e) {
+		e.preventDefault()
+		history.back()
+	}
+	return (
+		<div className="content filepage">
+			{
+				content.date && content.show_title ?
+					<h3 className={"details"}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
+				: ""
+			}
+			<h1>{content.title.replaceAll("_", " ")}</h1>
+			<object data={content.url}></object>
+			<a href={content.url} target="_blank"><h4>Download File</h4></a>
 		</div>
 	)
 }
@@ -129,7 +195,7 @@ function MapEmbed({url}) {
 function Redirect({url, text}) {
 	return (
 		<div className="content">
-			<h3>You will be redirected to the {text.toLowerCase()} in 5 seconds. If this doesn't work, press the button below</h3>
+			<h3>You will be redirected to {text.toLowerCase()} in 5 seconds. If this doesn't work, press the button below</h3>
 			<button type="button" className="quick-button" onClick={() => {window.location.href=`${url}`}}>
 				Go to {text}
 			</button>

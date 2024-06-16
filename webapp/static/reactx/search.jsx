@@ -12,7 +12,6 @@ const testResults = {
 function Search({content=testResults}) {
 	const [searchTerm, setSearchTerm] = React.useState("")
 	const [results, setResults] = React.useState([])
-	console.log(content)
 	// content = testResults
 
 	function handleInput(e) {
@@ -22,9 +21,19 @@ function Search({content=testResults}) {
 	React.useEffect(()=> {
 		let tempResults = []
 		if (searchTerm) {
+			let searchTerms = searchTerm.toLowerCase().split(",")
 			content.items.filter((item) => {
-				if (Object.values(item).join(" ").toLowerCase().includes(searchTerm.toLowerCase())) {
-					tempResults.push(<SearchResult item={item}></SearchResult>)
+				let searchable = [item.title, item.type].join(" ").toLowerCase()
+				let searchIndexes = []
+				searchTerms.filter((term) => {
+					let index = searchable.indexOf(term)
+					if (index > -1) {
+						searchIndexes.push(index)
+					}
+				})
+				if (searchIndexes.length) {
+					let order = Math.hypot(...searchIndexes)*(1 + searchTerms.length - searchIndexes.length)
+					tempResults.push(<SearchResult item={item} order={order}></SearchResult>)
 				}
 			})
 		}
@@ -35,7 +44,7 @@ function Search({content=testResults}) {
 		<div className="content">
 			<h1>{content.title}</h1>
 			<Input label={"Search"} type="text" onInput={(e) => {handleInput(e)}}/>
-			<h2>Results</h2>
+			<h2>Results ({results.length})</h2>
 			<div className="results">
 				{results}
 			</div>
@@ -43,7 +52,7 @@ function Search({content=testResults}) {
 	)
 }
 
-function SearchResult({item}) {
+function SearchResult({item, order}) {
 
 	let iconMap = {
 		blog: "blog_icon",
@@ -56,7 +65,7 @@ function SearchResult({item}) {
 		return s[0].toUpperCase() + s.slice(1)
 	}
 	return (
-		<Link className={"result"} href={item.href}>
+		<Link className={"result"} href={item.href} style={{order: order}}>
 			<Icon icon={iconMap[item.type]}></Icon>
 			{capitalize(item.type)}: {item.title}
 		</Link>

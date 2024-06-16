@@ -27,10 +27,13 @@ const DummyOrders= {
 
 const rootElem = document.getElementById('seating-plan')
 
-const root = ReactDOM.createRoot(rootElem)
-const layout = JSON.parse(rootElem.dataset.layout)
-const initialAssignments = JSON.parse(rootElem.dataset.assignments)
-root.render(<SeatingPlan defaultRowCount={layout.rowCount} showName={rootElem.dataset.showname} authors={rootElem.dataset.authors} date={rootElem.dataset.date} initialAssignment={initialAssignments} initialHiddenSeats={layout.hiddenSeats}></SeatingPlan>)
+if (rootElem) {
+	const root = ReactDOM.createRoot(rootElem)
+	const layout = JSON.parse(rootElem.dataset.layout)
+	const initialAssignments = JSON.parse(rootElem.dataset.assignments)
+	root.render(<SeatingPlan defaultRowCount={layout.rowCount} showName={rootElem.dataset.showname} authors={rootElem.dataset.authors} date={rootElem.dataset.date} initialAssignment={initialAssignments} initialHiddenSeats={layout.hiddenSeats}></SeatingPlan>)
+
+}
 
 const itemCounter = (value, index) => {
     return value.filter((x) => x == index).length

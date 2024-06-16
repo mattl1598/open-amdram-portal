@@ -3,27 +3,27 @@
 // const dims = [...imageDims]
 const lazyLoadDistance = 5
 const gallery = document.getElementById('gallery')
-const images = []
 
 if (gallery) {
 	const root = ReactDOM.createRoot(gallery)
-	root.render(<Gallery/>)
+	root.render(<Gallery imageLinks={galleryImages}/>)
+}
 
-	for (let i = 0; i <galleryImages.length; i++) {
+
+function Gallery({imageLinks}) {
+	const images = []
+	for (let i = 0; i <imageLinks.length; i++) {
 		let classname = "img-hidden"
 		let load = false
 		if (i === 0) {
 			classname = ""
 		}
-		if (i < 0 + lazyLoadDistance || i > galleryImages.length - 0 - lazyLoadDistance){
+		if (i < 0 + lazyLoadDistance || i > imageLinks.length - 0 - lazyLoadDistance){
 			load = true
 		}
-		images.push(<Image src={galleryImages[i][0]} width={galleryImages[i][1]} height={galleryImages[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
+		images.push(<Image src={imageLinks[i][0]} width={imageLinks[i][1]} height={imageLinks[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
 	}
-}
 
-
-function Gallery() {
 	const [imgNum, setImgNum] = React.useState(0)
 	const [imageTags, setImageTags] = React.useState(images)
 	const [fullscreen, setFullscreen] = React.useState(false)

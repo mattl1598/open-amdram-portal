@@ -319,6 +319,10 @@ div.title {
 }
 
 div#desktop_member_nav {
+	position: sticky;
+	top: 0;
+	@include theme(background-color, bg1);
+
 	&:not(:has(> *)) {
 		display: none;
 	}
@@ -348,6 +352,7 @@ div.members-nav-outer {
 }
 
 .members-nav-main, .members-nav-sub {
+	padding: 0 .5rem;
 	min-width: 1rem;
 	&.members-nav-main {
 		grid-area: members-nav;
@@ -362,6 +367,11 @@ div.members-nav-outer {
 			height: 1.85rem;
 			width: 1.85rem;
 			@include theme(fill, text);
+		}
+
+		h1, h2, h3, h4 {
+			margin-block-start: .5rem;
+			margin-block-end: .5rem;
 		}
 	}
 

@@ -2,6 +2,21 @@ div.next_show {
 	text-align: center;
 }
 
+h3.details {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+
+	a {
+		white-space:pre;
+	}
+
+	//span.gap {
+	//	display: block;
+	//	width: 1rem;
+	//}
+}
+
 div.post_content {
 	p:has(img) {
 		text-align: center;
@@ -9,6 +24,13 @@ div.post_content {
 	img {
 		max-width: 100%;
 		max-height: 50vh;
+	}
+}
+
+div.filepage {
+	object {
+		width: 100%;
+		aspect-ratio: calc(1/sqrt(2));
 	}
 }
 

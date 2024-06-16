@@ -2,9 +2,67 @@
 {% block portal_content %}
 	<h2>Paid Members since {{ since.strftime("%d %B %Y") }}</h2>
 	<h4>Last Square Collection: {{ sq_updated.strftime("%x %X")}} <a href="/members/update_subs">(Click to update now)</a></h4>
-	<ul>
-		{% for name in paid %}
-			<li>{{ name[0] }}</li>
-		{% endfor %}
-	</ul>
+	<input type="checkbox" {{ "checked" if detailed }} name="detailed" onchange="window.location.href=window.location.pathname+`?{{ "detailed" if not detailed }}`"><label for="detailed"> Detailed View</label>
+	{% if not detailed %}
+		<ul>
+			{% for result in results %}
+				<li>{{ result.get("name") }}</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<br><label for="startyear">Start Year </label>
+		<select name="startyear" id="startyear" onchange="window.location.href=window.location.pathname+`?detailed&startyear=${this.value}`">
+			{% if request.args.get("startyear") %}
+				{% for i in range(oldest_entry_year, datetime.now().year) %}
+					<option value="{{ i }}" {{ "selected" if str(i) == request.args.get("startyear") }}>{{ i }}</option>
+				{% endfor %}
+			{% else %}
+				{% for i in range(oldest_entry_year, datetime.now().year) %}
+					<option value="{{ i }}" {{ "selected" if loop.last }}>{{ i }}</option>
+				{% endfor %}
+			{% endif %}
+		</select>
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Amount</th>
+					<th>Fee</th>
+					<th>Totals</th>
+				</tr>
+			</thead>
+			{% set ns = namespace(amounts=0, fees=0) %}
+			{% for result in results %}
+				<tr>
+					<td>{{ result.get("name") or 0 }}</td>
+					<td>{{ result.get("type") or 0 }}</td>
+					<td>£{{ (result.get("amount") or 0)/100.0 }}</td>
+					<td>£{{ (result.get("fee") or 0)/100.0 }}</td>
+					<td>£{{ ((result.get("amount") or 0)-(result.get("fee") or 0))/100.0 }}</td>
+					{% set ns.amounts = ns.amounts + (result.get("amount") or 0) %}
+					{% set ns.fees = ns.fees + (result.get("fee") or 0) %}
+				</tr>
+			{% endfor %}
+			<tfoot>
+				<tr>
+					<td></td>
+					<td>Total:</td>
+					<td>£{{ ns.amounts/100.0 }}</td>
+					<td>£{{ ns.fees/100.0 }}</td>
+					<td>£{{ (ns.amounts - ns.fees)/100.0 }}</td>
+				</tr>
+				<tr>
+					<td>
+						{{ types }}
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</tfoot>
+		</table>
+
+	{% endif %}
 {% endblock %}

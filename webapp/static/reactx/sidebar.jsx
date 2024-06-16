@@ -69,7 +69,6 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 		)
 	}
 	if (item.type === "raw") {
-		console.log("RAW")
 		return (
 			<div className="generic_link">
 				{raw}

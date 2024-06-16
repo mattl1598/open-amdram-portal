@@ -1,5 +1,6 @@
 import json
 import re
+import math
 from io import BytesIO
 
 import dateutil
@@ -429,6 +430,7 @@ def bookings():
 
 
 @bp.route("/members/bookings/historic_sales")
+@bp.route("/members/api/historic_sales")
 @login_required
 def historic_sales():
 	"""admin"""
@@ -442,12 +444,42 @@ def historic_sales():
 	if show_id is not None:
 		square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 		show = Show.query.get(show_id)
-		if (end_date := show.date + timedelta(days=2)) > datetime.utcnow():
-			end_date = show.date
+		if (end_date := show.date + timedelta(days=14)) > datetime.utcnow():
+			end_date = datetime.utcnow()
 		# end_date = show.date
 		# print(end_date)
 		start_date = Show.query.filter(Show.date < show.date).order_by(Show.date.desc()).first().date + timedelta(days=2)
 		# print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
+
+		pos_card_orders = []
+		result = None
+		flag = True
+		cursor = ""
+		while flag:
+			if cursor:
+				result = app.square.payments.list_payments(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format),
+					cursor=cursor
+				)
+			else:
+				result = app.square.payments.list_payments(
+					begin_time=start_date.strftime(square_date_format),
+					end_time=end_date.strftime(square_date_format)
+				)
+			if result.is_error():
+				# print(result.errors)
+				errors += 1
+				flag = False
+			else:
+				# payments += list(result.body.get("payments") or [])
+				for payment in (result.body.get("payments") or []):
+					if payment.get("source_type") == "CARD":
+						if (amount := payment.get("amount_money", {}).get("amount")) >= 800:
+							if amount % math.gcd(1000, 800) == 0:
+								pos_card_orders.append(payment.get("order_id"))
+				if not (cursor := result.body.get("cursor")):
+					flag = False
 
 		results = app.square.orders.search_orders(
 			body={
@@ -494,29 +526,41 @@ def historic_sales():
 			# print("Error:", results.errors)
 			abort(500)
 		else:
-			for order in (results.body.get("orders") or []):
+			for order in results.body.get("orders", []):
 				if "returned_quantities" in order.keys():
 					for refund in order["returned_quantities"]:
 						refunds.append((refund.get("refunded_money") or {}).get("amount"))
 				valid_payment = True
 				try:
-					for tender in order["tenders"]:
-						if (tender.get("card_details") or {}).get("status") == "CAPTURED":
-							payment_ids.append(tender["id"])
-						else:
-							valid_payment = False
+					if order.get("total_money", {}).get("amount") > 0:
+						for tender in order["tenders"]:
+							if (tender.get("card_details") or {}).get("status") == "CAPTURED":
+								payment_ids.append(tender["id"])
+							else:
+								valid_payment = False
+					else:
+						valid_payment = False
 				except KeyError as e:
 					print("KeyError:", e)
 					# pprint(order)
 				if valid_payment:
 					# print(order["id"])
+					valid_order = True
+					item_sums = {}
+					item_refunds = []
 					for item in order["line_items"]:
-						if "returned_quantities" in item.keys():
-							# print(order["id"])
-							for refund in item["returned_quantities"]:
-								refunds.append((refund.get("refunded_money") or {}).get("amount"))
-						sums[item["name"]] = (sums.get(item["name"]) or 0) + int(item["quantity"])
-
+						if item.get("name") and show.title in item.get("name"):
+							if "returned_quantities" in item.keys():
+								# print(order["id"])
+								for refund in item["returned_quantities"]:
+									item_refunds.append((refund.get("refunded_money") or {}).get("amount"))
+							item_sums[item["name"]] = (item_sums.get(item["name"]) or 0) + int(item["quantity"])
+						else:
+							valid_order = False
+					if valid_order:
+						refunds += item_refunds
+						for k, v in item_sums.items():
+							sums[k] = sums.get(k, 0) + v
 
 		mods = BookingModifications.query.filter(
 			end_date > BookingModifications.datetime,
@@ -538,12 +582,14 @@ def historic_sales():
 				sums[mod.to_item] = (sums.get(mod.to_item) or 0) + int(mod.change_quantity)
 			elif mod.ref_num >= 0 and not mod.from_item and mod.change_quantity > 0:
 				# adding free ticket to existing order
-				item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
-				sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
+				if not mod.mark_as_paid:
+					item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+					sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
 			elif mod.ref_num < 0:
 				# free ticket(s) with no existing Square order
-				item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
-				sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
+				if not mod.mark_as_paid:
+					item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+					sums[item_name] = (sums.get(item_name) or 0) + int(mod.change_quantity)
 			elif mod.change_quantity < 0 and (mod.from_item == mod.to_item or not mod.from_item):
 				# full ticket refund
 				if mod.from_item == mod.to_item:
@@ -571,7 +617,7 @@ def historic_sales():
 					location_id="0W6A3GAFG53BH"
 				)
 			if result.is_error():
-				print(result.errors)
+				# print(result.errors)
 				errors += 1
 				flag = False
 			else:
@@ -581,6 +627,7 @@ def historic_sales():
 
 		totals = {
 			"paid": 0,
+			"cash": 0,
 			"fees": 0,
 			"expected_refunds": expected_refunds,
 			"actual_refunds": sum(refunds),
@@ -588,7 +635,8 @@ def historic_sales():
 		}
 		# print("PAYMENTS")
 		other_sum = 0
-		point_of_sale_order_ids = []
+		point_of_sale_order_ids = [*pos_card_orders]
+		# print(point_of_sale_order_ids)
 		for payment in payments:
 			if payment["id"] in payment_ids:
 				# print(payment["id"])
@@ -596,7 +644,6 @@ def historic_sales():
 					try:
 						totals["paid"] += int(payment["amount_money"]["amount"])
 						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
-
 					except KeyError as e:
 						errors += 1
 						# pprint(payment)
@@ -607,8 +654,11 @@ def historic_sales():
 			else:
 				if payment["status"] == "COMPLETED" and payment["application_details"] == {'square_product': 'SQUARE_POS'} and payment["amount_money"]["amount"] > 0:
 					try:
-						totals["paid"] += int(payment["amount_money"]["amount"])
-						totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+						if payment.get("source_type") == "CARD":
+							totals["paid"] += int(payment["amount_money"]["amount"])
+							totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment.get("processing_fee", [])]))
+						else:
+							totals["cash"] += int(payment["amount_money"]["amount"])
 						point_of_sale_order_ids.append(payment.get("order_id"))
 					except KeyError as e:
 						errors += 1
@@ -624,37 +674,54 @@ def historic_sales():
 		# print("POS")
 		result = app.square.orders.batch_retrieve_orders(
 			body={
-				"location_id": "0W6A3GAFG53BH",
 				"order_ids": point_of_sale_order_ids
 			}
 		)
+		# print(point_of_sale_order_ids)
 		if result.is_success():
 			# print(result.body)
 			for order in result.body.get("orders"):
+				test = True
 				for line_item in order.get("line_items"):
-					pos_sums[line_item["name"]] = (pos_sums.get(line_item["name"]) or 0) + int(line_item["quantity"])
-					print(line_item["name"], line_item["total_money"]["amount"])
+					if show.title in line_item.get("name", ""):
+						pos_sums[line_item["name"]] = (pos_sums.get(line_item["name"]) or 0) + int(line_item["quantity"])
+						print(order.get("id"), line_item["name"], line_item["total_money"]["amount"])
+						# test = False
+				if order.get("id") in pos_card_orders:
+					# pprint(order)
+					pass
 
 		elif result.is_error():
 			# print(result.errors)
 			pass
 
 		data = sorted(list(sums.items()), key=lambda tup: extract_numbers(tup[0]))
-		print([extract_numbers(i[0]) for i in data])
+		# print([extract_numbers(i[0]) for i in data])
 		data = sorted(data, key=lambda tup: extract_month(tup[0]))
 
-		totals["net"] = totals["paid"] - totals["fees"] - totals["expected_refunds"]
+		totals["net"] = totals["paid"] + totals["cash"] - totals["fees"] - totals["expected_refunds"]
 
-	return render_template(
-		"members/historic_sales.html",
-		data=data,
-		totals=totals,
-		pos_sum=pos_sums,
-		id=show_id,
-		errors=errors,
-		shows=Show.query.order_by(Show.date.desc()).all(),
-		css="bookings.css"
-	)
+	if "api" in str(request.url_rule):
+		api_results = {
+			"totals": {
+				"total": totals["paid"],
+				"fees": totals["fees"],
+				"refunds": totals["actual_refunds"],
+				"net": totals["net"]
+			}
+		}
+		return jsonify(api_results)
+	else:
+		return render_template(
+			"members/historic_sales.html",
+			data=data,
+			totals=totals,
+			pos_sum=pos_sums,
+			id=show_id,
+			errors=errors,
+			shows=Show.query.order_by(Show.date.desc()).all(),
+			css="bookings.css"
+		)
 
 
 @bp.route("/members/bookings/seating", methods=["GET", "POST"])

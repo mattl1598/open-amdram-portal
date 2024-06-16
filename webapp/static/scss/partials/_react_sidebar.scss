@@ -1,0 +1,185 @@
+div.sidebar {
+	display: flex;
+	gap: 1ch;
+
+	@include not-mobile {
+		flex-direction: column;
+		max-width: 25%;
+	}
+	@include mobile {
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		width: 100%;
+
+		//position: fixed;
+		//right: 0;
+		float: left;
+
+		div {
+			flex-grow: 2;
+			min-width: 75%;
+		}
+	}
+
+	> div {
+		@include theme(background-color, bg1);
+
+		padding: 1.5ch 2ch;
+		border-radius: 5px;
+
+		gap: 0.5ch;
+		display: flex;
+		flex-direction: column;
+
+		h2 {
+			margin: 0 0 0.3ch;
+		}
+	}
+
+	div.tickets {
+		gap: 0.5ch;
+		a {
+			@include theme(background-color, accent1);
+			padding: 0.5ch 2ch;
+			text-align: center;
+			font-size: 1.5em;
+			border-radius: 7px;
+			border: 3px solid;
+			@include theme-adjust(border-color, accent1, darken, 20%);
+			text-decoration: none;
+			@include theme(color, inv_text);
+			transition: box-shadow 150ms ease-in-out;
+		}
+		a:hover {
+			box-shadow: inset 0 0 0 1000ch #3b3b3b60;
+		}
+	}
+
+	div.socials {
+
+		a {
+			padding: 0.5ch 0.5ch;
+			text-align: center;
+			font-size: 1.5em;
+			border-radius: 7px;
+			text-decoration: none;
+			@include theme(color, text);
+
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+
+			span.icon, react-icon {
+				display: flex;
+				font-size: inherit;
+				flex-direction: column;
+				justify-content: center;
+
+				svg {
+					font-size: inherit;
+					width: auto;
+					height: 1.5rem;
+					fill: white;
+					@include theme(color, text);// maybe
+				}
+			}
+			span.text {
+				flex-grow: 2;
+				padding: 0 1ch;
+			}
+
+			transition: box-shadow 150ms ease-in-out;
+		}
+
+		a:hover {
+			box-shadow: inset 0 0 0 1000ch #3b3b3b60;
+		}
+
+		a.facebook {
+			background-color: #1877f2;
+			border: 3px solid darken(#1877f2, 20%);
+			color: #040404;
+		}
+
+		a.instagram {
+			background-color: #e1306c;
+			border: 3px solid darken(#e1306c, 20%);
+			color: #040404;
+		}
+
+		a.twitter {
+			background-color: #1da1f2;
+			border: 3px solid darken(#1da1f2, 20%);
+			color: #040404;
+		}
+
+		a.other {
+			@include theme(background-color, accent2);
+			border: 3px solid;
+			@include theme-adjust(border-color, accent2, darken, 20%);
+		}
+
+		a.other:nth-child(2n) {
+			@include theme(background-color, accent1);
+			border: 3px solid;
+			@include theme-adjust(border-color, accent1, darken, 20%);
+		}
+	}
+
+	div.generic_link {
+		a {
+			padding: 0.5ch 0.5ch;
+			text-align: center;
+			font-size: 1.5em;
+			border-radius: 7px;
+			text-decoration: none;
+			color: #373737;
+
+			display: flex;
+			flex-direction: row;
+			justify-content: flex-start;
+			align-items: center;
+
+			span.icon, react-icon {
+				display: flex;
+				font-size: inherit;
+				flex-direction: column;
+				justify-content: center;
+
+				svg {
+					font-size: inherit;
+					width: auto;
+					height: 1.5rem;
+					fill: white; //maybe
+				}
+			}
+
+			span.text {
+				flex-grow: 2;
+			}
+			&:not(.carousel-image-link) {
+				transition: box-shadow 150ms ease-in-out;
+			}
+		}
+
+		&:nth-of-type(even) a.generic_link {
+			@include theme(background-color, accent2);
+			border: 3px solid;
+			@include theme-adjust(border-color, accent2, darken, 20%);
+		}
+
+		&:nth-of-type(odd) a.generic_link {
+			@include theme(background-color, accent1);
+			border: 3px solid;
+			@include theme-adjust(border-color, accent1, darken, 20%);
+			color: white;
+		}
+
+		a:not(.carousel-image-link):hover {
+			box-shadow: inset 0 0 0 1000ch #3b3b3b60;
+		}
+	}
+}

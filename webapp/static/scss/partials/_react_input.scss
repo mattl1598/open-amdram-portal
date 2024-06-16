@@ -14,7 +14,7 @@ div.react-fancy-input {
 		}
 	}
 	@include not-mobile {
-		margin-top: 0.7rem;
+		margin-top: 1.2rem;
 	}
 
 	select, input, textarea, a {
@@ -43,6 +43,10 @@ div.react-fancy-input {
 			cursor: pointer;
 			border-width: 0.3rem;
 			font-size: 115%;
+
+			&:hover {
+				@include theme(box-shadow, bg4, 0 0 0 1000rem, inset);
+			}
 		}
 
 		&[type=date]:invalid {

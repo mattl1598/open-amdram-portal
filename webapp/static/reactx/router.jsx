@@ -24,9 +24,18 @@ function App() {
 	const [sidebarExtras, setSidebarExtras] = React.useState([]);
 	const [siteJson, setSiteJson] = React.useState({})
 	const [historyState, setHistoryState] = React.useState("")
+	let [pathState, setPathState] = React.useState(window.location.pathname)
 	let path = window.location.pathname
+	const memberNavRef = React.useRef(null)
+
+
+	window.addEventListener('popstate', (e) => {
+		setPathState(window.location.pathname)
+	})
 
 	function getPostJson(url) {
+		console.log("GET POST JSON")
+		console.log(url)
 		if (defaultPostPath !== url) {
 			const response = fetch(url)
 			.then(response => response.json())
@@ -36,7 +45,7 @@ function App() {
 		}
 	}
 
-	function getSiteJson(url) {
+	function getSiteJson() {
 		const response = fetch("/sitedata")
 		.then(response => response.json())
 	    .then(data => {
@@ -101,23 +110,52 @@ function App() {
 	}, [siteJson])
 
 	React.useEffect(() => {
-		if (["/", "/auditions", "/about-us", "/search"].includes(path)) {
+		if (["/", "/auditions", "/about-us", "/search", "/past-shows", "/members", "/members/get_sums", "/members/dashboard"].includes(pathState)) {
 			// FRONTPAGE
 			// tempContent.push(<Post content={testContent}></Post>)
 			// setPostJson({...testContent})
-			getPostJson(path+"?react")
-		} else if (RegExp("^/blog", "i").test(path)) {
+			getPostJson(pathState+"?"+window.location.search.replace("?","")+"&react")
+		} else if (RegExp("^/blog", "i").test(pathState)) {
 			getPostJson("/blog?react")
+		} else if (RegExp("^/post/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
+		} else if (RegExp("^/past-shows/([A-Za-z0-9-_]{15,16})/.+", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
+		} else if (RegExp("^/past-shows/member/([A-Za-z0-9-_]{15,16})/.+", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
+		} else if (RegExp("^(/members/|/)file/([A-Za-z0-9-_]{15,16})/(.+)", "i").test(pathState)) {
+			console.log("FILE PAGE")
+			getPostJson(pathState+`?react`)
+		} else if (RegExp("^(/members/|/)post/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
+		} else if (path === "/members/shows") {
+			setPostJson({
+				type: "members_shows",
+				title: "Shows:",
+				shows: siteJson.members_recent_shows
+			})
+		} else if (RegExp("^/members/show/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
 		} else if (path === "/tickets") {
 			setPostJson({
 				type: "redirect",
 				url: siteJson.tickets_link,
-				text: "Tickets Shop"
+				text: "Tickets Shop",
+				time: 1
 			})
+		// } else if (postJson.initialData === undefined) {
+		// 	console.log("RAW REDIRECT")
+		// 	window.location.href = pathState
 		} else {
-			window.location.href = path
+			console.log("REDIRECT")
+			setPostJson({
+				type: "redirect",
+				url: pathState,
+				text: "destination",
+				time: 1
+			})
 		}
-	}, [historyState])
+	}, [pathState])
 
 	React.useEffect(() => {
 		let tempContent = []
@@ -133,9 +171,27 @@ function App() {
 			tempSidebarExtras.push(<MapEmbed url={postJson.maps_url}></MapEmbed>)
 		} else if(postJson.type === "search") {
 			tempContent.push(<Search content={postJson}></Search>)
+		} else if(postJson.type === "list_shows") {
+			tempContent.push(<ListShows content={postJson}></ListShows>)
+		} else if(postJson.type === "past_show") {
+			tempContent.push(<ShowPage content={postJson}></ShowPage>)
+		} else if(postJson.type === "file_page") {
+			tempContent.push(<FilePage content={postJson}></FilePage>)
+		} else if(postJson.type === "login") {
+			tempContent.push(<Login content={postJson}></Login>)
+		} else if(postJson.type === "dashboard") {
+			tempContent.push(<Dashboard content={postJson}></Dashboard>)
+		} else if(postJson.type === "members_shows") {
+			tempContent.push(<Shows content={postJson}></Shows>)
+		} else if(postJson.type === "members_show") {
+			tempContent.push(<Show content={postJson}></Show>)
+		} else if(postJson.type === "accounting") {
+			tempContent.push(<Accounting content={postJson}></Accounting>)
 		} else if (postJson.type === "redirect") {
 			if (postJson.url.includes(window.location.origin) || !postJson.url.includes("http")) {
+				console.log(postJson.url)
 				window.history.pushState("", "", postJson.url)
+				setPathState(postJson.url)
 				setHistoryState(postJson.url)
 			} else {
 				tempContent.push(<Redirect url={postJson.url} text={postJson.text}></Redirect>)
@@ -143,12 +199,13 @@ function App() {
 		}
 		setContent(tempContent)
 		setSidebarExtras(tempSidebarExtras)
+
 	}, [postJson])
 
 	function handleHistoryStateChange(e) {
 		e.preventDefault()
 		window.history.pushState("", "", e.target.value)
-		setHistoryState(e.target.value)
+		setPathState(e.target.value)
 	}
 
 	return (
@@ -160,13 +217,12 @@ function App() {
 				onChange={(e)=> {handleHistoryStateChange(e)}}
 			></input>
 			<AlertsContainer></AlertsContainer>
-			<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}/>
-			<div className="main-outer">
+			<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}>
 				<div className="main-section">
 					{content}
 					<Sidebar sidebarItems={sidebarData} extras={sidebarExtras}></Sidebar>
 				</div>
-			</div>
+			</Nav>
 		</React.Fragment>
 	)
 }

@@ -358,7 +358,7 @@ def blog_img(blog_id, image_no):
 		abort(404)
 
 
-@bp.route("/past-shows")
+# @bp.route("/past-shows")
 def past_shows():
 	shows = Show.query \
 		.filter(Show.date < datetime.now()) \
@@ -374,14 +374,14 @@ def past_shows():
 	)
 
 
-@bp.route("/past-shows/<show_id>", methods=["GET"])
+# @bp.route("/past-shows/<show_id>", methods=["GET"])
 def past_show_redirect(show_id):
 	show = Show.query.filter_by(id=show_id).first_or_404()
 	title = show.title.lower().replace(" ", "-")
 	return redirect("/".join([show_id, title]))
 
 
-@bp.route("/past-shows/<show_id>/<test>")
+# @bp.route("/past-shows/<show_id>/<test>")
 def past_show_page(show_id, test):
 	test += " "
 
@@ -465,7 +465,7 @@ def past_show_page(show_id, test):
 		)
 
 
-@bp.route("/past-shows/u/<user_id>")
+# @bp.route("/past-shows/u/<user_id>")
 def u_redirect(user_id):
 	user = User.query.filter_by(id=user_id).first_or_404()
 	page_title = "-".join([user.firstname, user.lastname])
@@ -473,7 +473,7 @@ def u_redirect(user_id):
 
 
 # noinspection DuplicatedCode
-@bp.route("/past-shows/u/<user_id>/<test>")
+# @bp.route("/past-shows/u/<user_id>/<test>")
 def u(user_id, test):
 	test += " "
 	user_members = [
@@ -518,7 +518,7 @@ def u(user_id, test):
 	)
 
 
-@bp.route("/past-shows/m/<member_id>")
+# @bp.route("/past-shows/m/<member_id>")
 def m_redirect(member_id):
 	member = Member.query.filter_by(id=member_id).first_or_404()
 	page_title = "-".join([member.firstname, member.lastname])
@@ -526,7 +526,7 @@ def m_redirect(member_id):
 
 
 # noinspection DuplicatedCode
-@bp.route("/past-shows/m/<member_id>/<test>")
+# @bp.route("/past-shows/m/<member_id>/<test>")
 def m(member_id, test):
 	test += " "
 	member = Member.query.filter_by(id=member_id).first_or_404()
@@ -664,8 +664,8 @@ def prizedraw():
 
 
 # noinspection PyUnusedLocal
-@app.errorhandler(401)
-@bp.route("/members", methods=["GET", "POST"])
+# @app.errorhandler(401)
+# @bp.route("/members", methods=["GET", "POST"])
 def members(*args):
 	if current_user.is_authenticated:
 		return redirect(url_for("members_routes.dashboard"))

@@ -1,0 +1,16 @@
+{% extends "members/members_layout.html" %}
+{% block portal_content %}
+	<h2></h2>
+	<br><label for="startyear">Start Year </label>
+	<select name="startyear" id="startyear" onchange="window.location.href=window.location.pathname+`?detailed&startyear=${this.value}`">
+		{% if request.args.get("startyear") %}
+			{% for i in range(oldest_entry_year, datetime.now().year) %}
+				<option value="{{ i }}" {{ "selected" if str(i) == request.args.get("startyear") }}>{{ i }}</option>
+			{% endfor %}
+		{% else %}
+			{% for i in range(oldest_entry_year, datetime.now().year) %}
+				<option value="{{ i }}" {{ "selected" if loop.last }}>{{ i }}</option>
+			{% endfor %}
+		{% endif %}
+	</select>
+{% endblock %}

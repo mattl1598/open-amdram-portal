@@ -321,6 +321,7 @@ def get_photo(media_id, **kwargs):
 		# data = response.read()
 		# x = json.loads(data)
 		if x.get('baseUrl') is not None:
+			# pprint(x)
 			new_base_url = "/"
 			if route == "photo":
 				new_base_url = f"{x.get('baseUrl')}=d"

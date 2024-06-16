@@ -1,9 +1,15 @@
-@import "partials/layout";
+@import "partials/react_layout";
 @import "partials/variables";
 @import "partials/react_posts";
 @import "partials/react_input";
 @import "partials/react_carousel";
 @import "partials/react_nav";
+@import "partials/react_sidebar";
 @import "partials/react_search";
+@import "partials/react_past_shows";
+@import "partials/react_past_show_page";
+@import "partials/react_timeline";
+@import "partials/react_members_posts";
 @import "partials/alert";
 @import "partials/back_button";
+@import "partials/loader";
