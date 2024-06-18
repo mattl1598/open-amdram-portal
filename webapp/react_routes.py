@@ -445,11 +445,16 @@ def site_data():
 		).group_by(Show).order_by(Show.date.desc()).limit(10).subquery()
 	).scalar()
 
-	output["current_user"] = {
-
-		"role": current_user.role,
-		"id": current_user.id
-	}
+	if current_user.is_authenticated:
+		output["current_user"] = {
+			"is_authenticated": True,
+			"role": current_user.role,
+			"id": current_user.id
+		}
+	else:
+		output["current_user"] = {
+			"is_authenticated": False
+		}
 
 	return jsonify(output)
 

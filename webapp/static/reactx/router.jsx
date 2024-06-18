@@ -9,6 +9,8 @@ appRoot.render(
 	<App></App>
 )
 
+const app = React.createContext()
+
 function App() {
 	let defaultPostData = document.querySelector("#app").dataset.data
 	let defaultPostPath = document.querySelector("#app").dataset.path
@@ -158,49 +160,51 @@ function App() {
 	}, [pathState])
 
 	React.useEffect(() => {
-		let tempContent = []
-		let tempSidebarExtras = []
-		if (postJson.type === "post") {
-			tempContent.push(<Post content={postJson}></Post>)
-		} else if (postJson.type === "blog_post") {
-			tempContent.push(<BlogPost content={postJson}></BlogPost>)
-		} else if (postJson.type === "blogs") {
-			tempContent.push(<BlogPostList content={postJson}></BlogPostList>)
-		} else if(postJson.type === "map_post") {
-			tempContent.push(<Post content={postJson}></Post>)
-			tempSidebarExtras.push(<MapEmbed url={postJson.maps_url}></MapEmbed>)
-		} else if(postJson.type === "search") {
-			tempContent.push(<Search content={postJson}></Search>)
-		} else if(postJson.type === "list_shows") {
-			tempContent.push(<ListShows content={postJson}></ListShows>)
-		} else if(postJson.type === "past_show") {
-			tempContent.push(<ShowPage content={postJson}></ShowPage>)
-		} else if(postJson.type === "file_page") {
-			tempContent.push(<FilePage content={postJson}></FilePage>)
-		} else if(postJson.type === "login") {
-			tempContent.push(<Login content={postJson}></Login>)
-		} else if(postJson.type === "dashboard") {
-			tempContent.push(<Dashboard content={postJson}></Dashboard>)
-		} else if(postJson.type === "members_shows") {
-			tempContent.push(<Shows content={postJson}></Shows>)
-		} else if(postJson.type === "members_show") {
-			tempContent.push(<Show content={postJson}></Show>)
-		} else if(postJson.type === "accounting") {
-			tempContent.push(<Accounting content={postJson}></Accounting>)
-		} else if (postJson.type === "redirect") {
-			if (postJson.url.includes(window.location.origin) || !postJson.url.includes("http")) {
-				console.log(postJson.url)
-				window.history.pushState("", "", postJson.url)
-				setPathState(postJson.url)
-				setHistoryState(postJson.url)
-			} else {
-				tempContent.push(<Redirect url={postJson.url} text={postJson.text}></Redirect>)
+		if (Object.keys(siteJson).length) {
+			let tempContent = []
+			let tempSidebarExtras = []
+			if (postJson.type === "post") {
+				tempContent.push(<Post content={postJson}></Post>)
+			} else if (postJson.type === "blog_post") {
+				tempContent.push(<BlogPost content={postJson}></BlogPost>)
+			} else if (postJson.type === "blogs") {
+				tempContent.push(<BlogPostList content={postJson}></BlogPostList>)
+			} else if(postJson.type === "map_post") {
+				tempContent.push(<Post content={postJson}></Post>)
+				tempSidebarExtras.push(<MapEmbed url={postJson.maps_url}></MapEmbed>)
+			} else if(postJson.type === "search") {
+				tempContent.push(<Search content={postJson}></Search>)
+			} else if(postJson.type === "list_shows") {
+				tempContent.push(<ListShows content={postJson}></ListShows>)
+			} else if(postJson.type === "past_show") {
+				tempContent.push(<ShowPage content={postJson}></ShowPage>)
+			} else if(postJson.type === "file_page") {
+				tempContent.push(<FilePage content={postJson}></FilePage>)
+			} else if(postJson.type === "login") {
+				tempContent.push(<Login content={postJson}></Login>)
+			} else if(postJson.type === "dashboard") {
+				tempContent.push(<Dashboard content={postJson}></Dashboard>)
+			} else if(postJson.type === "members_shows") {
+				tempContent.push(<Shows content={postJson}></Shows>)
+			} else if(postJson.type === "members_show") {
+				tempContent.push(<Show content={postJson}></Show>)
+			} else if(postJson.type === "accounting") {
+				tempContent.push(<Accounting content={postJson}></Accounting>)
+			} else if (postJson.type === "redirect") {
+				if (postJson.url.includes(window.location.origin) || !postJson.url.includes("http")) {
+					console.log(postJson.url)
+					window.history.pushState("", "", postJson.url)
+					setPathState(postJson.url)
+					setHistoryState(postJson.url)
+				} else {
+					tempContent.push(<Redirect url={postJson.url} text={postJson.text}></Redirect>)
+				}
 			}
+			setContent(tempContent)
+			setSidebarExtras(tempSidebarExtras)
+			console.log(siteJson)
 		}
-		setContent(tempContent)
-		setSidebarExtras(tempSidebarExtras)
-
-	}, [postJson])
+	}, [postJson, siteJson])
 
 	function handleHistoryStateChange(e) {
 		e.preventDefault()
@@ -209,7 +213,7 @@ function App() {
 	}
 
 	return (
-		<React.Fragment>
+		<app.Provider value={{siteJson}}>
 			<input
 				id={"historyState"}
 				style={{display: "none"}}
@@ -217,12 +221,12 @@ function App() {
 				onChange={(e)=> {handleHistoryStateChange(e)}}
 			></input>
 			<AlertsContainer></AlertsContainer>
-			<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}>
+			<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteJson.site_name} logoSVG={siteJson.logoSVG}>
 				<div className="main-section">
 					{content}
 					<Sidebar sidebarItems={sidebarData} extras={sidebarExtras}></Sidebar>
 				</div>
 			</Nav>
-		</React.Fragment>
+		</app.Provider>
 	)
 }

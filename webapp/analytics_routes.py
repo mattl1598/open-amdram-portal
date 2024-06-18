@@ -23,7 +23,7 @@ def before_app_request():
 		session.modified = True
 
 
-@bp.after_app_request
+# @bp.after_app_request
 def after_app_request(response):
 	@response.call_on_close
 	@copy_current_request_context

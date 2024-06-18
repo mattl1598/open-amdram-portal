@@ -47,9 +47,11 @@ for (let i = 0; i < tags.length; i++) {
 
 function Icon({icon, timeline}) {
 	let d = iconPaths[icon]
+	const context = React.useContext(app)
 	if (icon === "siteLogo") {
+
 		return (
-			<span className={"icon"} dangerouslySetInnerHTML={{__html: logoSVG}}></span>
+			<span className={"icon"} dangerouslySetInnerHTML={{__html: context.siteJson.site_logo}}></span>
 		)
 	}
 

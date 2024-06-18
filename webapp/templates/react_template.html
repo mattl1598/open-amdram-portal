@@ -2,11 +2,11 @@
 <html lang="en" class="{{ session.get("theme", "auto") }}">
 <head>
 	<meta charset="UTF-8">
-	<title>{{ web_config["site-name"] }}</title>
-	<script>
-		const siteName = "{{ web_config["site-name"] }}";
-		const logoSVG = `{{ web_config.get("site_logo") | safe }}`;
-	</script>
+{#	<title>{{ web_config["site-name"] }}</title>#}
+{#	<script>#}
+{#		const siteName = "{{ web_config["site-name"] }}";#}
+{#		const logoSVG = `{{ web_config.get("site_logo") | safe }}`;#}
+{#	</script>#}
 {#	{% if css is defined %}#}
 {#		{% if type(css) == type("string") %}#}
 {#			{% set css = [css] %}#}

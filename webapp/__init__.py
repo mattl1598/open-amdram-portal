@@ -58,7 +58,7 @@ def create_app():
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
 
-		db.create_all()
+		# db.create_all()
 
 		qrcode = QRcode()
 		qrcode.init_app(app)
@@ -113,7 +113,7 @@ def create_app():
 			env=app.envs.app_environment
 		)
 
-		@app.context_processor
+		# @app.context_processor
 		def inject_nav():
 			# nav = [
 			# 	{"title": "Home", "link": "/", "is_active": False},
@@ -214,7 +214,7 @@ def create_app():
 		# def unauthorised_error(e):
 		# 	return redirect(url_for("routes.members"))
 
-		@app.errorhandler(HTTPException)
+		# @app.errorhandler(HTTPException)
 		def default_error(e):
 			if int(str(e)[:3]) == 404:
 				if (page := re.search(r"^/((new-year)|(spring)|(autumn))-\d{4}", request.path)) is not None:

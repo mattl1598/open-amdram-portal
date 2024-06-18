@@ -103,10 +103,6 @@ def react_members_post(post_id):
 def react_members_show(show_id):
 	results = db.session.query(
 		func.json_build_object(
-			'show', func.json_build_object(
-				'title', func.string_agg(func.distinct(text("show_details.title")), aggregate_order_by(", ", "show_details.title")),
-				'managing_users', func.array_to_json(func.array_agg(func.distinct(text("show_details.managing_users"))))
-			),
 			'posts', func.json_agg(
 				func.json_build_object(
 					'id', text("posts.id"),
@@ -127,16 +123,6 @@ def react_members_show(show_id):
 				))
 		)
 	).select_from(
-		db.session.query(
-			Show.title,
-			Member.associated_user.label("managing_users")
-		).join(
-			MSL, MSL.show_id == Show.id
-		).filter(MSL.cast_or_crew == "crew", MSL.role_name.in_(["Director", "Producer"])).join(
-			Member, Member.id == MSL.member_id
-		).filter(
-			Show.id == show_id
-		).subquery().alias("show_details"),
 		db.session.query(
 				Post.id.label("id"),
 				Post.title.label("title"),
@@ -161,12 +147,32 @@ def react_members_show(show_id):
 		).order_by(Files.date.desc()).scalar_subquery().alias("files")
 	).scalar()
 
-	pprint(results)
+	show_details = db.session.query(
+		func.json_build_object(
+			'id', Show.id,
+			'title', Show.title,
+			"directors", func.array_to_json(func.array_agg(func.distinct(case(
+				(Member.associated_user.is_not(None), Member.associated_user)
+			))))
+		)
+	).join(
+		MSL, Show.id == MSL.show_id, isouter=True
+	).filter(
+		MSL.role_name.in_(["Director", "Producer"]),
+		MSL.cast_or_crew == "crew",
+		Show.id == show_id
+	).join(
+		Member, MSL.member_id == Member.id
+	).join(
+		User, Member.associated_user == User.id, isouter=True
+	).group_by(Show).order_by(Show.date.desc()).scalar()
+
+	print(show_details)
 
 	data = {
 		"type": "members_show",
-		"title": "Show",
-		**results
+		**results,
+		**show_details
 	}
 
 	if "react" in request.args.keys():

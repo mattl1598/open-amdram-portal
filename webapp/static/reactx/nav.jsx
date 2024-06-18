@@ -37,7 +37,7 @@ if (document.getElementById('nav') && !document.getElementById('app')) {
 }
 
 
-function Nav({navItems, siteName, children}) {
+function Nav({navItems, siteName, logoSVG, children}) {
 	const navList = []
 	const memberNavList = []
 	const memberNavSubList = []

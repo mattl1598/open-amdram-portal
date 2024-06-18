@@ -32,3 +32,59 @@ a.show {
 		}
 	}
 }
+
+div.files {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	max-width: 100%;
+	flex-wrap: wrap;
+}
+
+div.file {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 10rem;
+	padding: 0.3rem 0.15rem;
+	border: 0.2rem solid;
+	border-radius: 1rem;
+	@include theme(background, bg3);
+
+	&:nth-child(even) {
+		@include theme(border-color, accent1);
+	}
+	&:nth-child(odd) {
+		@include theme(border-color, accent2);
+	}
+
+	a.filetext {
+		text-align: center;
+	}
+
+	a.icon {
+		flex-grow: 1;
+		flex-shrink: 1;
+		align-self: stretch;
+
+		display: flex;
+		font-size: inherit;
+		flex-direction: column;
+		justify-content: center;
+		max-height: 7rem;
+		min-height: 3rem;
+		width: 10rem;
+
+		overflow: visible;
+		object-fit: contain;
+
+		svg.icon {
+			@include theme(fill, text);
+			@include theme(color, text);
+			height: 100%;
+			width: auto;
+
+			overflow: hidden;
+		}
+	}
+}
