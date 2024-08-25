@@ -43,7 +43,7 @@ function Search({content=testResults}) {
 	return (
 		<div className="content">
 			<h1>{content.title}</h1>
-			<Input label={"Search"} type="text" onInput={(e) => {handleInput(e)}}/>
+			<Input label={"Search"} className={"search"} type="text" onInput={(e) => {handleInput(e)}}/>
 			<h2>Results ({results.length})</h2>
 			<div className="results">
 				{results}

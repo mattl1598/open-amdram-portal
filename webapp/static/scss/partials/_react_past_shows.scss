@@ -1,3 +1,4 @@
+@import "variables";
 
 .past_shows_title {
 	display: flex;
@@ -47,8 +48,8 @@
 }
 
 
-
-div#past_shows, table:not([class]) {
+//, table:not([class])
+div#past_shows {
 	max-width: 100%;
 	overflow: hidden;
 
@@ -79,26 +80,25 @@ div#past_shows, table:not([class]) {
 	}
 }
 
-table.table_mode, div.table_mode {
+:is(table.table_mode, div.table_mode) {
 	width: 100%;
 	height: auto;
 
 	img.programme {
-		height: 5rem;
+		@include not-mobile {
+			height: 5rem;
+		}
 		width: 5rem;
 		object-fit: cover;
 		vertical-align: middle;
 	}
 
-	& > a, & > div.header {
+	:is(a,  div.header) {
 		display: grid;
 		gap: .5rem;
 		grid-template-rows: 1fr;
 		grid-template-columns: 5rem repeat(5, 1fr);
-
 		&.header {
-			@include theme(background-color, bg2);
-			text-align: center;
 			.image {
 				grid-area: 1 / 1 / 1 / 1;
 			}
@@ -106,6 +106,44 @@ table.table_mode, div.table_mode {
 				grid-area: 1 / 1 / 2 / 3;
 			}
 		}
+
+		@include mobile {
+			grid-template-areas:
+				"image title title season genre"
+				"image cast cast crew crew"
+			;
+			grid-template-rows: 1fr 1fr;
+			grid-template-columns: 5rem  repeat(4, 1fr);
+			&.header {
+				.image {
+					grid-area: 1 / 1 / 1 / 1;
+				}
+				.show_title {
+					grid-area: 1 / 1 / 2 / 4;
+				}
+			}
+			.image {
+				grid-area: image;
+				text-align: left;
+				place-self: center start;
+				width: 5rem;
+				overflow: hidden;
+			}
+			.show_title { grid-area: title;	}
+			.season { grid-area: season; }
+			.genre { grid-area: genre; }
+			.cast { grid-area: cast; }
+			.crew {	grid-area: crew; }
+			div:not(.image) { text-align: center; }
+		}
+
+
+		&.header {
+			@include theme(background-color, bg2);
+			text-align: center;
+		}
+
+		height: fit-content;
 	}
 
 	td, div {
@@ -150,6 +188,21 @@ table.table_mode, div.table_mode {
 	}
 }
 
+@include mobile {
+	table.cards_mode, div.cards_mode {
+		tr, a.link {
+			flex: 1 1 10rem;
+		}
+	}
+}
+@include not-mobile {
+	table.cards_mode, div.cards_mode {
+		tr, a.link {
+			flex: 1 1 15rem;
+		}
+	}
+}
+
 table.cards_mode, div.cards_mode {
 	width: 100%;
 	tr:nth-child(1) {
@@ -171,7 +224,7 @@ table.cards_mode, div.cards_mode {
 
 	tr, a.link {
 		text-decoration: none;
-		flex: 1 1 15rem;
+		box-sizing: border-box;
 
 		border-radius: 3ch;
 		border-spacing: 0;

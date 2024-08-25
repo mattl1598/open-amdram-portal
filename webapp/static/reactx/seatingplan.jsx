@@ -46,7 +46,20 @@ function int(str) {
 	return parseInt(str, 10)
 }
 
+function SeatingPlanner({content}) {
+	return (
+		<div className="content wide">
+			<SeatingPlan
+				defaultRowCount={content.defaultRowCount} initialAssignment={content.initialAssignment}
+				initialHiddenSeats={content.initialHiddenSeats} date={content.date}
+				showName={content.showName} authors={content.authors}
+			></SeatingPlan>
+		</div>
+	)
+}
+
 function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, date, showName, authors}) {
+	const context = React.useContext(app)
 	const [rowCount, setRowCount] = React.useState(defaultRowCount)
 	const [assignments, setAssignments] = React.useState(initialAssignment)
 	const [previewAssignments, setPreviewAssignments] = React.useState({})
@@ -54,6 +67,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 	let assignedOrders = []
 	let unassignedOrders = []
 	const fullWidth = 12
+	date = getPerfDateString(date)
 
 	const [hiddenSeats, setHiddenSeats] = React.useState(initialHiddenSeats)
 	const [orders, setOrders] = React.useState({})
@@ -157,7 +171,8 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 
 	const [colours, colourMap, reverseAssignments] = fourColour()
 
-	function save() {
+	function save(e) {
+		e.preventDefault()
 		let newSeats = 0;
 		for (let i=0; i<unassignedOrders.length; i++) {
 			newSeats += unassignedOrders[i].props.order.seats - itemCounter(Object.values(assignments), unassignedOrders[i].order_id)
@@ -173,9 +188,16 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 				layout: {rowCount: rowCount, hiddenSeats: hiddenSeats, newSeats: newSeats, fullWidth: fullWidth},
 				assignments: assignments
 			})
-		}).then(() => {
-			displayAlerts([{title: "Saved!", content: ""}])
-			return false
+		}).then((response) => {
+			return response.json()
+		}).then((data) => {
+			if (data.code === 200) {
+				displayAlerts([{title: data.msg, content: ""}])
+				return false
+			} else {
+				displayAlerts([{title: "Something went wrong.", content: ""}])
+				return false
+			}
 		}).catch((e) => {
 			displayAlerts([{title: "Something went wrong.", content: e}])
 			return false
@@ -291,7 +313,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 		let newOrder = <Order key={"order"+order_id} order_id={order_id} order={order} seats_assigned={seats_assigned}></Order>
 		let seats = reverseAssignments[order_id] !== undefined ? reverseAssignments[order_id]: []
 		let newTicket = <Ticket
-			groupName={siteName} showDate={date}
+			groupName={context.siteJson.site_name} showDate={date}
 			showName={showName} authors={authors}
 			name={order.name} seats={seats}
 		></Ticket>
@@ -335,7 +357,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 				</select>
 				<div>
 					<h2>Assigned: {Object.values(assignments).filter(Boolean).length}/{fullWidth*rowCount - hiddenSeats.length}</h2>
-					<a href="#" onClick={save} className={"button"}>Save</a>
+					<a href="#" onClick={(e)=>{save(e)}} className={"button"}>Save</a>
 				</div>
 			</div>
 			<div className={"seats-container"}>

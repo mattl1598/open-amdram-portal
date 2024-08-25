@@ -20,6 +20,8 @@ from sqlalchemy import or_
 from webapp.models import *
 from flask import current_app as app
 
+from webapp.react_permissions import check_page_permission
+
 bp = Blueprint("tickets_routes", __name__)
 
 
@@ -121,7 +123,6 @@ def get_ticket_types():
 			ticket_types.append(item["item_data"]["name"])
 
 	perf_tree = {}
-	print(ticket_types)
 	for ticket_type in ticket_types:
 		if ticket_type.count("-") == 2:
 			keys = ticket_type.split(" - ", 2)
@@ -293,7 +294,7 @@ def collect_orders():
 	return perf_tree
 
 
-@bp.get("/members/api/orders/<show>/<perf>")
+# @bp.get("/members/api/orders/<show>/<perf>")
 def orders_api(show, perf):
 	"""admin"""
 	if request.args.get("auth") == KeyValue.query.get("api_key").value or (current_user.is_authenticated and (current_user.role in ["admin"])):
@@ -373,8 +374,8 @@ def get_orders():
 		return response
 
 
-@bp.route("/members/bookings", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/bookings", methods=["GET", "POST"])
+# @login_required
 def bookings():
 	"""admin"""
 	if current_user.role not in ["admin"]:
@@ -421,12 +422,12 @@ def bookings():
 	performances = Performance.query.filter(Performance.date > end_of_last_show).order_by(Performance.date.asc()).all()
 
 	return render_template(
-			"members/manage_bookings.html",
-			mods=mods,
-			performances=performances,
-			items=items,
-			css="bookings.css"
-		)
+		"members/manage_bookings.html",
+		mods=mods,
+		performances=performances,
+		items=items,
+		css="bookings.css"
+	)
 
 
 @bp.route("/members/bookings/historic_sales")
@@ -724,8 +725,8 @@ def historic_sales():
 		)
 
 
-@bp.route("/members/bookings/seating", methods=["GET", "POST"])
-@bp.route("/members/bookings/seating/<perf_id>", methods=["GET", "POST"])
+# @bp.route("/members/bookings/seating", methods=["GET", "POST"])
+# @bp.route("/members/bookings/seating/<perf_id>", methods=["GET", "POST"])
 def seating_planner(perf_id=""):
 	# performance = Performance.query.get("2olqqYkVemQmE7D")
 	if perf_id:

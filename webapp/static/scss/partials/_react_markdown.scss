@@ -1,0 +1,224 @@
+:root {
+	--md-blockquote-level: 1;
+}
+
+div.markdown {
+	width: 100%;
+	max-width: 100%;
+	overflow: auto;
+
+	code:not(pre>code) {
+		background-color: #00000050;
+		padding: .2rem;
+		border-radius: .2rem;
+		user-select: all;
+	}
+
+	pre {
+		width: fit-content;
+		background-color: #00000050;
+		border-radius: .5rem;
+		& > code {
+			display: block;
+			text-wrap: wrap;
+			width: fit-content;
+			padding: 1rem;
+		}
+
+		div.code_header {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			border-bottom: 1px solid;
+			@include theme(border-bottom-color, text);
+			padding: .25rem 0;
+			margin: 0 .5rem;
+
+			span {
+				display: grid;
+				place-items: center;
+			}
+
+			span.code_language {
+				padding: .3rem .5rem;
+			}
+
+			span.copy_button {
+				display:grid;
+				grid-template-areas: "copy";
+
+				padding: .3rem .5rem;
+				border-radius: .25rem;
+				transition:
+					background-color 150ms ease-in-out,
+					box-shadow 500ms 1s ease-in-out
+				;
+				cursor: pointer;
+				user-select: none;
+				.copied {
+					opacity: 0;
+					grid-area: copy;
+					transition: opacity 500ms 1s linear;
+				}
+				.copy {
+					opacity: 1;
+					grid-area: copy;
+					transition: opacity 500ms 1s linear;
+				}
+
+				&:hover {
+					//@include theme-adjust(box-shadow, text, rgba, .15, inset 0 0 0 1000rem);
+					@include theme-adjust(background-color, text, rgba, .15);
+				}
+				&:active {
+					transition-duration: 0s;
+					transition-delay: 0s;
+					@include theme-adjust(box-shadow, accent2, rgba, .5, inset 0 0 0 1000rem);
+
+					> span.copied {
+						transition: opacity 0ms 0s linear;
+						opacity: 1;
+					}
+					> span.copy {
+						transition: opacity 0ms 0s linear;
+						opacity: 0;
+					}
+				}
+			}
+		}
+	}
+
+	table {
+		margin-block: 1rem;
+		border-collapse: collapse;
+		th, td {
+			border: 1px solid;
+			@include theme(border-color, text);
+			padding: .35rem .75rem;
+		}
+
+		tbody tr:nth-of-type(2n+1) {
+			@include theme-adjust(box-shadow, text, rgba, .1, inset 0 0 0 1000rem);
+		}
+
+		th {
+			border-bottom: 2px solid;
+		}
+	}
+
+	blockquote {
+		display: block;
+		background-color: #00000030;
+		width: fit-content;
+		padding: .4rem .6rem;
+
+		margin-inline-start: 1.5rem;
+		margin-inline-end: 1.5rem;
+
+		border-left: .3rem solid;
+
+		@container style(--md-blockquote-level: 1) {
+			@include theme(border-color, accent2);
+			--md-blockquote-level: 2;
+		}
+		@container style(--md-blockquote-level: 2) {
+			@include theme(border-color, accent1);
+			--md-blockquote-level: 1;
+		}
+	}
+
+	p.task_list_item {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: .4rem;
+
+		input[type="checkbox"].task_list_checkbox {
+			appearance: none;
+			width: 1rem;
+			height: 1rem;
+			margin-right: .5rem;
+			box-sizing: content-box;
+			border-radius: .2rem;
+			border: 1px solid;
+			@include theme-adjust(border-color, text, rgba, .4);
+
+			@mixin checkmark($colour) {
+				background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="white" fill="white" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" /></svg>');
+			}
+
+			&:checked {
+				@include theme(background-color, accent1);
+				background-position: center;
+				@include checkmark(text);
+
+				@include theme(fill, text);
+				@include theme(stroke, text);
+
+				&::before {
+					//content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>check-bold</title><path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" /></svg>');
+				}
+			}
+		}
+	}
+
+
+
+	section.footnotes {
+		ol, ul {
+			list-style-position: inside;
+			padding-left: 1.5rem;
+			//--marker: 1;
+			//counter-reset: marker;
+		}
+		li {
+			display: grid;
+			grid-template-areas: "marker content";
+			grid-template-columns: max-content 1fr;
+			gap: .5rem;
+			counter-increment: --marker;
+			div.marker {
+				grid-area: marker;
+				place-self: center;
+				&::before {
+					//content: "A";
+					content: counter(--marker) ".";
+				}
+			}
+			div.content {
+				grid-area: content;
+				* {
+					margin-block-start: .5rem;
+					margin-block-end: .5rem;
+					&:first-child {
+						margin-block-start: 0;
+					}
+					&:last-child {
+						margin-block-end: 0;
+					}
+				}
+
+				box-sizing: content-box;
+				padding-left: .3rem;
+				margin: .5rem 0;
+				border-left: .2rem solid;
+				@include theme-adjust(border-color, text, rgba, .2)
+			}
+		}
+
+		li:target {
+			padding-left: .5rem;
+			margin-left: -.75rem;
+			border-left: .3rem solid;
+			border-color: rgba(yellow, .8);
+			background-color: rgba(yellow, .2);
+		}
+	}
+
+	*:has(> sup:target) {
+		padding-left: .5rem;
+		border-left: .3rem solid;
+		border-color: rgba(yellow, .8);
+		background-color: rgba(yellow, .2);
+	}
+}

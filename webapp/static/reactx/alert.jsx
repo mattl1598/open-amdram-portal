@@ -68,7 +68,7 @@ function AlertsContainer({ initialAlerts = [] }) {
 	}
 
 	return (
-		<div>
+		<div id={"alerts"}>
 			{getAlerts()}
 			<input id="AlertsContainerInput" onChange={handleNewAlerts} hidden/>
 		</div>
