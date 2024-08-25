@@ -2,15 +2,18 @@ import json
 from datetime import datetime
 from pprint import pprint
 import requests
-from flask_login import current_user
+from flask_login import current_user, login_user, logout_user
 from sqlalchemy import literal_column, or_, func, case, text
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from flask import abort, Blueprint, make_response, redirect, jsonify, \
 	render_template, Response, send_file, send_from_directory, url_for, request, session
+from flask import current_app as app
 
 from webapp.models import *
 from webapp.models import MemberShowLink as MSL
+from webapp.react_permissions import default_role_permissions, get_allowed_pages
+
 bp = Blueprint("react_routes", __name__)
 
 
@@ -25,6 +28,7 @@ def react():
 			.order_by(Show.date.asc()) \
 			.order_by(Post.date.desc()) \
 			.first()
+		extra = {}
 	else:
 		post = Post.query \
 			.filter(or_(Post.type == "public", Post.type == "auditions")) \
@@ -33,6 +37,7 @@ def react():
 			.order_by(Show.date.asc()) \
 			.order_by(Post.date.desc()) \
 			.first()
+		extra = {"frontpage": True}
 
 	files = Files.query \
 		.filter(Files.id.in_((post.linked_files or {}).get("files", [])))
@@ -43,7 +48,8 @@ def react():
 		'content': post.content,
 		'files': [
 			{'id': file.id, 'name': file.name} for file in files
-		]
+		],
+		**extra
 	}
 
 	if "react" in request.args.keys():
@@ -70,6 +76,7 @@ def react_blog():
 			x.id: {
 				"title": x.title,
 				"date": x.date.strftime("%b %Y"),
+				"dateInt": x.date.timestamp(),
 				"author": f"{x.user.firstname} {x.user.lastname}",
 				"content": x.content
 			}
@@ -212,6 +219,8 @@ def react_shows_by_person(person_id, name=""):
 @bp.get("/past-shows/<show_id>")
 def react_past_show_page_redirect(show_id):
 	show = Show.query.get(show_id)
+	if show is None:
+		abort(404)
 	data = {
 		"type": "redirect",
 		"url": f"/past-shows/{show.id}/{show.title.replace(' ', '_')}",
@@ -231,6 +240,8 @@ def react_past_show_page_redirect(show_id):
 @bp.get("/past-shows/<show_id>/<title>")
 def react_past_show_page(show_id, title=""):
 	show = Show.query.get(show_id)
+	if show is None:
+		abort(404)
 	data = {
 		"type": "past_show",
 		"title": show.title,
@@ -248,7 +259,16 @@ def react_past_show_page(show_id, title=""):
 			"text_blob": show.text_blob,
 			"radio_audio": show.radio_audio
 		},
-		"photos": [[f"/photo/{photo.photo_url}", *photo.photo_desc.split(",")] for photo in show.show_photos],
+		"photos": [
+			[f"/photo/{photo.photo_url}", *photo.photo_desc.split(",")]
+			for photo in show.show_photos
+			if photo.photo_type == "photo"
+		],
+		"videos": [
+			[f"/video/{photo.photo_url}", *photo.photo_desc.split(",")]
+			for photo in show.show_photos
+			if photo.photo_type == "video"
+		],
 		"cast": sorted([
 			{
 				"role": link.role_name,
@@ -370,17 +390,61 @@ def react_tickets():
 @bp.errorhandler(401)
 @bp.get("/members")
 def react_members():
-	member_files = db.session.query(
-			func.json_agg(
-				func.json_build_object('id', Files.id, 'name', Files.name)
-			)
-		).filter(
-			Files.show_id == 'members_public'
-		).scalar()
+	if current_user.is_authenticated:
+		data = {
+			"type": "redirect",
+			"url": "/members/dashboard"
+		}
+	else:
+		member_files = db.session.query(
+				func.json_agg(
+					func.json_build_object('id', Files.id, 'name', Files.name)
+				)
+			).filter(
+				Files.show_id == 'members_public'
+			).scalar()
+		data = {
+			"type": "login",
+			"title": "Members",
+			"files": member_files
+		}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.post("/members")
+def react_login():
+	email = request.form.get("email")
+	user = db.session.query(
+		User
+	).filter(User.email == email).first()
+
+	if user is not None and user.verify_password(request.form.get("password")):
+		login_user(user)
+		return {
+			"code": 200,
+			"msg": "Login Successful"
+		}
+	else:
+		return {
+			"code": 400,
+			"msg": "Login Failed - Credentials Invalid"
+		}
+
+
+@bp.get("/members/logout")
+def react_logout():
+	logout_user()
 	data = {
-		"type": "login",
-		"title": "Members",
-		"files": member_files
+		"type": "redirect",
+		"url": "/members",
+		"reloadSiteData": True
 	}
 	if "react" in request.args.keys():
 		return jsonify(data)
@@ -407,7 +471,7 @@ def site_data():
 	}
 	if (db_next_show := Show.query.filter(Show.date > datetime.now()).order_by(
 			Show.date.asc()).first()) is not None:
-		output["next_show"] = {"title": db_next_show.title, "subtitle": db_next_show.subtitle}
+		output["next_show"] = {"title": db_next_show.title, "subtitle": db_next_show.subtitle, "banner": db_next_show.banner}
 	if (db_latest_blog := Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(
 			Post.date.desc()).first()) is not None:
 		output["latest_blog"] = {"date": db_latest_blog.date.strftime("%b %Y"), "title": db_latest_blog.title, "link": f"/blog/{db_latest_blog.id}"}
@@ -451,10 +515,48 @@ def site_data():
 			"role": current_user.role,
 			"id": current_user.id
 		}
+
+		output["square"] = {
+			"appId": app.envs.square_app_id,
+			"membershipLocationId": app.envs.square_membership_location
+		}
+
+		output["memberDocs"] = {
+			"type": "post",
+			"title": "Members Docs",
+			"content": "",
+			"files_title": "Members Docs",
+			"files": db.session.query(
+				func.json_agg(
+					func.json_build_object(
+						'id', Files.id,
+						'name', Files.name
+					)
+				)
+			).filter(
+				Files.show_id.in_(["members_public", "members_private"])
+			).scalar()
+		}
+
+		output["memberNavItemsToShow"] = get_allowed_pages()
+
+		output["mostRecentMemberShows"] = db.session.query(
+			func.json_agg(
+				func.json_build_object(
+					"id", text('id'),
+					"title", text('title')
+				)
+			)
+		).select_from(
+			db.session.query(
+				Show.id.label("id"), Show.title.label("title")
+			).order_by(Show.date.desc()).limit(4).subquery()
+		).scalar()
 	else:
 		output["current_user"] = {
 			"is_authenticated": False
 		}
+		output["memberNavItems"] = []
 
 	return jsonify(output)
 
@@ -464,3 +566,22 @@ def cors():
 	data = request.json
 	response = requests.get(data.get("url"))
 	return response.text
+
+
+@bp.get("/testmd")
+def test_md():
+	with open("E:/004_Repos/open-amdram-portal/test.md", "r", encoding="utf8") as file:
+		content = file.read()
+	data = {
+		'type': 'post',
+		'title': "Markdown Stress Test",
+		'content': content
+	}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)

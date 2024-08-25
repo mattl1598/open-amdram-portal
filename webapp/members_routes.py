@@ -106,7 +106,7 @@ class MemberPost:
 		return f"DashboardPost('{self.id}', '{self.title}', '{self.date}', '{self.link}', '{self.show_title}', '{self.type}')"
 
 
-@bp.before_request
+# @bp.before_request
 def force_password_change():
 	if request.endpoint not in ["members_routes.account_settings", "routes.logout", "routes.js", "routes.css"]:
 		if current_user.is_authenticated and session.get('set_password'):
@@ -321,8 +321,8 @@ def m_show(show_id):
 	)
 
 
-@bp.route("/members/emergency_contacts/<show_id>")
-@login_required
+# @bp.route("/members/emergency_contacts/<show_id>")
+# @login_required
 def emergency_contacts(show_id):
 	"""member,author,admin"""
 	show = Show.query.get_or_404(show_id)
@@ -368,8 +368,8 @@ def emergency_contacts(show_id):
 	)
 
 
-@bp.route("/members/new_post/<show_id>", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/new_post/<show_id>", methods=["GET", "POST"])
+# @login_required
 def new_post(show_id):
 	"""member,author,admin"""
 	Show.query.filter_by(id=show_id).first_or_404()
@@ -481,8 +481,8 @@ def new_post(show_id):
 			return redirect(url_for("members_routes.new_post", show_id=show_id, d=url_draft))
 
 
-@bp.route("/members/docs")
-@login_required
+# @bp.route("/members/docs")
+# @login_required
 def member_docs():
 	"""member,author,admin"""
 	if current_user.is_authenticated:
@@ -517,8 +517,8 @@ def member_docs():
 		)
 
 
-@bp.route("/members/manage-blog")
-@login_required
+# @bp.route("/members/manage-blog")
+# @login_required
 def manage_blog():
 	"""author,admin"""
 	if current_user.is_authenticated:
@@ -540,8 +540,8 @@ def manage_blog():
 		abort(405)
 
 
-@bp.post("/members/manage-blog/upload")
-@login_required
+# @bp.post("/members/manage-blog/upload")
+# @login_required
 def upload_blog():
 	"""author,admin"""
 	def convert_image(image):
@@ -616,8 +616,8 @@ def upload_blog():
 	return make_response(post.id, 200)
 
 
-@bp.route("/members/manage-blog/editor", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/manage-blog/editor", methods=["GET", "POST"])
+# @login_required
 def blog_editor():
 	"""author,admin"""
 	if current_user.role not in ["author", "admin"]:
@@ -709,8 +709,8 @@ def file_direct(file_id, filename):
 		abort(401)
 
 
-@bp.route("/members/upload_file/<show_id>", methods=["POST"])
-@login_required
+# @bp.route("/members/upload_file/<show_id>", methods=["POST"])
+# @login_required
 def file_upload(show_id, **kwargs):
 	"""member,author,admin"""
 	if kwargs.get("file"):
@@ -733,8 +733,8 @@ def file_upload(show_id, **kwargs):
 			return redirect(f"/members/show/{show_id}")
 
 
-@bp.route("/members/file_delete/<file_id>/<filename>", methods=["GET"])
-@login_required
+# @bp.route("/members/file_delete/<file_id>/<filename>", methods=["GET"])
+# @login_required
 def file_delete(file_id, filename):
 	"""member,author,admin"""
 	file = Files.query \
@@ -749,8 +749,8 @@ def file_delete(file_id, filename):
 	return redirect(f"/members/show/{show_id}")
 
 
-@bp.get("/members/csv")
-@login_required
+# @bp.get("/members/csv")
+# @login_required
 def csv_download():
 	"""admin"""
 	if current_user.role == "admin":
@@ -794,8 +794,8 @@ def csv_download():
 		abort(403)
 
 
-@bp.route("/members/admin/manage-shows")
-@login_required
+# @bp.route("/members/admin/manage-shows")
+# @login_required
 def manage_shows():
 	"""admin"""
 	if current_user.role != "admin":
@@ -815,8 +815,8 @@ def manage_shows():
 	)
 
 
-@bp.route("/members/edit-show/<show_id>", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/edit-show/<show_id>", methods=["GET", "POST"])
+# @login_required
 def edit_show(show_id):
 	"""admin"""
 	if current_user.role != "admin":
@@ -985,8 +985,8 @@ def edit_show(show_id):
 		return redirect(url_for("members_routes.manage_shows"))
 
 
-@bp.route("/members/admin/add-show-member", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/admin/add-show-member", methods=["GET", "POST"])
+# @login_required
 def add_show_member():
 	"""admin"""
 	if current_user.role != "admin":
@@ -1066,8 +1066,8 @@ def add_show_member():
 		return redirect(url_for("members_routes.add_show_member"))
 
 
-@bp.route("/members/admin/manage_users", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/admin/manage_users", methods=["GET", "POST"])
+# @login_required
 def manage_users():
 	"""admin"""
 	if current_user.role != "admin":
@@ -1135,8 +1135,8 @@ def manage_users():
 			return jsonify(200)
 
 
-@bp.route("/members/admin")
-@login_required
+# @bp.route("/members/admin")
+# @login_required
 def admin_tools():
 	"""admin"""
 	if current_user.role != "admin":
@@ -1148,8 +1148,8 @@ def admin_tools():
 	)
 
 
-@bp.route("/members/admin/admin_settings", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/admin/admin_settings", methods=["GET", "POST"])
+# @login_required
 def admin_settings():
 	"""admin"""
 	if current_user.role != "admin":
@@ -1176,8 +1176,8 @@ def admin_settings():
 		return redirect(url_for("members_routes.admin_settings"))
 
 
-@bp.route("/members/account_settings", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/account_settings", methods=["GET", "POST"])
+# @login_required
 def account_settings():
 	"""member,author,admin"""
 	error = ""
@@ -1273,7 +1273,7 @@ def account_settings():
 		return redirect(url_for("members_routes.account_settings", e=error))
 
 
-@bp.route("/members/register", methods=["GET", "POST"])
+# @bp.route("/members/register", methods=["GET", "POST"])
 def member_registeration():
 	if current_user.is_authenticated:
 		return redirect(url_for("members_routes.account_settings"))
@@ -1325,8 +1325,8 @@ def member_registeration():
 		)
 
 
-@bp.route("/members/pay_subs", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/pay_subs", methods=["GET", "POST"])
+# @login_required
 def pay_subs():
 	"""member,author,admin"""
 	idempotency_key = uuid.uuid4().hex
@@ -1340,7 +1340,7 @@ def pay_subs():
 	)
 
 
-@bp.route("/api/members/subs_amount/<query>", methods=["GET"])
+# @bp.route("/api/members/subs_amount/<query>", methods=["GET"])
 def subs_amount(query):
 	levels = json.loads(KeyValue.query.get("subs_levels").value)
 	result = levels.get(query)
@@ -1353,13 +1353,13 @@ def subs_amount(query):
 		abort(404)
 
 
-@bp.route("/api/new_idemp", methods=["GET"])
+# @bp.route("/api/new_idemp", methods=["GET"])
 def new_idemp():
 	return jsonify({"new_key": uuid.uuid4().hex})
 
 
-@bp.route("/api/members/subs_payment", methods=["POST"])
-@login_required
+# @bp.route("/api/members/subs_payment", methods=["POST"])
+# @login_required
 def subs_payment():
 	"""member,author,admin"""
 	amount = 0
@@ -1486,7 +1486,7 @@ def subs_payment():
 			return jsonify(payment_result.body)
 
 
-@bp.route("/members/update_subs")
+# @bp.route("/members/update_subs")
 def update_subs():
 	latest_square_date = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).first().datetime
 	latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
@@ -1569,9 +1569,9 @@ def update_subs():
 		return redirect(url_for("members_routes.get_subs"))
 
 
-@bp.route("/members/api/get_subs")
-@bp.route("/members/get_subs")
-@login_required
+# @bp.route("/members/api/get_subs")
+# @bp.route("/members/get_subs")
+# @login_required
 def get_subs():
 	"""admin"""
 	if current_user.role == "admin" or current_user.id == "GCs4BJ9rQ2jaoWK":
@@ -1667,9 +1667,9 @@ def get_subs():
 		abort(403)
 
 
-@bp.route("/members/api/get_sums")
-@bp.route("/members/get_sums")
-@login_required
+# @bp.route("/members/api/get_sums")
+# @bp.route("/members/get_sums")
+# @login_required
 def get_sums():
 	"""admin"""
 	if current_user.role == "admin":
@@ -1797,16 +1797,17 @@ def get_sums():
 	else:
 		abort(403)
 
-@bp.route("/members/logout")
-@login_required
+
+# @bp.route("/members/logout")
+# @login_required
 def logout():
 	"""member,author,admin"""
 	logout_user()
 	return redirect(url_for("routes.frontpage"))
 
 
-@bp.route("/members/test", methods=["GET"])
-@login_required
+# @bp.route("/members/test", methods=["GET"])
+# @login_required
 def test():
 	"""admin"""
 	if current_user.role != "admin":

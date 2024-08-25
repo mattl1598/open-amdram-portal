@@ -716,7 +716,7 @@ def members(*args):
 			)
 
 
-@bp.route("/members/otp", methods=["GET", "POST"])
+# @bp.route("/members/otp", methods=["GET", "POST"])
 def otp():
 	if request.method == "GET":
 		if 'email' not in session:
@@ -936,7 +936,8 @@ def js(filename):
 		abort(404)
 
 
-@bp.route("/react/<string:filename>", methods=["GET"])
+# @bp.route("/react/<string:filename>", methods=["GET"])
+# @bp.route("/static/react/<string:filename>", methods=["GET"])
 def react(filename):
 	if app.envs.app_environment == "development":
 		fp = 'static/reactx/' + filename.replace('.js', '.jsx')
@@ -952,7 +953,8 @@ def react(filename):
 		abort(404)
 
 
-@bp.route("/css/<string:filename>", methods=["GET"])
+# @bp.route("/css/<string:filename>", methods=["GET"])
+# @bp.route("/static/css/<string:filename>", methods=["GET"])
 def css(filename):
 	if app.envs.app_environment != "development":
 		fp = 'static/css/' + filename
@@ -977,7 +979,7 @@ def css(filename):
 
 
 # noinspection PyUnresolvedReferences
-@bp.get("/sounds/<filename>")
+# @bp.get("/sounds/<filename>")
 def sound(filename):
 	if filename not in app.available_sounds:
 		abort(404)
@@ -986,7 +988,8 @@ def sound(filename):
 		return response
 
 
-@bp.get("/favicon.svg")
+# @bp.get("/favicon.svg")
+# @bp.get("/static/favicon.svg")
 def favicon():
 	response = Response(KeyValue.query.filter_by(key="site_logo").first().value, mimetype='image/svg+xml')
 	return response
@@ -1007,7 +1010,7 @@ def favicon():
 #
 # 	return redirect(url_for("frontpage"))
 
-@bp.route("/accessibility")
+# @bp.route("/accessibility")
 def accessibility():
 	if request.args.get('theme') is not None:
 		session["theme"] = request.args.get('theme')
@@ -1017,6 +1020,7 @@ def accessibility():
 	session.modified = True
 
 	return redirect(request.referrer)
+
 
 @bp.route("/tempest")
 def tempest_redirect():

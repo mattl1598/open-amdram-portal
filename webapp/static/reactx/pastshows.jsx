@@ -1,10 +1,13 @@
+// TODO LIST
+// TODO: loading bar on link click? + more error catching in router.js
+
 function ListShows({content}) {
 	const [displayMode, setDisplayMode] = React.useState(content.default_layout ? content.default_layout : "cards")
 	let shows = []
-	console.log(displayMode)
+	// console.log(displayMode)
 	for (let i = 0; i < content.shows.length; i++) {
 		shows.push(
-			<ShowListItem item={content.shows[i]}></ShowListItem>
+			<ShowListItem key={i} item={content.shows[i]}></ShowListItem>
 		)
 	}
 	return (
@@ -63,11 +66,11 @@ function ShowPage({content}) {
 	for (let i=0; i<castKeys.length; i++) {
 		let names = []
 		for (let j=0; j<cast[castKeys[i]].length; j++) {
-			names.push(<Link href={`/past-shows/member/${cast[castKeys[i]][j].id}/${cast[castKeys[i]][j].name}`}>{cast[castKeys[i]][j].name}</Link>)
-			names.push(<br/>)
+			names.push(<Link key={`cast${j}`} href={`/past-shows/member/${cast[castKeys[i]][j].id}/${cast[castKeys[i]][j].name}`}>{cast[castKeys[i]][j].name}</Link>)
+			names.push(<br key={`castBreak${j}`}/>)
 		}
 		castRows.push(
-			<tr>
+			<tr key={`castTable${i}`}>
 				<td>{cast[castKeys[i]][0].role}</td>
 				<td>{names}</td>
 			</tr>
@@ -86,19 +89,19 @@ function ShowPage({content}) {
 	for (let i=0; i<crewKeys.length; i++) {
 		let names = []
 		for (let j=0; j<crew[crewKeys[i]].length; j++) {
-			let link = <Link href={`/past-shows/member/${crew[crewKeys[i]][j].id}/${crew[crewKeys[i]][j].name.replace(' ', '_')}`}>{crew[crewKeys[i]][j].name}</Link>
+			let link = <Link key={`crew${j}`} href={`/past-shows/member/${crew[crewKeys[i]][j].id}/${crew[crewKeys[i]][j].name.replace(' ', '_')}`}>{crew[crewKeys[i]][j].name}</Link>
 			names.push(link)
-			names.push(<br/>)
+			names.push(<br key={`crewBreak${j}`}/>)
 			if (crew[crewKeys[i]][0].role === "Director") {
-				let newLink = React.cloneElement(link, { className: "director"});
+				let newLink = React.cloneElement(link, { key: `director${j}`, className: "director"});
 				directors.push(newLink)
 			} else if (crew[crewKeys[i]][0].role === "Producer") {
-				let newLink = React.cloneElement(link, { className: "producer"});
+				let newLink = React.cloneElement(link, { key: `producer${j}`, className: "producer"});
 				producers.push(newLink)
 			}
 		}
 		crewRows.push(
-			<tr>
+			<tr key={`castTable${i}`}>
 				<td>{crew[crewKeys[i]][0].role}</td>
 				<td>{names}</td>
 			</tr>
@@ -153,19 +156,29 @@ function ShowPage({content}) {
 
 				</div>
 				<div className="details-cover">
-					<img src={content.show.programme} alt={`${content.show.title} programme cover`}
+					<Image src={content.show.programme} alt={`${content.show.title} programme cover`}
 					     className="programme"/>
 				</div>
 			</div>
-			{
-				content.photos.length ?
-					<React.Fragment>
-						<h2>Photos</h2>
-						<Gallery imageLinks={content.photos}></Gallery>
-					</React.Fragment>
-				:
-					<React.Fragment></React.Fragment>
-			}
+
+			<Tabs>
+				{
+					content.photos.length ?
+						<Tab title={"Photos"}>
+							<Gallery key={"photos"} imageLinks={content.photos}></Gallery>
+						</Tab>
+					:
+						""
+				}
+				{
+					content.videos.length ?
+						<Tab title={"Videos"}>
+							<Gallery key={"videos"} imageLinks={content.videos} type={"videos"}></Gallery>
+						</Tab>
+					:
+						""
+				}
+			</Tabs>
 
 			<div className="cast_crew">
 				<div className="cast">

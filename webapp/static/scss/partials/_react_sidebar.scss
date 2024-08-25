@@ -9,7 +9,7 @@ div.sidebar {
 	@include mobile {
 		flex-direction: column;
 		justify-content: space-between;
-		align-items: center;
+		//align-items: center;
 		flex-wrap: wrap;
 		width: 100%;
 
@@ -35,6 +35,25 @@ div.sidebar {
 
 		h2 {
 			margin: 0 0 0.3ch;
+		}
+	}
+
+	div:has(div.content) {
+		padding: 0;
+	}
+
+	div.content {
+		//font-size: .9rem;
+		padding-left: 0;
+		padding-right: 0;
+
+		h1 {
+			margin-block-start: 0;
+			margin-block-end: 0;
+		}
+
+		h1:has(~ div.post_content:empty) {
+			display: none;
 		}
 	}
 

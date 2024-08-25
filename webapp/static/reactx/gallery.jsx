@@ -10,8 +10,9 @@ if (gallery) {
 }
 
 
-function Gallery({imageLinks}) {
+function Gallery({imageLinks, type="images"}) {
 	const images = []
+
 	for (let i = 0; i <imageLinks.length; i++) {
 		let classname = "img-hidden"
 		let load = false
@@ -21,7 +22,11 @@ function Gallery({imageLinks}) {
 		if (i < 0 + lazyLoadDistance || i > imageLinks.length - 0 - lazyLoadDistance){
 			load = true
 		}
-		images.push(<Image src={imageLinks[i][0]} width={imageLinks[i][1]} height={imageLinks[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load}></Image>)
+		if (type === "images"){
+			images.push(<Image src={imageLinks[i][0]} width={imageLinks[i][1]} height={imageLinks[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
+		} else if (type === "videos") {
+			images.push(<Video src={imageLinks[i][0]} key={i} className={classname} i={i} inGallery={true}></Video>)
+		}
 	}
 
 	const [imgNum, setImgNum] = React.useState(0)
@@ -45,21 +50,23 @@ function Gallery({imageLinks}) {
 	// const max_dims =
 
 	function changeImage(incr) {
-		let oldNum = wrapImgNum(imgNum)
-		let newNum = wrapImgNum(imgNum + incr)
-		let loadNum = wrapImgNum(imgNum + incr*lazyLoadDistance)
-		let tagsCopy = [...imageTags]
+		if (imageTags.length > 1) {
+			let oldNum = wrapImgNum(imgNum)
+			let newNum = wrapImgNum(imgNum + incr)
+			let loadNum = wrapImgNum(imgNum + incr*lazyLoadDistance)
+			let tagsCopy = [...imageTags]
 
-		tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} key={oldNum} className={"img-hidden"}></Image>
-		tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} key={newNum} className={""}></Image>
-		tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} key={loadNum} load={true}></Image>
-		setImgNum(newNum)
-		setImageTags([...tagsCopy])
+			tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} key={oldNum} className={"img-hidden"}></Image>
+			tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} key={newNum} className={""}></Image>
+			tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} key={loadNum} load={true}></Image>
+			setImgNum(newNum)
+			setImageTags([...tagsCopy])
 
-		currentZoom = 1
-		currentOffsetX = 0
-		currentOffsetY = 0
-		imagesRef.current.style.transform = `scale(${currentZoom}) translate(${Math.trunc(currentOffsetX)}px, ${Math.trunc(currentOffsetY)}px)`
+			currentZoom = 1
+			currentOffsetX = 0
+			currentOffsetY = 0
+			imagesRef.current.style.transform = `scale(${currentZoom}) translate(${Math.trunc(currentOffsetX)}px, ${Math.trunc(currentOffsetY)}px)`
+		}
 	}
 
 	function wrapImgNum(i) {
@@ -134,38 +141,65 @@ function Gallery({imageLinks}) {
 			imagesRef.current.style.transform = `scale(${tempZoom}) translate(${Math.trunc(tempOffsetX)}px, ${Math.trunc(tempOffsetY)}px)`
 		}
 	}
-
-	return (
-		<React.Fragment>
-			<div
-				ref={galleryRef}
-			     tabIndex={-1}
-			     className={"gallery-container " + ["", "fullscreen"][fullscreen*1]}
-			     onKeyUpCapture={(e) => handleKeyPress(e)}
-			>
-				<div className="gallery-images" key={"gallery-images"}
-				     ref={imagesRef}
-				     onTouchStart={(event) => handleTouchStart(event)}
-				     onTouchMove={(event) => handleZoom(event)}
-				     onTouchEnd={(event) => handleTouchEnd(event)}
+	if (type === "images") {
+		return (
+			<React.Fragment>
+				<div
+					ref={galleryRef}
+				     tabIndex={-1}
+				     className={"gallery-container " + ["", "fullscreen"][fullscreen*1]}
+				     onKeyUpCapture={(e) => handleKeyPress(e)}
 				>
-					{ imageTags }
-				</div>
-				<div className={"gallery-controls"}>
-					<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
-					<div className="counter" key={"gallery-counter"}><span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
-					<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
-					<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
-						<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
+					<div className="gallery-images" key={"gallery-images"}
+					     ref={imagesRef}
+					     onTouchStart={(event) => handleTouchStart(event)}
+					     onTouchMove={(event) => handleZoom(event)}
+					     onTouchEnd={(event) => handleTouchEnd(event)}
+					>
+						{ imageTags }
+					</div>
+					<div className={"gallery-controls"}>
+						<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
+						<div className="counter" key={"gallery-counter"}><span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
+						<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
+							<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
+						</div>
 					</div>
 				</div>
-			</div>
-			<p className={"mobile-instructions"}>Pinch to zoom and pan, swipe to navigate between images.</p>
-		</React.Fragment>
-	)
+				<p className={"mobile-instructions"}>Pinch to zoom and pan, swipe to navigate between images.</p>
+			</React.Fragment>
+		)
+	} else if (type === "videos") {
+		return (
+			<React.Fragment>
+				<div
+					ref={galleryRef}
+					tabIndex={-1}
+					className={"gallery-container " + ["", "fullscreen"][fullscreen * 1]}
+					onKeyUpCapture={(e) => handleKeyPress(e)}
+				>
+					<div className="gallery-images" key={"gallery-images"}
+					     ref={imagesRef}
+					>
+						{imageTags}
+					</div>
+					<div className={"gallery-controls"}>
+						<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
+						<div className="counter" key={"gallery-counter"}>
+							<span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
+						<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
+							<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
+						</div>
+					</div>
+				</div>
+			</React.Fragment>
+		)
+	}
 }
 
-function Image({src, alt, className, i, load, width, height}) {
+function Image({src, alt, className, i, load=true, width, height, inGallery=false, title=""}) {
 	let elemSrc = ""
 
 	function refreshImage(e) {
@@ -178,11 +212,42 @@ function Image({src, alt, className, i, load, width, height}) {
 		elemSrc = src
 	}
 
-	return (
-		<div key={"div" + i}>
-			<img src={elemSrc} width={width} height={height} alt={alt} key={i} className={className}
-			     onError={refreshImage}></img>
-		</div>
-	)
+	if (inGallery){
+		return (
+			<div key={"div" + i}>
+				<img src={elemSrc} width={width} height={height} alt={alt} key={i} className={className}
+				     onError={refreshImage}></img>
+			</div>
+		)
+	} else {
+		return (
+			<img src={elemSrc} width={width} height={height} alt={alt} key={i}
+			     className={className} onError={refreshImage} title={title}>
+			</img>
+		)
+	}
+
 }
 
+function Video({src, className, i, alt="", inGallery=false}) {
+	function refreshVideo(e) {
+		if (!e.target.src.includes("?refresh")) {
+			e.target.src = e.target.src + "?refresh"
+		}
+	}
+	if (inGallery) {
+		return (
+			<div key={"div" + i}>
+				<video width={"100%"} alt={alt} controls className={className} onError={refreshVideo}>
+					<source src={src} type={"video/mp4"}></source>
+				</video>
+			</div>
+		)
+	} else {
+		return (
+			<video key={i} width={"100%"} alt={alt} controls className={className} onError={refreshVideo}>
+				<source src={src} type={"video/mp4"}></source>
+			</video>
+		)
+	}
+}

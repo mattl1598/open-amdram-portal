@@ -8,13 +8,13 @@ const navItems = [
 	{title: "Search", link: "/search", class: "search", icon: "search"},
 ]
 
-const memberNavItems = [
-	{title: "Dashboard", link: "/members/dashboard", class: "", icon: "dashboard"},
-	{title: "Shows", link: "/members/shows", class: "", icon: "drama"},
-	{title: "Manage Blog", link: "/members/manage-blog", class: "", icon: "blog_icon"},
-	{title: "Get Subs", link: "/members/get_subs", class: "", icon: "membership"},
-	{title: "Manage Bookings", link: "/members/bookings", class: "", icon: "ticket"},
-	{title: "Admin Tools", link: "/members/admin", class: "", icon: "admin", subNav: [
+const memberNavItemsMaster = {
+	dashboard: {title: "Dashboard", link: "/members/dashboard", class: "", icon: "dashboard"},
+	shows: {title: "Shows", link: "/members/shows", class: "", icon: "drama"},
+	blog: {title: "Manage Blog", link: "/members/manage-blog", class: "", icon: "blog_icon"},
+	get_subs: {title: "Get Subs", link: "/members/get_subs", class: "", icon: "membership"},
+	bookings: {title: "Manage Bookings", link: "/members/bookings", class: "", icon: "ticket"},
+	admin: {title: "Admin Tools", link: "/members/admin", class: "", icon: "admin", subNav: [
 		{title: "Manage Media", link: "/members/admin/manage_media"},
 		{title: "Manage Shows", link: "/members/admin/manage-shows"},
 		{title: "Add Show Photos", link: "/members/admin/set_show_photos"},
@@ -22,22 +22,22 @@ const memberNavItems = [
 		{title: "Manage Users", link: "/members/admin/manage_users"},
 		{title: "Admin Settings", link: "/members/admin/admin_settings"},
 	]},
-	{title: "Member Docs", link: "/members/docs", class: "", icon: "note"},
-	{title: "Account Settings", link: "/members/account_settings", class: "", icon: "person"},
-	{title: "Help & Feedback", link: "", class: "", icon: "help", subNav: [
+	member_docs: {title: "Member Docs", link: "/members/docs", class: "", icon: "note"},
+	account_settings: {title: "Account Settings", link: "/members/account_settings", class: "", icon: "person"},
+	help: {title: "Help & Feedback", link: "", class: "", icon: "help", subNav: [
 		{title: "Feedback Form", link: "/members/feedback_form"},
 		{title: "Help Docs", link: "https://github.com/mattl1598/open-amdram-portal/wiki"},
 	]},
-	{title: "Logout", link: "/members/logout", class: "", icon: "logout"},
-]
+	logout: {title: "Logout", link: "/members/logout", class: "", icon: "logout"},
+}
 
 if (document.getElementById('nav') && !document.getElementById('app')) {
 	const navRoot = ReactDOM.createRoot(document.getElementById('nav'))
 	navRoot.render(<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteName}/>)
 }
 
-
-function Nav({navItems, siteName, logoSVG, children}) {
+function Nav({navItems, siteName, logoSVG, memberNavItemsToShow, children}) {
+	const context = React.useContext(app)
 	const navList = []
 	const memberNavList = []
 	const memberNavSubList = []
@@ -49,48 +49,65 @@ function Nav({navItems, siteName, logoSVG, children}) {
 	// const [memberNav, setMemberNav] = React.useState(false)
 	const [expanded, setExpanded] = React.useState(false)
 
-	for (let i=0; i<navItems.length; i++) {
-		let is_active = navItems[i].link.split("/")[1] === window.location.pathname.split("/")[1];
-		navList.push(
-			<NavItem item={navItems[i]} is_active={is_active} mobileNav={mobileNav}></NavItem>
-		)
-		if (is_active && navItems[i].show_member_nav) {
-			showMemberNav = true
+	function closeMobileNav() {
+		setExpanded(false)
+	}
+
+	if (navItems) {
+		for (let i=0; i<navItems.length; i++) {
+			let is_active = navItems[i].link.split("/")[1] === window.location.pathname.split("/")[1];
+			navList.push(
+				<NavItem key={i} item={navItems[i]} is_active={is_active} mobileNav={mobileNav} onClick={closeMobileNav}></NavItem>
+			)
+			if (is_active && navItems[i].show_member_nav && RegExp(`^${navItems[i].link}/`, "i").test(window.location.pathname)) {
+				showMemberNav = true
+			}
 		}
 	}
 
-	if (showMemberNav) {
-		for (let i=0; i<memberNavItems.length; i++) {
-			let is_active = memberNavItems[i].link.split("/")[2] === window.location.pathname.split("/")[2] && window.location.pathname.split("/").length>2;
-			if (mobileNav) {
-				if (is_active) {
-					defaultMemberValue = memberNavItems[i].link
-				}
-				memberNavList.push(
-					<NavItem item={memberNavItems[i]} is_active={is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
-				)
-			} else {
-				memberNavList.push(
-					<NavItem item={memberNavItems[i]} is_active={is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
-				)
-			}
-			if (is_active && (memberNavItems[i].subNav !== undefined)) {
-				defaultMemberValue = memberNavItems[i].link
-				memberNavSubList.push(
-						<NavItem item={memberNavItems[i]} mobileNav={mobileNav} memberNav={true}></NavItem>
-				)
-				for (let j = 0; j < memberNavItems[i].subNav.length; j++) {
-					let sub_is_active = (memberNavItems[i].subNav[j].link.split("/")[3] === window.location.pathname.split("/")[3]) && window.location.pathname.split("/").length>3
-					if (sub_is_active) {
-						defaultMemberValue = memberNavItems[i].subNav[j].link
-						console.log(defaultSubValue)
+	if (showMemberNav && memberNavItemsToShow !== undefined) {
+		for (let i=0; i<Object.keys(memberNavItemsMaster).length; i++) {
+			let key = Object.keys(memberNavItemsMaster)[i]
+			if (memberNavItemsToShow[key]) {
+				let memberNavItem =  memberNavItemsMaster[key]
+				if (key === "shows") {
+					let subNav = []
+					for (let j=0; j<context.siteJson.mostRecentMemberShows.length; j++) {
+						let show = context.siteJson.mostRecentMemberShows[j]
+						subNav.push({title: show.title, link: `/members/show/${show.id}`})
 					}
-					if (mobileNav) {
-						memberNavSubList.push(
-							<NavItem item={memberNavItems[i].subNav[j]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
-						)
-					} else {
-						memberNavSubList.push(<NavItem item={memberNavItems[i].subNav[j]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem>)
+					memberNavItem.subNav = subNav
+				}
+				let is_active = memberNavItem.link.split("/")[2] === window.location.pathname.split("/")[2] && window.location.pathname.split("/").length>2;
+				if (mobileNav) {
+					if (is_active) {
+						defaultMemberValue = memberNavItem.link
+					}
+					memberNavList.push(
+						<NavItem key={i} item={memberNavItem} is_active={is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
+					)
+				} else {
+					memberNavList.push(
+						<NavItem key={i} item={memberNavItem} is_active={is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
+					)
+				}
+				if (is_active && (memberNavItem.subNav !== undefined)) {
+					defaultMemberValue = memberNavItem.link
+					memberNavSubList.push(
+							<NavItem key={i} item={memberNavItem} mobileNav={mobileNav} memberNav={true}></NavItem>
+					)
+					for (let j = 0; j < memberNavItem.subNav.length; j++) {
+						let sub_is_active = (memberNavItem.subNav[j].link.split("/")[3] === window.location.pathname.split("/")[3]) && window.location.pathname.split("/").length>3
+						if (sub_is_active) {
+							defaultMemberValue = memberNavItem.subNav[j].link
+						}
+						if (mobileNav) {
+							memberNavSubList.push(
+								<NavItem key={j} item={memberNavItem.subNav[j]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem>
+							)
+						} else {
+							memberNavSubList.push(<NavItem key={j} item={memberNavItem.subNav[j]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem>)
+						}
 					}
 				}
 			}
@@ -139,7 +156,7 @@ function Nav({navItems, siteName, logoSVG, children}) {
 
 	function handleMemberNavChange(e) {
 		e.preventDefault()
-		window.location.href = memberNavSelectRef.current.value
+		context.functions.setPath(memberNavSelectRef.current.value)
 	}
 
 	return (
@@ -178,7 +195,7 @@ function Nav({navItems, siteName, logoSVG, children}) {
 					: ""
 				}
 			</div>
-			<div className="main-outer">
+			<div className={`main-outer ${mobileNav ? "mobile" : ""}`}>
 				<div id="desktop_member_nav" className="portal-nav side">
 				{showMemberNav && mobileNav?
 					"" :
@@ -196,7 +213,7 @@ function optionNavItem({item, is_active, mobileNav, memberNav = false}) {
 	if (item.subNav !== undefined) {
 		for (let i = 0; i < item.subNav.length; i++) {
 			let sub_is_active = (item.subNav[i].link.split("/")[3] === window.location.pathname.split("/")[3])  && window.location.pathname.split("/").length>3
-			subNavList.push(<MemberNavItem item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></MemberNavItem>)
+			subNavList.push(<MemberNavItem key={i} item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></MemberNavItem>)
 		}
 	}
 	if (item.subNav !== undefined) {
@@ -213,7 +230,7 @@ function optionNavItem({item, is_active, mobileNav, memberNav = false}) {
 }
 
 
-function NavItem({item, is_active, mobileNav, memberNav = false}) {
+function NavItem({item, is_active, mobileNav, onClick, memberNav = false}) {
 	let style = {width: `calc(100dvw - ${mobileNav ? document.body.offsetWidth - document.body.clientWidth : 0}px)`}
 	if (memberNav) {
 		style = {}
@@ -222,11 +239,11 @@ function NavItem({item, is_active, mobileNav, memberNav = false}) {
 	if (item.subNav !== undefined && !mobileNav) {
 		for (let i = 0; i < item.subNav.length; i++) {
 			let sub_is_active = (item.subNav[i].link.split("/")[3] === window.location.pathname.split("/")[3])  && window.location.pathname.split("/").length>3
-			subNavList.push(<li><NavItem item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem></li>)
+			subNavList.push(<li key={getID()}><NavItem key={item.subNav[i].link} item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem></li>)
 		}
 	} else if (item.subNav !== undefined && mobileNav) {
 		for (let i = 0; i < item.subNav.length; i++) {
-			subNavList.push(<NavItem item={item.subNav[i]} is_active={false} mobileNav={mobileNav} memberNav={true}></NavItem>)
+			subNavList.push(<NavItem key={item.subNav[i].link} item={item.subNav[i]} is_active={false} mobileNav={mobileNav} memberNav={true}></NavItem>)
 		}
 	}
 	let subNav = ""
@@ -257,7 +274,7 @@ function NavItem({item, is_active, mobileNav, memberNav = false}) {
 			<React.Fragment>
 				<Link href={item.link}
 				   className={is_active ? `${item.class} active` : `${item.class}`}
-				   style={style}
+				   style={style} alsoOnClick={onClick}
 				>
 					<Icon icon={item.icon}></Icon>
 					<h3 className={"mobile"}>{item.title}</h3>
@@ -270,7 +287,7 @@ function NavItem({item, is_active, mobileNav, memberNav = false}) {
 			<React.Fragment>
 				<Link href={item.link}
 				   className={is_active ? `${item.class} active` : `${item.class}`}
-				   style={style}
+				   style={style} alsoOnClick={onClick}
 				>
 					<h3>{item.title}</h3>
 				</Link>

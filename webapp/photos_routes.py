@@ -117,8 +117,8 @@ def batch_get_show_media(show_id, media_type):
 # 	return jsonify(batch_get_show_media("2ExG1dp2H77RpEd", "photo"))
 
 
-@bp.route("/members/admin/manage_media", methods=["POST", "GET"])
-@login_required
+# @bp.route("/members/admin/manage_media", methods=["POST", "GET"])
+# @login_required
 def manage_media(**kwargs):
 	"""admin"""
 	if current_user.role != "admin":
@@ -314,14 +314,10 @@ def get_photo(media_id, **kwargs):
 		if not refresh and item.cache_expires and item.cache_url and item.cache_expires > datetime.now():
 			return redirect(item.cache_url)
 
-		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.photo_url}?access_token={session.get('access_token')}"
+		url = f"https://photoslibrary.googleapis.com/v1/mediaItems/{item.photo_url}?access_token={session.get('access_token')}&fields=baseUrl"
 		# x = app.requests_session.get(url=url).json()
 		x = requests.get(url=url).json()
-		# response = urllib.request.urlopen(url)
-		# data = response.read()
-		# x = json.loads(data)
 		if x.get('baseUrl') is not None:
-			# pprint(x)
 			new_base_url = "/"
 			if route == "photo":
 				new_base_url = f"{x.get('baseUrl')}=d"
@@ -335,8 +331,11 @@ def get_photo(media_id, **kwargs):
 			@response.call_on_close
 			@copy_current_request_context
 			def process_after_request():
-				item.cache_url = new_base_url
-				item.cache_expires = datetime.now() + timedelta(hours=1)
+				if new_base_url != item.cache_url:
+					item.cache_url = new_base_url
+					item.cache_expires = datetime.now() + timedelta(minutes=45)
+				else:
+					item.cache_expires = item.cache_expires + timedelta(minutes=1)
 				db.session.add(item)
 				db.session.commit()
 
@@ -381,8 +380,8 @@ def get_photo(media_id, **kwargs):
 		abort(404)
 
 
-@bp.route("/members/admin/set_show_photos/oauth")
-@login_required
+# @bp.route("/members/admin/set_show_photos/oauth")
+# @login_required
 def oauth():
 	"""admin"""
 	if current_user.role != "admin":
@@ -414,8 +413,8 @@ def oauth():
 		return redirect(redirect_url)
 
 
-@bp.route("/members/admin/set_show_photos/form", methods=["GET", "POST"])
-@login_required
+# @bp.route("/members/admin/set_show_photos/form", methods=["GET", "POST"])
+# @login_required
 def choose_album():
 	"""admin"""
 	if current_user.role != "admin":

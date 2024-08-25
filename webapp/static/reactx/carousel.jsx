@@ -6,10 +6,10 @@ function Carousel5({photos, showTitle}) {
 	for (let i=0; i<photos.length; i++) {
 		photoElems.push(
 			<div className={"react-carousel-item"}
-			     data-position={`${((i+currentOffset) % count)+1}`}
+			     data-position={`${((i+currentOffset) % count)+1}`} key={i}
 			     style={{gridArea: `${String.fromCharCode(64+((i+currentOffset) % count)+1)}`}}
 			>
-				<img id={`photo${i+currentOffset}`} src={photos[i]} alt={`Photo from ${showTitle}`}/>
+				<Image id={`photo${i+currentOffset}`} src={photos[i]} alt={`Photo from ${showTitle}`}/>
 			</div>
 		)
 	}

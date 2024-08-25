@@ -2,6 +2,8 @@ import json
 import re
 from os import walk, getcwd
 from urllib.parse import urlparse, unquote
+from flask_squeeze import Squeeze
+from rjsmin import jsmin
 
 import markdown as markdown
 import requests
@@ -23,13 +25,14 @@ from sqlalchemy import and_
 # noinspection PyPackageRequirements
 from werkzeug.exceptions import HTTPException
 
-from webapp import react_routes, react_members_routes
+from webapp import react_permissions, react_routes, react_members_routes, react_support_routes, react_tickets_routes
 from webapp.svgs import *
 from webapp.models import *
 
 
 def create_app():
 	app = Flask(__name__, static_folder=None)
+	squeeze = Squeeze()
 	with app.app_context():
 		app.envs = corha.credentials_loader(".env")
 		# app.requests_session = requests.Session()
@@ -53,12 +56,15 @@ def create_app():
 
 		app.root_dir = getcwd()
 
+		if app.envs.app_environment != "development":
+			squeeze.init_app(app)
+
 		from webapp.models import db, login_manager
 		db.init_app(app)
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
 
-		# db.create_all()
+		db.create_all()
 
 		qrcode = QRcode()
 		qrcode.init_app(app)
@@ -82,6 +88,7 @@ def create_app():
 
 		if app.envs.app_environment != "development":
 			# compile scss to css
+			print("Compiling SCSS to CSS...")
 			compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
 
 			# compile jsx to js
@@ -89,18 +96,39 @@ def create_app():
 			if not os.path.isdir(react_path):
 				os.mkdir(react_path)
 
+			app_js = ""
+			i = 0
+			print("Compiling JSX to JS...")
+
 			for (_, _, files) in walk("webapp/static/reactx/"):
 				for file in files:
-					with open("webapp/static/reactx/" + file, "r") as f:
-						output = dukpy.jsx_compile(
+					print(f"JS {(i := i+1)}/{len(files)}")
+					with open("webapp/static/reactx/" + file, "r", encoding="utf8") as f:
+						# output = dukpy.jsx_compile(
+						# 	f.read(),
+						# 	plugins=[
+						# 		"transform-es2015-destructuring",
+						# 		"transform-object-rest-spread"
+						# 	]
+						# )
+						app_js += dukpy.jsx_compile(
 							f.read(),
+							presets=["es2015", "react"],
 							plugins=[
 								"transform-es2015-destructuring",
 								"transform-object-rest-spread"
 							]
 						)
-					with open(react_path + file.replace(".jsx", ".js"), "w") as w:
-						w.write(output)
+						app_js += "\n"
+					# with open(react_path + file.replace(".jsx", ".js"), "w") as w:
+					# 	w.write(output)
+
+			print("Minifying JS...")
+			app_js_min = jsmin(app_js)
+
+			with open(react_path + "app.js", "w") as w:
+				print("Writing JS to file...")
+				w.write(app_js_min)
 
 		app.jinja_env.globals.update(
 			md=markdown.markdown,
@@ -110,7 +138,8 @@ def create_app():
 			list=list,
 			datetime=datetime,
 			json=json,
-			env=app.envs.app_environment
+			env=app.envs.app_environment,
+			square_environment=app.envs.square_environment
 		)
 
 		# @app.context_processor
@@ -195,15 +224,18 @@ def create_app():
 			)
 
 		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes
-		app.register_blueprint(routes.bp)
-		app.register_blueprint(members_routes.bp)
+		# app.register_blueprint(routes.bp)
+		# app.register_blueprint(members_routes.bp)
 		app.register_blueprint(photos_routes.bp)
-		app.register_blueprint(analytics_routes.bp)
+		# app.register_blueprint(analytics_routes.bp)
 		app.register_blueprint(tickets_routes.bp)
-		app.register_blueprint(scheduler_routes.bp)
+		# app.register_blueprint(scheduler_routes.bp)
 
 		app.register_blueprint(react_routes.bp)
 		app.register_blueprint(react_members_routes.bp)
+		app.register_blueprint(react_permissions.bp)
+		app.register_blueprint(react_tickets_routes.bp)
+		app.register_blueprint(react_support_routes.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():

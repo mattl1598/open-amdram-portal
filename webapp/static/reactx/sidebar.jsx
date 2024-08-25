@@ -9,19 +9,27 @@ const sidebarItemsTest = [
 	{type: "simple", title: "Latest Blog: May 2023", icon: "blog_icon", link: "/testreact/blog", linkText: "Preparations, Preparations", target: "_self"},
 ]
 
-function Sidebar({sidebarItems=sidebarItemsTest, extras=[]}) {
+function Sidebar({sidebarItems=sidebarItemsTest, extras=[], show=true}) {
 	let items = []
 	for (let i=0; i<extras.length; i++) {
-		items.push(<SidebarItem raw={extras[i]}></SidebarItem>)
+		items.push(<SidebarItem key={`extras[${i}]`} raw={extras[i]}></SidebarItem>)
 	}
 	for (let i=0; i<sidebarItems.length; i++) {
-		items.push(<SidebarItem item={sidebarItems[i]}></SidebarItem>)
+		if (sidebarItems[i].type === "raw") {
+			items.push(<SidebarItem key={i} raw={sidebarItems[i].raw}></SidebarItem>)
+		} else {
+			items.push(<SidebarItem key={i} item={sidebarItems[i]}></SidebarItem>)
+		}
 	}
-	return (
-		<div className={"sidebar m"}>
-			{items}
-		</div>
-	)
+	if (show) {
+		return (
+			<div className={"sidebar m"}>
+				{items}
+			</div>
+		)
+	} else {
+		return (<React.Fragment></React.Fragment>)
+	}
 }
 
 function SidebarItem({item={type: "raw"}, raw=<div/>}) {
@@ -51,7 +59,7 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 	if (item.type === "socials") {
 		let socials = []
 		for (let i = 0; i<item.socials.length; i++) {
-			socials.push(<SidebarItem item={item.socials[i]}></SidebarItem>)
+			socials.push(<SidebarItem key={i} item={item.socials[i]}></SidebarItem>)
 		}
 		return (
 			<div className="socials">
@@ -61,8 +69,14 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 		)
 	}
 	if (item.type === "social") {
+		let link
+		if (RegExp("^https://|^http://").test(item.link)) {
+			link = item.link
+		} else {
+			link = `https://${item.link}`
+		}
 		return (
-			<Link href={item.link} className={item.class} target={"_blank"}>
+			<Link href={link} className={item.class} target={"_blank"}>
 				<span className="icon"><Icon icon={item.icon}></Icon></span>
 				<span className="text">{item.linkText}</span>
 			</Link>
@@ -70,7 +84,7 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 	}
 	if (item.type === "raw") {
 		return (
-			<div className="generic_link">
+			<div className="">
 				{raw}
 			</div>
 		)

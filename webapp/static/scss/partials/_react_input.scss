@@ -17,7 +17,17 @@ div.react-fancy-input {
 		margin-top: 1.2rem;
 	}
 
-	select, input, textarea, a {
+	textarea {
+		height: 10rem;
+	}
+
+	&:has(input[type=hidden]) {
+		height: 0;
+		margin: 0 !important;
+		padding: 0;
+	}
+
+	select, input, textarea, a, button {
 		@include theme(background, bg3);
 		@include theme(color, text);
 		margin: 0.01ch;
@@ -36,7 +46,7 @@ div.react-fancy-input {
 			font-size: 150%;
 		}
 
-		&[type=submit], &.button {
+		&[type=submit], &[type=button], &.button {
 			margin: auto;
 			width: auto;
 			padding: 0.5rem 2rem;
@@ -52,7 +62,6 @@ div.react-fancy-input {
 		&[type=date]:invalid {
 			color: #00000000;
 		}
-
 
 		&[type="date"]::-webkit-calendar-picker-indicator {
 			background: transparent;
@@ -150,5 +159,37 @@ div.react-fancy-input {
 			bottom: 100%;
 			margin-top: -2ch;
 		}
+	}
+}
+
+form:has(> div.form):has(>div.loader) {
+	display: grid;
+	box-sizing: border-box;
+	width: 100%;
+
+	&.pending {
+		*:not(.loader) {
+			opacity: 0;
+		}
+		> div.loader {
+			z-index: 1;
+			place-self: center;
+		}
+	}
+
+	&:not(.pending) {
+		> div.loader {
+			opacity: 0;
+		}
+	}
+
+	div.form {
+		grid-area: 1 / 1 / -1 / -1;
+	}
+
+	div.loader {
+		grid-area: 1 / 1 / -1 / -1;
+		margin-bottom: 0;
+		z-index: -1;
 	}
 }

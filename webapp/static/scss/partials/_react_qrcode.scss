@@ -1,0 +1,30 @@
+div.qrcode {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-auto-rows: min-content;
+	width: auto;
+	align-content: start;
+	justify-content: center;
+
+	div.row {
+		display: grid;
+		grid-template-rows: 1fr;
+		grid-template-columns: min-content;
+		grid-auto-columns: min-content;
+		column-gap: 0;
+		align-content: start;
+		justify-content: start;
+		span.cell {
+			grid-row: 1 / 2;
+			aspect-ratio: 1;
+			width: .25rem;
+
+			&.true {
+				background-color: black;
+			}
+			&.false {
+				background-color: white;
+			}
+		}
+	}
+}

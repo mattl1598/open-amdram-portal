@@ -1,3 +1,5 @@
+@import "variables";
+
 div.next_show {
 	text-align: center;
 }
@@ -35,6 +37,10 @@ div.filepage {
 }
 
 div.all-posts {
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: stretch;
+
 	hr {
 		margin: 1px 0;
 	}
@@ -48,6 +54,11 @@ div.all-posts {
 
 		&:hover {
 			box-shadow: inset 0 0 0 100ch #3b3b3b60;
+		}
+
+		&.hr_after {
+			border-top: .125rem inset;
+			@include theme(border-color, text);
 		}
 	}
 }

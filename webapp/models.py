@@ -70,7 +70,6 @@ class PrizeDrawEntry(db.Model, NewIdGetter):
 	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 
 
-# noinspection PyRedeclaration
 class User(UserMixin, db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	firstname = db.Column(db.String(20))
@@ -83,11 +82,13 @@ class User(UserMixin, db.Model, NewIdGetter):
 	role = db.Column(db.String(30))
 	e_con_name = db.Column(db.String(50))
 	e_con_phone = db.Column(db.String(13))
+	square_customer_id = db.Column(db.String(64))
 
 	blogpost = db.relationship('BlogPost', backref='user', lazy=True)
 	post = db.relationship('Post', backref='user', lazy=True)
 	member = db.relationship('Member', backref='user', lazy=True)
 	subs_payment = db.relationship('SubsPayment', backref='user', lazy=True)
+	subs = db.relationship('Subscription', backref='user', lazy=True)
 
 	def __init__(self, **kwargs):
 		super(User, self).__init__(**kwargs)
@@ -111,6 +112,14 @@ class User(UserMixin, db.Model, NewIdGetter):
 		return check_password_hash(self.password_hash, password)
 
 
+class AccessPermissions(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
+	role_name = db.Column(db.String(20))
+	page_name = db.Column(db.String(64))
+	allowed = db.Column(db.Boolean, default=True)
+
+
 class SubsPayment(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
@@ -127,6 +136,36 @@ class SubsPayment(db.Model, NewIdGetter):
 	payment_id = db.Column(db.String(192))
 	source = db.Column(db.String(6))
 	refunded = db.Column(db.Boolean, default=False)
+
+
+class Subscription(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
+	plan = db.Column(db.String(16), db.ForeignKey('subscription_plan.id'))
+	active = db.Column(db.Boolean, default=True)
+	start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	sub_for = db.Column(db.String(16))
+	name = db.Column(db.String(50))
+	phone_number = db.Column(db.String(13))
+	e_con_name = db.Column(db.String(50))
+	e_con_phone = db.Column(db.String(13))
+	square_initial_id = db.Column(db.String(48))
+	square_continuing_id = db.Column(db.String(48))
+	square_env = db.Column(db.String(16))
+
+
+class SubscriptionPlan(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	name = db.Column(db.String(30))
+	amount = db.Column(db.Integer)
+	desc = db.Column(db.Text)
+	enabled = db.Column(db.Boolean, default=True)
+	period = db.Column(db.String(10))
+	renewal_month = db.Column(db.Integer)
+	plan_id = db.Column(db.String(32))
+	initial_variation_id = db.Column(db.String(32))
+	continuing_variation_id = db.Column(db.String(32))
+	square_env = db.Column(db.String(10))
 
 
 class BookingModifications(db.Model, NewIdGetter):

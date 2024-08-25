@@ -1,18 +1,13 @@
 
-function Link({href, className, children, style, target="_self"}) {
-	function click(e) {
-		if (document.querySelector("#app")) {
-			if (target === "_self") {
-				e.preventDefault()
-				let input = document.querySelector('#historyState')
-				const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-				  window.HTMLInputElement.prototype,
-				  'value').set;
-				nativeInputValueSetter.call(input, href);
-				const event = new Event('input', { bubbles: true });
-				input.dispatchEvent(event);
-				document.getElementById("historyState").value = href
-			}
+function Link({href, className, children, style, title="", target="_self", onClick=handleClick, alsoOnClick}) {
+	const context = React.useContext(app)
+	function handleClick(e) {
+		if (alsoOnClick !== undefined) {
+			alsoOnClick()
+		}
+		if (target !== "_blank") {
+			e.preventDefault()
+			context.functions.setPath(href)
 		}
 	}
 
@@ -20,9 +15,10 @@ function Link({href, className, children, style, target="_self"}) {
 		<a
 			className={className}
 			href={href}
-			onClick={(e) => {click(e)}}
+			onClick={(e) => {onClick(e)}}
 			style={style}
 			target={target}
+			title={title}
 		>
 			{children}
 		</a>
@@ -31,20 +27,27 @@ function Link({href, className, children, style, target="_self"}) {
 
 function Frontpage({nextShow, children}) {
 	return (
-		<React.Fragment>
-			<div class="next_show">
-				<h2>Our Next Show</h2>
-				<h1>{nextShow.show_title}</h1>
-				<h3>{nextShow.show_subtitle}</h3>
+		<div className={"content"} key={getID()}>
+			<div className="next_show" key={getID()}>
+				{
+					nextShow.banner ?
+					ReactDOM.createPortal(
+					    [<Link key={getID()} href="/tickets"><Image key={"banner1"} i={"banner"} src={nextShow.banner}></Image></Link>],
+					    document.querySelector("#banner")
+					) : ""
+				}
+				<h2 key={getID()}>Our Next Show</h2>
+				<h1 key={getID()}>{nextShow.title}</h1>
+				<h3 key={getID()}>{nextShow.subtitle}</h3>
+				<hr key={getID()}/>
 			</div>
-			<hr/>
 			{children}
-		</React.Fragment>
+		</div>
 	)
 }
 
 function Files({title, files}) {
-	if (files !== undefined) {
+	if (files !== undefined && files.length > 0) {
 		let fileTags = []
 
 		if (files) {
@@ -54,7 +57,7 @@ function Files({title, files}) {
 			}
 			for (let i=0; i<files.length; i++) {
 				fileTags.push(
-					<Link href={`${file_route}/${files[i].id}/${files[i].name.replaceAll(" ", "_")}`} className={"file"}>
+					<Link key={files[i].id} href={`${file_route}/${files[i].id}/${files[i].name.replaceAll(" ", "_")}`} className={"file"}>
 						<Icon icon={"pdf"} timeline={"up"}></Icon>
 						<div className="text">
 							<span className="title"><h3>{files[i].name}</h3></span>
@@ -69,7 +72,7 @@ function Files({title, files}) {
 			<div className={"timeline"}>
 				<span className="file heading">
 					<Icon icon={"circle"} timeline={"down"}></Icon>
-					<h2>{title}</h2>
+					<h2>{title ? title : "Files"}</h2>
 				</span>
 				{ fileTags }
 			</div>
@@ -85,15 +88,19 @@ function Post({content}) {
 	}
 
 	return (
-		<div className="content">
+		<div className="content" key={getID()}>
 			{
 				content.date && content.show_title ?
-					<h3 className={"details"}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
+					<h3 className={"details"} key={getID()}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
 				: ""
 			}
-			<h1>{content.title}</h1>
-			<Markdown className={"post_content"} content={content.content}></Markdown>
-			<Files title={"Auditions Files"} files={content.files}></Files>
+			<h1 key={getID()}>{content.title}</h1>
+			<Markdown key={getID()} className={"post_content"} content={content.content}></Markdown>
+			{
+				content.files ?
+					<Files key={getID()} title={content.files_title} files={content.files}></Files>
+					: ""
+			}
 		</div>
 	)
 }
@@ -112,17 +119,16 @@ function FilePage({content}) {
 				: ""
 			}
 			<h1>{content.title.replaceAll("_", " ")}</h1>
-			<object data={content.url}></object>
-			<a href={content.url} target="_blank"><h4>Download File</h4></a>
+			<object data={content.url}>
+				<h4>File preview not supported on your device. See Download link below.</h4>
+				<a href={content.url} target="_blank"><h3>Download File</h3></a>
+			</object>
+			<a href={content.url} target="_blank"><h3>Download File</h3></a>
 		</div>
 	)
 }
 
 function BlogPost({content}) {
-	function goToBlogs() {
-		location.href='/blog';
-	}
-
 	return (
 		<div className="content">
 			<div className="flex-container">
@@ -156,27 +162,26 @@ function BlogPostList({content}) {
 	let postKeys = Object.keys(postsObject)
 	for (let i=0; i<postKeys.length; i++) {
 		let post = postsObject[postKeys[i]]
+		let style = {order: post.dateInt}
 		posts.push(
-			<React.Fragment>
-				<Link className="link" href={`/blog/${postKeys[i]}`}>
-					<b>{post.title}</b>
-					{` - ${post.date} - by ${post.author}`}
-				</Link>
-				<hr/>
-			</React.Fragment>
+			<Link key={i} className="link hr_after" href={`/blog/${postKeys[i]}`} style={style}>
+				<b>{post.title}</b>
+				{` - ${post.date} - by ${post.author}`}
+			</Link>
 		)
 	}
 	let pathSplit = window.location.pathname.split("/")
-	if (pathSplit.length > 2) {
+	if (pathSplit.length > 2 && postKeys.includes(pathSplit[2])) {
 		return (
 			<BlogPost content={postsObject[pathSplit[2]]}></BlogPost>
 		)
+	} else if (pathSplit.length > 2) {
+		return <BlogPost content={{title: "404 Not Found", content: "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again."}}></BlogPost>
 	} else {
 		return (
 			<div className="content">
 				<h1>{content.title}</h1>
 				<div className="all-posts">
-					<hr/>
 					{posts}
 				</div>
 			</div>
@@ -192,7 +197,7 @@ function MapEmbed({url}) {
 	)
 }
 
-function Redirect({url, text}) {
+function Redirect({url, text="the destination"}) {
 	return (
 		<div className="content">
 			<h3>You will be redirected to {text.toLowerCase()} in 5 seconds. If this doesn't work, press the button below</h3>

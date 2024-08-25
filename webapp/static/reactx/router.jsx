@@ -1,9 +1,3 @@
-const testContent = {
-	type: "post",
-	title: "Black Coffee - Tickets Available Now",
-	content: '![BlackCoffeeMay2024Poster3-1.webp](/media/C3W6eU5sEQvyAAe/BlackCoffeeMay2024Poster3-1.webp)\n\n[Test](/)'
-}
-
 const appRoot = ReactDOM.createRoot(document.getElementById('app'))
 appRoot.render(
 	<App></App>
@@ -12,59 +6,58 @@ appRoot.render(
 const app = React.createContext()
 
 function App() {
-	let defaultPostData = document.querySelector("#app").dataset.data
 	let defaultPostPath = document.querySelector("#app").dataset.path
-	let defaultPost = {}
-	if (defaultPostData) {
-		defaultPost = JSON.parse(defaultPostData)
-		// delete document.querySelector("#app").dataset.data
-	}
-
-	const [postJson, setPostJson] = React.useState(defaultPost)
+	const [memberNavItemsToShow, setMemberNavItemsToShow] = React.useState({})
+	const [postJson, setPostJson] = React.useState(document.querySelector("#app").dataset.data || "{}")
 	const [content, setContent] = React.useState([]);
 	const [sidebarData, setSidebarData] = React.useState([]);
 	const [sidebarExtras, setSidebarExtras] = React.useState([]);
+	const [showSidebar, setShowSidebar] = React.useState(true)
 	const [siteJson, setSiteJson] = React.useState({})
-	const [historyState, setHistoryState] = React.useState("")
-	let [pathState, setPathState] = React.useState(window.location.pathname)
+	const [pathState, setPathState] = React.useState(window.location.pathname)
+	const [pathHistory, setPathHistory] = React.useState([window.location.pathname])
+	const [pathIncrementer, setPathIncrementer] = React.useState(0)
+	const [popstateEvents, setPopstateEvents] = React.useState([])
 	let path = window.location.pathname
-	const memberNavRef = React.useRef(null)
 
-
-	window.addEventListener('popstate', (e) => {
-		setPathState(window.location.pathname)
-	})
-
-	function getPostJson(url) {
-		console.log("GET POST JSON")
-		console.log(url)
-		if (defaultPostPath !== url) {
-			const response = fetch(url)
-			.then(response => response.json())
-		    .then(data => {
-				setPostJson({...data})
-		    })
-		}
-	}
-
-	function getSiteJson() {
-		const response = fetch("/sitedata")
-		.then(response => response.json())
-	    .then(data => {
-			setSiteJson({...data})
-	    })
-	}
 
 	React.useEffect(() => {
+		if (popstateEvents.length) {
+		    const debounceTimer = setTimeout(() => {
+				let event = popstateEvents[0]
+				setPathState(window.location.pathname)
+				setPathIncrementer(pathIncrementer + 1)
+				setPopstateEvents([])
+		    }, 500);
+
+		    return () => clearTimeout(debounceTimer);
+		}
+	}, [popstateEvents]);
+
+	React.useEffect(() => {
+		if (!window.history.state) {
+			window.history.replaceState("", "", pathState)
+		}
 		getSiteJson()
 	}, [])
 
 	React.useEffect(() => {
+		if (pathState !== pathHistory[-1]) {
+			let tempHistory = [...pathHistory]
+			tempHistory.push(pathState)
+			setPathHistory(tempHistory)
+		}
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
-			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: "/testredirect", linkText: "Purchase Tickets", target: "_self"})
+			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: siteJson.tickets_link, linkText: "Purchase Tickets", target: "_blank"})
 		}
+
+		// MEMBER DOCS
+		if (RegExp("^/members/", "i").test(pathState) && siteJson.memberDocs) {
+			data.push({type: "raw", raw: <Post content={siteJson.memberDocs}></Post>})
+		}
+
 		// SOCIALS
 		if (siteJson.socials) {
 			let socials = []
@@ -105,17 +98,24 @@ function App() {
 		if (siteJson.latest_blog) {
 			data.push({type: "simple", title: `Latest Blog: ${siteJson.latest_blog.date}`, icon: "drama", link: siteJson.latest_blog.link, linkText: siteJson.latest_blog.title})
 		}
-
+		if (siteJson.memberNavItemsToShow){
+			setMemberNavItemsToShow({
+				...siteJson.memberNavItemsToShow
+			})
+		}
 		setSidebarData([
 			...data
 		])
-	}, [siteJson])
+	}, [siteJson, pathState, pathIncrementer])
 
 	React.useEffect(() => {
-		if (["/", "/auditions", "/about-us", "/search", "/past-shows", "/members", "/members/get_sums", "/members/dashboard"].includes(pathState)) {
-			// FRONTPAGE
-			// tempContent.push(<Post content={testContent}></Post>)
-			// setPostJson({...testContent})
+		if (["/", "/auditions", "/about-us", "/search", "/past-shows", "/members", "/members/logout"].includes(pathState)) {
+			getPostJson(pathState+"?"+window.location.search.replace("?","")+"&react")
+		} else if ([
+			"/members/get_sums", "/members/dashboard",
+			"/members/account_settings", "/members/admin/admin_settings",
+			"/members/bookings"
+		].includes(pathState)) {
 			getPostJson(pathState+"?"+window.location.search.replace("?","")+"&react")
 		} else if (RegExp("^/blog", "i").test(pathState)) {
 			getPostJson("/blog?react")
@@ -126,105 +126,152 @@ function App() {
 		} else if (RegExp("^/past-shows/member/([A-Za-z0-9-_]{15,16})/.+", "i").test(pathState)) {
 			getPostJson(pathState+`?react`)
 		} else if (RegExp("^(/members/|/)file/([A-Za-z0-9-_]{15,16})/(.+)", "i").test(pathState)) {
-			console.log("FILE PAGE")
 			getPostJson(pathState+`?react`)
 		} else if (RegExp("^(/members/|/)post/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
 			getPostJson(pathState+`?react`)
+		} else if (RegExp("^/members/bookings/seating/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
+			getPostJson(pathState+`?react`)
+		} else if (path === "/members/docs") {
+			getPostJson(pathState+`?react`)
 		} else if (path === "/members/shows") {
-			setPostJson({
-				type: "members_shows",
-				title: "Shows:",
-				shows: siteJson.members_recent_shows
-			})
+			if (siteJson.members_recent_shows) {
+				setPostJson({
+					type: "members_shows",
+					title: "Shows:",
+					shows: siteJson.members_recent_shows
+				})
+			}
 		} else if (RegExp("^/members/show/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
 			getPostJson(pathState+`?react`)
 		} else if (path === "/tickets") {
-			setPostJson({
-				type: "redirect",
-				url: siteJson.tickets_link,
-				text: "Tickets Shop",
-				time: 1
-			})
-		// } else if (postJson.initialData === undefined) {
-		// 	console.log("RAW REDIRECT")
-		// 	window.location.href = pathState
+			// setPostJson({
+			// 	type: "redirect",
+			// 	url: siteJson.tickets_link,
+			// 	text: "Tickets Shop",
+			// 	time: 1
+			// })
+			getPostJson(pathState + `?react`)
 		} else {
-			console.log("REDIRECT")
-			setPostJson({
-				type: "redirect",
-				url: pathState,
-				text: "destination",
-				time: 1
-			})
+			getPostJson(pathState + `?react`)
 		}
-	}, [pathState])
+	}, [pathState, pathIncrementer, siteJson])
 
 	React.useEffect(() => {
 		if (Object.keys(siteJson).length) {
 			let tempContent = []
 			let tempSidebarExtras = []
+			setShowSidebar(true)
+
+			// Post type
 			if (postJson.type === "post") {
-				tempContent.push(<Post content={postJson}></Post>)
+				tempContent.push(<Post key={tempContent.length} content={postJson}></Post>)
 			} else if (postJson.type === "blog_post") {
-				tempContent.push(<BlogPost content={postJson}></BlogPost>)
+				tempContent.push(<BlogPost key={tempContent.length} content={postJson}></BlogPost>)
 			} else if (postJson.type === "blogs") {
-				tempContent.push(<BlogPostList content={postJson}></BlogPostList>)
+				tempContent.push(<BlogPostList key={tempContent.length} content={postJson}></BlogPostList>)
 			} else if(postJson.type === "map_post") {
-				tempContent.push(<Post content={postJson}></Post>)
-				tempSidebarExtras.push(<MapEmbed url={postJson.maps_url}></MapEmbed>)
+				tempContent.push(<Post key={tempContent.length} content={postJson}></Post>)
+				tempSidebarExtras.push(<MapEmbed key={tempSidebarExtras.length} url={postJson.maps_url}></MapEmbed>)
 			} else if(postJson.type === "search") {
-				tempContent.push(<Search content={postJson}></Search>)
+				tempContent.push(<Search key={tempContent.length} content={postJson}></Search>)
 			} else if(postJson.type === "list_shows") {
-				tempContent.push(<ListShows content={postJson}></ListShows>)
+				tempContent.push(<ListShows key={tempContent.length} content={postJson}></ListShows>)
 			} else if(postJson.type === "past_show") {
-				tempContent.push(<ShowPage content={postJson}></ShowPage>)
+				tempContent.push(<ShowPage key={tempContent.length} content={postJson}></ShowPage>)
 			} else if(postJson.type === "file_page") {
-				tempContent.push(<FilePage content={postJson}></FilePage>)
+				tempContent.push(<FilePage key={tempContent.length} content={postJson}></FilePage>)
 			} else if(postJson.type === "login") {
-				tempContent.push(<Login content={postJson}></Login>)
+				tempContent.push(<Login key={tempContent.length} content={postJson}></Login>)
 			} else if(postJson.type === "dashboard") {
-				tempContent.push(<Dashboard content={postJson}></Dashboard>)
+				tempContent.push(<Dashboard key={tempContent.length} content={postJson}></Dashboard>)
 			} else if(postJson.type === "members_shows") {
-				tempContent.push(<Shows content={postJson}></Shows>)
+				tempContent.push(<Shows key={tempContent.length} content={postJson}></Shows>)
 			} else if(postJson.type === "members_show") {
-				tempContent.push(<Show content={postJson}></Show>)
+				tempContent.push(<Show key={tempContent.length} content={postJson} refresh={getPostJson}></Show>)
+			} else if(postJson.type === "account_settings") {
+				tempContent.push(<AccountSettings key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></AccountSettings>)
+			} else if(postJson.type === "admin_settings") {
+				tempContent.push(<AdminSettings key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></AdminSettings>)
 			} else if(postJson.type === "accounting") {
-				tempContent.push(<Accounting content={postJson}></Accounting>)
+				tempContent.push(<Accounting key={tempContent.length} content={postJson}></Accounting>)
+			} else if(postJson.type === "bookings") {
+				tempContent.push(<ManageBookings key={tempContent.length} content={postJson}></ManageBookings>)
+			} else if(postJson.type === "seating") {
+				setShowSidebar(false)
+				tempContent.push(<SeatingPlanner key={tempContent.length} content={postJson}></SeatingPlanner>)
+			} else if(postJson.type === "error") {
+				tempContent.push(<Post key={tempContent.length} content={postJson}></Post>)
 			} else if (postJson.type === "redirect") {
+				if (postJson.reloadSiteData) {
+					getSiteJson()
+				}
 				if (postJson.url.includes(window.location.origin) || !postJson.url.includes("http")) {
-					console.log(postJson.url)
 					window.history.pushState("", "", postJson.url)
 					setPathState(postJson.url)
-					setHistoryState(postJson.url)
 				} else {
-					tempContent.push(<Redirect url={postJson.url} text={postJson.text}></Redirect>)
+					tempContent.push(<Redirect key={tempContent.length} url={postJson.url} text={postJson.text}></Redirect>)
 				}
 			}
+
+			// FRONTPAGE
+			if (postJson.frontpage) {
+				tempContent = [
+					<Frontpage nextShow={siteJson.next_show} key={getID()}>
+						{tempContent}
+					</Frontpage>
+				]
+			}
+
 			setContent(tempContent)
 			setSidebarExtras(tempSidebarExtras)
-			console.log(siteJson)
 		}
 	}, [postJson, siteJson])
 
-	function handleHistoryStateChange(e) {
-		e.preventDefault()
-		window.history.pushState("", "", e.target.value)
-		setPathState(e.target.value)
+	function refresh(withSiteData=false) {
+		if (withSiteData) {
+			getSiteJson()
+		}
+		setPathIncrementer(pathIncrementer+1)
 	}
 
+	function setPath(newPath) {
+		setPathState(newPath)
+		setPathIncrementer(pathIncrementer + 1)
+		window.history.pushState("", "", newPath)
+	}
+
+	function getPostJson(url) {
+		// console.log("GET POST JSON")
+		// console.log(url)
+		if (defaultPostPath !== url) {
+			const response = fetch(url)
+			.then(response => response.json())
+		    .then(data => {
+				setPostJson({...data, requestURL: url, requestTime: Date.now()})
+		    })
+		}
+	}
+
+	function getSiteJson() {
+		const response = fetch("/sitedata")
+		.then(response => response.json())
+	    .then(data => {
+			setSiteJson({...data})
+	    })
+	}
+
+	window.addEventListener('popstate', (event) => {
+		setPopstateEvents([...popstateEvents, event])
+	})
+
 	return (
-		<app.Provider value={{siteJson}}>
-			<input
-				id={"historyState"}
-				style={{display: "none"}}
-		        value={historyState}
-				onChange={(e)=> {handleHistoryStateChange(e)}}
-			></input>
+		<app.Provider value={{siteJson, functions: {setPath, refresh}}}>
 			<AlertsContainer></AlertsContainer>
-			<Nav navItems={navItems} memberNavItems={memberNavItems} siteName={siteJson.site_name} logoSVG={siteJson.logoSVG}>
-				<div className="main-section">
+			<Nav navItems={navItems} memberNavItemsToShow={memberNavItemsToShow} siteName={siteJson.site_name} logoSVG={siteJson.logoSVG}>
+				<div className={"main-section"}>
+					<div className={"banner"} id={"banner"}></div>
 					{content}
-					<Sidebar sidebarItems={sidebarData} extras={sidebarExtras}></Sidebar>
+					<Sidebar show={showSidebar} sidebarItems={sidebarData} extras={sidebarExtras}></Sidebar>
 				</div>
 			</Nav>
 		</app.Provider>

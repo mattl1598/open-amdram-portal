@@ -352,6 +352,7 @@ div.members-nav-outer {
 }
 
 .members-nav-main, .members-nav-sub {
+	white-space: nowrap;
 	padding: 0 .5rem;
 	min-width: 1rem;
 	&.members-nav-main {
