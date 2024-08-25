@@ -27,19 +27,19 @@ function Link({href, className, children, style, title="", target="_self", onCli
 
 function Frontpage({nextShow, children}) {
 	return (
-		<div className={"content"} key={getID()}>
-			<div className="next_show" key={getID()}>
+		<div className={"content"} key={`content_${nextShow.title}`}>
+			<div className="next_show" key={`next_show_${nextShow.title}`}>
 				{
 					nextShow.banner ?
 					ReactDOM.createPortal(
-					    [<Link key={getID()} href="/tickets"><Image key={"banner1"} i={"banner"} src={nextShow.banner}></Image></Link>],
+					    [<Link key={"tickets_banner"} href="/tickets"><Image key={"banner1"} i={"banner"} src={nextShow.banner}></Image></Link>],
 					    document.querySelector("#banner")
 					) : ""
 				}
-				<h2 key={getID()}>Our Next Show</h2>
-				<h1 key={getID()}>{nextShow.title}</h1>
-				<h3 key={getID()}>{nextShow.subtitle}</h3>
-				<hr key={getID()}/>
+				<h2>Our Next Show</h2>
+				<h1>{nextShow.title}</h1>
+				<h3>{nextShow.subtitle}</h3>
+				<hr/>
 			</div>
 			{children}
 		</div>
@@ -88,17 +88,17 @@ function Post({content}) {
 	}
 
 	return (
-		<div className="content" key={getID()}>
+		<div className="content" key={`post_${content.title}`}>
 			{
 				content.date && content.show_title ?
-					<h3 className={"details"} key={getID()}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
+					<h3 className={"details"}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
 				: ""
 			}
-			<h1 key={getID()}>{content.title}</h1>
-			<Markdown key={getID()} className={"post_content"} content={content.content}></Markdown>
+			<h1>{content.title}</h1>
+			<Markdown className={"post_content"} content={content.content}></Markdown>
 			{
 				content.files ?
-					<Files key={getID()} title={content.files_title} files={content.files}></Files>
+					<Files title={content.files_title} files={content.files}></Files>
 					: ""
 			}
 		</div>

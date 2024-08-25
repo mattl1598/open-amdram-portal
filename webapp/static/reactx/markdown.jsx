@@ -1,8 +1,8 @@
 // TODO LIST
 // TODO: refresh page on error unless recently refreshed.
 
-function getID() {
-	return crypto.randomUUID()
+function getID(a) {
+	for(var b=65521,c=1,d=0,e=0,f;f=a.charCodeAt(e++);d=(d+c)%b)c=(c+f)%b;return(d<<16)|c
 }
 
 const md = new remarkable.Remarkable('full')
@@ -124,13 +124,13 @@ function renderMD(array=[]) {
 			output.push(<input className={"task_list_checkbox"} type="checkbox" disabled defaultChecked={item.checked}/>)
 		} else if (item.type === "image") {
 			tag = ""
-			output.push(<MarkdownMedia i={getID()} src={item.src} alt={item.alt} title={item.title}></MarkdownMedia>)
+			output.push(<MarkdownMedia i={item.src} src={item.src} alt={item.alt} title={item.title}></MarkdownMedia>)
 		} else if (item.type === "code" || item.type === "fence") {
 			tag = ""
 			if (item.block || item.type === "fence") {
-				let codeId = getID()
+				let codeId = getID(String(item.content))
 				output.push(
-					<pre key={getID()}>
+					<pre key={`${codeId}_pre`}>
 						<div className={"code_header"}>
 							<span className={"code_language"}>{item.params}</span>
 							<span className="copy_button" onClick={()=>{codeCopy(codeId)}}>
@@ -142,7 +142,7 @@ function renderMD(array=[]) {
 					</pre>
 				)
 			} else {
-				output.push(<code key={getID()}>{item.content}</code>)
+				output.push(<code key={`output_${output.length}_${String(item.content).slice(0,10)}`}>{item.content}</code>)
 			}
 		} else if (item.type === "footnote_ref") {
 			tag = ""
@@ -153,15 +153,15 @@ function renderMD(array=[]) {
 				id = `ref-${item.id+1}-${item.subId+1}`
 			}
 			output.push(
-				<sup key={getID()} id={id}>
-					<a href={`#footnote-${item.id+1}`} key={getID()}>{item.id + 1}</a>
+				<sup key={`footref_${item.id+1}`} id={id}>
+					<a href={`#footnote-${item.id+1}`} key={`#footnote-${item.id+1}`}>{item.id + 1}</a>
 				</sup>
 			)
 		} else if (item.type === "footnote_block") {
 			tag = ""
 			output.push(
-				<section className={"footnotes"} key={getID()}>
-					<h3 key={getID()}>Footnotes</h3>
+				<section className={"footnotes"} key={"#footnote-block"}>
+					<h3>Footnotes</h3>
 					<ol>
 						{renderMD(item.children)}
 					</ol>
@@ -176,7 +176,7 @@ function renderMD(array=[]) {
 				id = `footnote-${item.id+1}-${item.subId+1}`
 			}
 			output.push(
-				<li key={getID()} id={id}>
+				<li key={id} id={id}>
 					<div className="marker"></div>
 					<div className="content">
 						{renderMD(item.children)}
@@ -194,10 +194,10 @@ function renderMD(array=[]) {
 			} else {
 				dest = `#ref-${item.id+1}-${item.subId+1}`
 				label = `Back to reference ${item.id+1}-${item.subId+1}`
-				sup.push(<sup key={getID()}>{item.subId+1}</sup>)
+				sup.push(<sup key={`${dest}_sup`}>{item.subId+1}</sup>)
 			}
 			output.push(
-				<a href={dest} aria-label={label}>↩{sup}</a>
+				<a href={dest} key={dest} aria-label={label}>↩{sup}</a>
 			)
 		} else if (item.type === "hardbreak" || item.type === "softbreak") {
 			tag = ""
@@ -210,7 +210,7 @@ function renderMD(array=[]) {
 		if (tag !== "") {
 			output.push(React.createElement(
 				tag,
-				{...props, key: getID()},
+				{...props, key: `output_${output.length}_${String(item.content).slice(0,10)}`},
 				...renderMD(item.children)
 			))
 		}

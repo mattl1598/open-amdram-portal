@@ -216,7 +216,7 @@ function App() {
 			// FRONTPAGE
 			if (postJson.frontpage) {
 				tempContent = [
-					<Frontpage nextShow={siteJson.next_show} key={getID()}>
+					<Frontpage nextShow={siteJson.next_show} key={siteJson.next_show.title}>
 						{tempContent}
 					</Frontpage>
 				]

@@ -239,7 +239,7 @@ function NavItem({item, is_active, mobileNav, onClick, memberNav = false}) {
 	if (item.subNav !== undefined && !mobileNav) {
 		for (let i = 0; i < item.subNav.length; i++) {
 			let sub_is_active = (item.subNav[i].link.split("/")[3] === window.location.pathname.split("/")[3])  && window.location.pathname.split("/").length>3
-			subNavList.push(<li key={getID()}><NavItem key={item.subNav[i].link} item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem></li>)
+			subNavList.push(<li key={item.subNav[i].link}><NavItem key={item.subNav[i].link} item={item.subNav[i]} is_active={sub_is_active} mobileNav={mobileNav} memberNav={true}></NavItem></li>)
 		}
 	} else if (item.subNav !== undefined && mobileNav) {
 		for (let i = 0; i < item.subNav.length; i++) {
