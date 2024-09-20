@@ -1,0 +1,26 @@
+table.mods {
+	display: grid;
+	grid-template-columns: repeat(8, min-content);
+	thead, tbody, tfoot {
+		display: grid;
+		grid-template-columns: subgrid;
+		grid-column: span 8;
+	}
+
+	tr {
+		display: grid;
+		grid-column: span 8;
+		grid-template-columns: subgrid;
+		grid-template-rows: min-content;
+	}
+
+	tbody input[type="checkbox"] {
+		pointer-events: none;
+	}
+
+	tfoot tr input {
+		&[type="number"] {
+			width: 2rem;
+		}
+	}
+}
