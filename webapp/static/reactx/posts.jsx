@@ -191,13 +191,15 @@ function BlogPostList({content}) {
 
 function MapEmbed({url}) {
 	return (
-		<iframe style={{border: 0}} src={url}
-		        height="450" frameBorder="0" allowFullScreen="allowfullscreen">
-		</iframe>
+		<div className="map">
+			<iframe style={{border: 0}} src={url}
+			        height="450" frameBorder="0" allowFullScreen="allowfullscreen">
+			</iframe>
+		</div>
 	)
 }
 
-function Redirect({url, text="the destination"}) {
+function Redirect({url, text = "the destination"}) {
 	return (
 		<div className="content">
 			<h3>You will be redirected to {text.toLowerCase()} in 5 seconds. If this doesn't work, press the button below</h3>

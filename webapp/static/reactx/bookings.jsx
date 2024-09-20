@@ -17,6 +17,8 @@ function ManageBookings({content}) {
 	let seats_sat = 0
 	let seats_total = 0
 	let performances = []
+	let mods = []
+	let items = []
 
 	for (let i=0; i<content.performances.length; i++) {
 		let perf = content.performances[i]
@@ -32,6 +34,27 @@ function ManageBookings({content}) {
 				</Link>
 			</li>
 		)
+	}
+
+	for (let i=0; i<content.mods.length; i++) {
+		let mod = content.mods[i]
+		mods.push(
+			<tr>
+				<td className={"info"} title={ mod.id }><Icon icon="important"></Icon></td>
+				<td className={"center"}>{ mod.ref }</td>
+				<td>{ mod.from_item || "" }</td>
+				<td className={"center"}>{ mod.change_quantity }</td>
+				<td className={"wide"}>{ mod.to_item }</td>
+				<td>{ mod.note || "" }</td>
+				<td className={"center"}><input type={"checkbox"} checked={mod.is_reservation ? "checked" : ""} onClick="return false;"></input></td>
+				<td className={"center"}><a href={`/members/bookings?delete=${ mod.id }`}>Delete</a></td>
+			</tr>
+		)
+	}
+
+	for (let i=0; i<content.items.length; i++) {
+		let item = content.items[i];
+		items.push(<option value={ item }>{ item }</option>)
 	}
 
 	function handleFormSubmit(e) {
@@ -68,6 +91,51 @@ function ManageBookings({content}) {
 				<Tab title={"Modify Bookings"}>
 					<h2>Modify Bookings: </h2>
 					{/*Form/table goes here*/}
+
+					<form method="POST" action="" id="add_mod"></form>
+
+					<table className={"mods"}>
+						<thead>
+						<tr>
+							<td>ID</td>
+							<td>Ref#</td>
+							<td>From</td>
+							<td>Quantity</td>
+							<td>New Item</td>
+							<td>Note</td>
+							<td>Reserved?</td>
+						</tr>
+						</thead>
+						<tbody>
+						{mods}
+						</tbody>
+						<tfoot>
+						<tr>
+							<td></td>
+							<td className="center"><input form="add_mod" type="number" name="ref_num"
+							                              placeholder="#"/></td>
+							<td className="wide">
+								<datalist id="items_list">
+									{items}
+								</datalist>
+								<input type="text" list="items_list" name="from_item"
+								       placeholder="From (Name or Item)"/>
+							</td>
+							<td className="center"><input form="add_mod" type="number" min="1"
+							                              name="change_quantity" defaultValue="1"/></td>
+							<td className="wide">
+								<select form="add_mod" name="to_item" required defaultValue={""}>
+									<option value="" disabled>...</option>
+									{items}
+								</select>
+							</td>
+							<td className="wide"><input form="add_mod" type="text" name="note"/></td>
+							<td className="center"><input form="add_mod" type="checkbox" name="is_reservation"/>
+							</td>
+							<td className="center"><input form="add_mod" type="submit"/></td>
+						</tr>
+						</tfoot>
+					</table>
 				</Tab>
 				<Tab title={"Manage Performances"}>
 					<h2>Add New Performance:</h2>

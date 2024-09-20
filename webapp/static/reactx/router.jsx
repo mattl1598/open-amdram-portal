@@ -50,7 +50,7 @@ function App() {
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
-			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: siteJson.tickets_link, linkText: "Purchase Tickets", target: "_blank"})
+			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: "/tickets", linkText: "Purchase Tickets", target: "_blank"})
 		}
 
 		// MEMBER DOCS

@@ -47,3 +47,65 @@ function Input(
 		)
 	}
 }
+
+function Select({id, children, placeholder, selected, setSelected}) {
+	React.useEffect(()=>{
+		new TomSelect(`#${id}`, {
+			maxItems: 200,
+			allowEmptyOption: true,
+			hidePlaceholder: false,
+			items: selected,
+			onItemAdd: function(){
+				this.setTextboxValue('');
+				this.refreshOptions();
+			},
+		})
+	}, [])
+	function handleChange(e) {
+		let values = e.target.tomselect.getValue(0)
+		setSelected([...values])
+	}
+	return (
+		<select name="" id={id}
+	        placeholder={placeholder}
+	        onChange={handleChange}
+		>
+			{children}
+		</select>
+	)
+}
+
+function Range({min, max, lowerVal, lowerValSetter, higherVal, higherValSetter}) {
+	function handleLowerChange(e) {
+		lowerValSetter(e.target.value*-1)
+	}
+	function handleHigherChange(e) {
+		higherValSetter(e.target.value*1)
+	}
+	let halfwayA = Math.ceil((higherVal - lowerVal) / 2)
+	let halfwayB = Math.floor((higherVal - lowerVal) / 2)
+	let halfwayYearA = halfwayA + lowerVal
+	let halfwayYearB = halfwayB + lowerVal
+
+	return (
+		<div className="dual_range">
+			{lowerVal}-{higherVal}
+			<div className="sliders">
+				<div className="lower" style={{flexGrow: halfwayYearA - min}}>
+					<input type="range" className={"lower"}
+					       min={(halfwayYearA) * -1} max={min * -1} step={1} value={lowerVal * -1}
+					       onChange={handleLowerChange}
+					/>
+					<meter min={(halfwayYearA+1) * -1} max={min * -1} value={lowerVal * -1}/>
+				</div>
+				<div className="higher" style={{flexGrow: max - halfwayYearB}}>
+					<input type="range" className={"higher"}
+					       max={max} min={halfwayYearB} step={1} value={higherVal}
+					       onChange={handleHigherChange}
+					/>
+					<meter min={halfwayYearB-1} max={max} value={higherVal}/>
+				</div>
+			</div>
+		</div>
+	)
+}

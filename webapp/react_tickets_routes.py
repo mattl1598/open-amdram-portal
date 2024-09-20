@@ -1,4 +1,5 @@
 import json
+import re
 from pprint import pprint
 
 from flask import Blueprint, make_response, redirect, render_template, request, session, abort, jsonify, url_for
@@ -15,13 +16,48 @@ from webapp.tickets_routes import collect_orders, OrderInfo
 bp = Blueprint("react_tickets_routes", __name__)
 
 
+def extract_numbers(string):
+	# Use regular expression to find all numbers in the string
+	numbers = re.findall(r'\d+', string)
+	# Convert the first number found to an integer (assuming there's at least one number)
+	return "".join(numbers) if numbers else float('inf')
+
+
 @bp.get("/members/bookings")
 def bookings():
 	check_page_permission("bookings")
-
 	now = datetime.utcnow()
 	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
-	mods = BookingModifications.query.filter(BookingModifications.datetime > end_of_last_show).all()
+
+	mods = db.session.query(func.json_agg(
+			func.json_build_object(
+				"id", BookingModifications.id,
+				"ref", BookingModifications.ref_num,
+				"from_item", BookingModifications.from_item,
+				"change_quantity", BookingModifications.change_quantity,
+				"to_item", BookingModifications.to_item,
+				"is_reservation", BookingModifications.is_reservation,
+				"mark_as_paid", BookingModifications.mark_as_paid,
+				"note", BookingModifications.note,
+			)
+		)
+	).filter(BookingModifications.datetime > end_of_last_show).scalar()
+
+	items = []
+	for item in (app.square.catalog.search_catalog_items(
+			body={
+				"category_ids": [
+					"LETDSKQATFDC3IAJITOXQFGT"
+				],
+				"product_types": [
+					"REGULAR"
+				],
+				"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
+			}
+	).body.get("items") or []):
+		items.append(item["item_data"]["name"])
+
+	items = sorted(items, key=extract_numbers)
 
 	performances = db.session.query(
 		func.json_agg(
@@ -50,7 +86,8 @@ def bookings():
 		"type": "bookings",
 		"title": "Manage Bookings",
 		"mods": mods,
-		"performances": performances
+		"performances": performances,
+		"items": items,
 	}
 
 	if "react" in request.args.keys():

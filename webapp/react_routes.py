@@ -387,9 +387,10 @@ def react_tickets():
 		)
 
 
-@bp.errorhandler(401)
+@bp.app_errorhandler(401)
 @bp.get("/members")
-def react_members():
+def react_members(error=None):
+	print(error)
 	if current_user.is_authenticated:
 		data = {
 			"type": "redirect",
@@ -419,7 +420,7 @@ def react_members():
 
 
 @bp.post("/members")
-def react_login():
+def react_login(code=0):
 	email = request.form.get("email")
 	user = db.session.query(
 		User

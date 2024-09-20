@@ -223,8 +223,9 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 						name: order.name,
 						seats: order.tickets_count,
 						note: order.note,
-						adults: order.tickets.Adult !== undefined ? order.tickets.Adult : 0,
-						children: order.tickets.Junior !== undefined ? order.tickets.Junior : 0
+						tickets: order.tickets,
+						// adults: order.tickets.Adult !== undefined ? order.tickets.Adult : 0,
+						// children: order.tickets.Junior !== undefined ? order.tickets.Junior : 0
 					}
 				}
 				setOrders({
@@ -379,7 +380,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 }
 
 function Order({order_id, order, seats_assigned}) {
-
+	let seats = []
 	function handleDragStart(e, data) {
 		e.dataTransfer.setData("text/plain", `new,,${data}`);
 	}
@@ -390,12 +391,16 @@ function Order({order_id, order, seats_assigned}) {
 	if (order.note) {
 		classname = classname + " has_note"
 	}
+	let ticket_types = Object.keys(order.tickets)
+	for (let i=0; i<ticket_types.length; i++) {
+		seats.push(`${ticket_types[i]}: ${order.tickets[ticket_types[i]]}`)
+	}
 
 	return (
 		<div className={classname} data-order-id={order_id} draggable={true} onDragStart={(e) => handleDragStart(e, `${order_id}`)}>
 			<h2 className={"num"}><span>{order.seats - seats_assigned}</span></h2>
 			<h3 className={"name"}>{order.name}</h3>
-			<span className={"seats"}><span className={"bold"}></span>Adult: {order.adults}, Child: {order.children}</span>
+			<span className={"seats"}><span className={"bold"}></span>{seats.join(", ")}</span>
 			<span className={"note"} title={order.note}>{order.note}</span>
 		</div>
 	)
@@ -561,11 +566,14 @@ function Seat({
 	let joins = ""
 
 	if (exists) {
-		let name
+		let name, note
 		if (order_id !== undefined) {
-			name = orders[order_id] !== undefined ? orders[order_id].name : <div className={"loader"}></div>
+			let order_defined = orders[order_id] !== undefined
+			name = order_defined ? orders[order_id].name : <div className={"loader"}></div>
+			note = order_defined ? orders[order_id].note : ""
 		} else {
 			name = ""
+			note = ""
 		}
 
 		let previewName = undefined
@@ -608,7 +616,8 @@ function Seat({
 			>
 				<span className={"resize left"} data-direction="left" draggable={order_id !== undefined} onDragStart={(e) => handleDragStart(e)}></span>
 				<span className={"seatNum"} style={style}>{rowLetter}{seatNumber}</span>
-				<span className={"name"} >{name}</span>
+				<span className={"name"}>{name}</span>
+				<span className={"note"} title={note}>{note !== "" ? "i" : ""}</span>
 				<span className={"remove"} onClick={(e)=>handleRemove(e)}>×</span>
 				<span className={"resize right"} data-direction="right" draggable={order_id !== undefined}></span>
 			</div>
@@ -663,6 +672,7 @@ function Ticket({groupName, showName, authors, showDate, name, seats}) {
 			<div className={"date"}><h3>{showDate}</h3></div>
 			<div className={"name"}>Name: <span className={"bold"}>{name}</span></div>
 			<div className={"seats"}>Seats ({seats.length}): <span className={"bold"}>{shortSeats.join(" ")}</span></div>
+			<div className={"progs"}><span className="bold">{Math.ceil(seats.length/2)}</span></div>
 		</div>
 	)
 }

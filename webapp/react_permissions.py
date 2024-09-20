@@ -30,6 +30,12 @@ def react_error(e):
 		)
 
 
+def unauthenticated(error):
+	print(error)
+	print(request.url)
+	return "Error: Unauthenticated"
+
+
 def default_role_permissions():
 	defaultNavRoles = {
 		"member": {
@@ -77,6 +83,9 @@ def default_role_permissions():
 
 
 def check_page_permission(page_name, show_id=None):
+	if not current_user.is_authenticated:
+		abort(401)
+
 	defaultRoles = default_role_permissions()
 
 	if show_id:

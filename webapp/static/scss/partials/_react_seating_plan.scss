@@ -163,7 +163,7 @@ div.seat {
 	grid-template-rows: 1fr 1.2rem;
 	grid-template-areas:
 		"name name name name"
-		"seat seat x x"
+		"i seat seat x"
 	;
 
 	&.join-left {
@@ -252,7 +252,7 @@ div.seat {
 	&.assigned .remove {
 		align-self: flex-end;
 		justify-self: center;
-		padding-right: .3rem;
+		padding-right: 1rem;
 		font-size: 1.5rem;
 		margin: -.2rem 0;
 
@@ -261,7 +261,25 @@ div.seat {
 		grid-area: x;
 	}
 
+	&.assigned .note {
+		align-self: center;
+		justify-self: center;
+		margin-left: .3rem;
+		padding-left: .7rem;
+		padding-right: .5rem;
+		//font-size: 1.3rem;
+		//margin: -.2rem 0;
+
+		cursor: pointer;
+
+		grid-area: i;
+	}
+
 	&:not(.assigned) .remove {
+		display: none;
+	}
+
+	&:not(.assigned) .note {
 		display: none;
 	}
 }
@@ -289,12 +307,12 @@ div.tickets {
 		display: grid;
 		grid-template-columns: 1fr 3fr;
 		grid-template-areas:
-			"logo group"
-			"logo show"
-			"logo authors"
-			"date date"
-			"name name"
-			"seats seats"
+			"logo group group"
+			"logo show show"
+			"logo authors authors"
+			"date date date"
+			"name name name"
+			"seats seats progs"
 		;
 
 		div {
@@ -346,6 +364,11 @@ div.tickets {
 		.seats {
 			grid-area: seats;
 			text-align: left;
+		}
+
+		.progs {
+			grid-area: progs;
+			text-align: right;
 		}
 
 		span.bold {
