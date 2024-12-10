@@ -54,18 +54,17 @@ for (let i = 0; i < tags.length; i++) {
 	)
 }
 
-function Icon({icon, timeline, onClick}) {
+function Icon({icon, timeline, onClick, className}) {
 	let d = iconPaths[icon]
 	const context = React.useContext(app)
 	if (icon === "siteLogo") {
-
 		return (
 			<span className={"icon"} onClick={onClick} dangerouslySetInnerHTML={{__html: context.siteJson.site_logo}}></span>
 		)
 	}
 
 	return (
-		<svg className="icon" viewBox="0 0 50 50" onClick={onClick}>
+		<svg className={`icon ${className}`} viewBox="0 0 50 50" onClick={onClick}>
 			<path d={ d }></path>
 			{timeline === "up" ? (
 				<path shapeRendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
@@ -85,9 +84,9 @@ function QRCode({data}) {
 	for (let i=0; i<data.length; i++) {
 		let row = []
 		for (let j=0; j<data[i].length; j++) {
-			row.push(<span className={`cell ${data[i][j]}`}></span>)
+			row.push(<span key={`${i} ${j}`} className={`cell ${data[i][j]}`}></span>)
 		}
-		rows.push(<div className={"row"}>{row}</div>)
+		rows.push(<div key={i} className={"row"}>{row}</div>)
 	}
 
 	return (

@@ -165,7 +165,7 @@ function Nav({navItems, siteName, logoSVG, memberNavItemsToShow, children}) {
 				<div className={"title"}>
 					<Link href={"/"} className={"title"} title={"Home"}>
 						<Icon icon={"siteLogo"}></Icon>
-						<h1>{siteName}</h1>
+						{ siteName ? <h1>{siteName.split(" ").map((a) => {return (<span>{a}</span>)})}</h1> : "" }
 					</Link>
 				</div>
 				<div className={"full-nav"}>
@@ -195,7 +195,7 @@ function Nav({navItems, siteName, logoSVG, memberNavItemsToShow, children}) {
 					: ""
 				}
 			</div>
-			<div className={`main-outer ${mobileNav ? "mobile" : ""}`}>
+			<div className={`main-outer ${mobileNav && 1 ? "mobile" : ""}`}>
 				<div id="desktop_member_nav" className="portal-nav side">
 				{showMemberNav && mobileNav?
 					"" :

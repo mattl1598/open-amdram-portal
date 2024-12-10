@@ -307,25 +307,38 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 		)
 	}
 
+	let tickets_buckets = {}
+	for (let i=0; i<=26; i++) {
+		tickets_buckets[i] = []
+	}
+
 	let tickets = []
 
 	for (let [order_id, order] of Object.entries(orders)) {
 		let seats_assigned = itemCounter(Object.values(assignments), order_id)
 		let newOrder = <Order key={"order"+order_id} order_id={order_id} order={order} seats_assigned={seats_assigned}></Order>
 		let seats = reverseAssignments[order_id] !== undefined ? reverseAssignments[order_id]: []
+
 		let newTicket = <Ticket
 			groupName={context.siteJson.site_name} showDate={date}
 			showName={showName} authors={authors}
 			name={order.name} seats={seats}
 		></Ticket>
-		tickets.push(newTicket)
+		let bucket_lookup = order.name.toLowerCase().split(" ").slice(-1)[0].charCodeAt(0) - 96
+		if (!(1 <= bucket_lookup && bucket_lookup <= 26)) {
+			bucket_lookup = 0
+		}
+		// console.log(order.name, bucket_lookup)
+		tickets_buckets[bucket_lookup].push(newTicket)
 		if (seats_assigned < order.seats) {
 			unassignedOrders.push(newOrder)
 		} else {
 			assignedOrders.push(newOrder)
 		}
 	}
-
+	for (let i=1; i<=26; i++) {
+		tickets.push(...tickets_buckets[i])
+	}
 
 	let seatOptions = []
 
@@ -493,9 +506,9 @@ function Seat({
 	function handleDrop(e) {
 		let [type, arg, order_num] = e.dataTransfer.getData("text/plain").split(',')
 		if (type === "move") {
-			reportNewAssignmentRow(`${rowLetter}${seatNumber}`, order_num, arg)
+			reportNewAssignmentRow(`${rowLetter}${seatNumber}`, Number(order_num), arg)
 		} else if (type !== "resize") {
-			reportNewAssignmentRow(`${rowLetter}${seatNumber}`, order_num)
+			reportNewAssignmentRow(`${rowLetter}${seatNumber}`, Number(order_num))
 		}
 	}
 
@@ -633,6 +646,8 @@ function Ticket({groupName, showName, authors, showDate, name, seats}) {
 	let shortSeats = []
 	let temp = ""
 
+	let ordering = name.toLowerCase().split(" ").slice(-1)[0].charCodeAt(0) - 96;
+
 	if (seats.length > 2) {
 		for (let i=0; i<seats.length; i++) {
 			if (temp === "") {
@@ -667,12 +682,12 @@ function Ticket({groupName, showName, authors, showDate, name, seats}) {
 		<div className={"ticket"}>
 			<div className={"logo"}><Icon icon={"siteLogo"}></Icon></div>
 			<div className={"group-presents"}>{groupName} presents</div>
-			<div className={"show"}><h1>{showName}</h1></div>
+			<div className={"show big"}><h1>{showName}</h1></div>
 			<div className={"authors"}>by {authors}</div>
 			<div className={"date"}><h3>{showDate}</h3></div>
-			<div className={"name"}>Name: <span className={"bold"}>{name}</span></div>
-			<div className={"seats"}>Seats ({seats.length}): <span className={"bold"}>{shortSeats.join(" ")}</span></div>
-			<div className={"progs"}><span className="bold">{Math.ceil(seats.length/2)}</span></div>
+			<div className={"name big"}>Name: <span className={"bold"}>{name}</span></div>
+			<div className={"seats big"}>Seats ({seats.length}): <span className={"bold"}>{shortSeats.join(" ")}</span></div>
+			<div className={"progs big"}><span className="bold">{Math.ceil(seats.length/2)}</span></div>
 		</div>
 	)
 }

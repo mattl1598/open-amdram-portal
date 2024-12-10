@@ -1,11 +1,48 @@
 @import "variables";
 
+div.ruler {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+
+	div {
+		width: 1rem;
+		height: 1rem;
+
+		&:nth-child(2n) {
+			background-color: black;
+		}
+		&:nth-child(2n+1) {
+			background-color: white;
+		}
+		&:nth-child(5n+1) {
+			background-color: red !important;
+		}
+	}
+}
+
 div.filtering {
-	margin-block: 1rem;
+	margin-block: .5rem;
 	display: grid;
-	grid-template-rows: auto auto;
-	grid-template-columns: 1fr 1fr auto;
-	gap: .5rem;
+	grid-template-rows: 2.3835rem auto 0fr min-content;
+	grid-template-columns: 1fr 1fr auto ;
+
+	column-gap: .5rem;
+	row-gap: .5rem;
+
+	&:has(div.filters:empty) {
+		row-gap: .25rem;
+	}
+
+	transition: grid-template-rows .5s ease-in-out;
+
+	&:not(.show_filter_menu) div.filter_menu {
+		border-width: 0;
+	}
+
+	&.show_filter_menu {
+		grid-template-rows: 2.3835rem auto 1fr min-content;
+	}
 
 	> div {
 		flex-grow: 1;
@@ -45,27 +82,22 @@ div.filtering {
 
 	div.filter {
 		grid-area: 1 / 1 / 2 / 2;
+		cursor: pointer;
+		overflow: hidden;
+		//transform: translateZ(0);
+		span {
+			overflow: hidden;
+		}
 	}
 
 	div.filters {
 		grid-area: 2 / 1 / 3 / 4;
-		background-color: red;
+		background-color: transparent !important;
+		border: none;
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
 		gap: .5rem;
-		&.members:not(:empty)::before {
-			content: "Members: "
-		}
-		&.genres:not(:empty)::before {
-			content: "Genres: "
-		}
-		&.seasons:not(:empty)::before {
-			content: "Seasons: "
-		}
-		&.years:not(:empty)::before {
-			content: "Years: "
-		}
 		> div {
 			display: flex;
 			align-items: center;
@@ -80,6 +112,19 @@ div.filtering {
 				transform: scale(1.5);
 				transform-origin: 0 53%;
 			}
+
+			&.member:not(:empty)::before {
+				content: "Member: "
+			}
+			&.genre:not(:empty)::before {
+				content: "Genre: "
+			}
+			&.season:not(:empty)::before {
+				content: "Season: "
+			}
+			&.year:not(:empty)::before {
+				content: "Years: "
+			}
 		}
 	}
 
@@ -89,18 +134,25 @@ div.filtering {
 			flex-grow: 1;
 			flex-shrink: 1;
 			cursor: pointer;
+			overflow: hidden;
 		}
 		select {
+			overflow: hidden;
 			cursor: pointer;
 			appearance: none;
+			-webkit-appearance: initial;
+			-moz-appearance: initial;
 			outline: none;
 			background-color: transparent;
 			border: none;
 			font: inherit;
 			color: inherit;
+			margin: 0;
+			padding: 0;
 			option {
 				@include theme(background-color, bg2);
 			}
+
 		}
 	}
 
@@ -118,6 +170,25 @@ div.filtering {
 			grid-template-columns: min-content 0fr;
 		}
 
+		svg.icon {
+			width: 1.25rem;
+			padding-left: .25rem;
+			padding-right: .5rem;
+
+			&.cross {
+				stroke-width: 8;
+				@include mobile {
+					stroke-width: 6;
+				}
+			}
+
+			@include mobile {
+				width: .75rem;
+				padding-left: .0625rem;
+				padding-right: .125rem;
+			}
+		}
+
 		div.searchbox {
 			grid-area: 1 / 2 / 2 / 3;
 			overflow: hidden;
@@ -126,30 +197,79 @@ div.filtering {
 			align-items: center;
 			input {
 				height: 1.75rem;
-				font-size: 1.5rem;
 				min-width: 5rem;
 				max-width: 50rem;
 				flex-grow: 1;
 				flex-shrink: 1;
-			}
+				@include mobile {
+					font-size: 1.2rem;
+					padding: 0;
+				}
+				@include not-mobile {
+					font-size: 1.5rem;
+					padding: 0;
+				}
 
-			svg.icon {
-				stroke-width: 8;
-				width: 1.25rem;
-				padding-left: .25rem;
-				padding-right: .5rem;
+				&::-webkit-search-decoration {
+					-webkit-appearance: none;
+				}
 			}
 		}
 	}
 
 	div.filter_menu {
 		grid-area: 3 / 1 / 4 / 4;
+		overflow: hidden;
+		transition: border-width .5s ease-in-out;
+
+		&:has(div.ts-wrapper.focus) {
+			overflow: visible;
+		}
+
+		ul {
+			width: 100%;
+			gap: 0.5rem;
+
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-items: flex-start;
+
+			padding: 1rem;
+			@include mobile {
+				padding: .375rem;
+			}
+			margin-block-start: 0;
+			margin-block-end: 0;
+
+			li {
+				flex-grow: 10;
+				flex-shrink: 10;
+				min-width: 5rem;
+				width: 15rem;
+				max-width: 30rem;
+				list-style: none;
+			}
+		}
+
+		div.ts-wrapper.focus {
+			z-index: 20;
+		}
 
 		div.range {
 			input.lower {
 				direction: rtl;
 			}
 		}
+	}
+
+	div.resultsCount {
+		grid-area: 4 / 1 / 5 / 4;
+		justify-content: center;
+		background-color: transparent !important;
+		border: none;
+		text-align: center;
 	}
 
 	svg.icon {
@@ -368,7 +488,7 @@ div#past_shows {
 @include mobile {
 	table.cards_mode, div.cards_mode {
 		tr, a.link {
-			flex: 1 1 10rem;
+			flex: 1 1 9rem;
 		}
 	}
 }
@@ -395,8 +515,12 @@ div#past_shows {
 		flex-direction: row;
 		flex-wrap: wrap;
 		justify-content: space-evenly;
-		gap: 1ch;
+		gap: .5rem;
 		vertical-align: baseline;
+
+		@include mobile {
+			gap: .25rem;
+		}
 	}
 
 	tr, a.link {
@@ -449,7 +573,12 @@ div#past_shows {
 
 		img.programme {
 			max-width: 100%;
+			aspect-ratio: 1/sqrt(2);
 			object-fit: contain;
+		}
+
+		div.genre {
+			flex-grow: 10;
 		}
 
 		span.card-subtitle {

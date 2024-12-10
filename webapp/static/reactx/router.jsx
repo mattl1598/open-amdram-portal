@@ -182,6 +182,8 @@ function App() {
 				tempContent.push(<FilePage key={tempContent.length} content={postJson}></FilePage>)
 			} else if(postJson.type === "login") {
 				tempContent.push(<Login key={tempContent.length} content={postJson}></Login>)
+			} else if(postJson.type === "error") {
+				tempContent.push(<ErrorComponent key={tempContent.length} content={postJson}></ErrorComponent>)
 			} else if(postJson.type === "dashboard") {
 				tempContent.push(<Dashboard key={tempContent.length} content={postJson}></Dashboard>)
 			} else if(postJson.type === "members_shows") {
@@ -192,6 +194,10 @@ function App() {
 				tempContent.push(<AccountSettings key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></AccountSettings>)
 			} else if(postJson.type === "admin_settings") {
 				tempContent.push(<AdminSettings key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></AdminSettings>)
+			} else if(postJson.type === "manage_media") {
+				tempContent.push(<ManageMedia key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></ManageMedia>)
+			} else if(postJson.type === "show_photos_form") {
+				tempContent.push(<ShowPhotosForm key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></ShowPhotosForm>)
 			} else if(postJson.type === "accounting") {
 				tempContent.push(<Accounting key={tempContent.length} content={postJson}></Accounting>)
 			} else if(postJson.type === "bookings") {

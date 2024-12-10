@@ -25,7 +25,8 @@ from sqlalchemy import and_
 # noinspection PyPackageRequirements
 from werkzeug.exceptions import HTTPException
 
-from webapp import react_permissions, react_routes, react_members_routes, react_support_routes, react_tickets_routes
+from webapp import react_permissions, react_photos_routes, react_routes, react_members_routes, react_support_routes, \
+	react_tickets_routes
 from webapp.svgs import *
 from webapp.models import *
 
@@ -236,6 +237,7 @@ def create_app():
 		app.register_blueprint(react_permissions.bp)
 		app.register_blueprint(react_tickets_routes.bp)
 		app.register_blueprint(react_support_routes.bp)
+		app.register_blueprint(react_photos_routes.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():

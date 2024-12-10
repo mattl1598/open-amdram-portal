@@ -49,26 +49,36 @@ function Input(
 }
 
 function Select({id, children, placeholder, selected, setSelected}) {
+	const ref = React.createRef()
+	let currentSelection = [...selected]
 	React.useEffect(()=>{
 		new TomSelect(`#${id}`, {
 			maxItems: 200,
 			allowEmptyOption: true,
 			hidePlaceholder: false,
-			items: selected,
+			items: currentSelection,
 			onItemAdd: function(){
 				this.setTextboxValue('');
 				this.refreshOptions();
 			},
+	        onChange: handleChange
 		})
 	}, [])
+	React.useEffect(()=>{
+		if (currentSelection !== selected) {
+			ref.current.tomselect.setValue(selected, true)
+			currentSelection = selected
+		}
+	}, [selected])
 	function handleChange(e) {
-		let values = e.target.tomselect.getValue(0)
-		setSelected([...values])
+		if (e !== currentSelection) {
+			currentSelection = [...e]
+			setSelected([...e])
+		}
 	}
 	return (
-		<select name="" id={id}
+		<select name="" id={id} ref={ref}
 	        placeholder={placeholder}
-	        onChange={handleChange}
 		>
 			{children}
 		</select>

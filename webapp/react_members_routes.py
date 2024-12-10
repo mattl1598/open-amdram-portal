@@ -191,18 +191,18 @@ def react_members_show(show_id):
 			Show.id == show_id,
 			Post.type.in_(["auditions", "private"])
 		).order_by(Post.date.desc()).scalar_subquery().alias("posts")
-	).scalar()
+	).scalar() or {}
 
 	files = db.session.query(
 		func.json_build_object(
-			'files', func.json_agg(func.json_build_object(
+			'files', func.coalesce(func.json_agg(func.json_build_object(
 					'id', text("files.id"),
 					'title', text("files.title"),
 					'date', text("files.date"),
 					'content', None,
 					'show_title', text("files.show_title"),
 					'type', 'file'
-				))
+				)), '[]')
 		)
 	).select_from(
 		db.session.query(
@@ -215,7 +215,7 @@ def react_members_show(show_id):
 		).filter(
 			Show.id == show_id
 		).order_by(Files.date.desc()).scalar_subquery().alias("files")
-	).scalar()
+	).scalar() or {}
 
 	show_details = db.session.query(
 		func.json_build_object(
@@ -235,7 +235,7 @@ def react_members_show(show_id):
 		Member, MSL.member_id == Member.id
 	).join(
 		User, Member.associated_user == User.id, isouter=True
-	).group_by(Show).order_by(Show.date.desc()).scalar()
+	).group_by(Show).order_by(Show.date.desc()).scalar() or {}
 
 	data = {
 		"type": "members_show",

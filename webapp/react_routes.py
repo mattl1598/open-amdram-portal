@@ -4,6 +4,7 @@ from pprint import pprint
 import requests
 from flask_login import current_user, login_user, logout_user
 from sqlalchemy import literal_column, or_, func, case, text
+from sqlalchemy.sql import union
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from flask import abort, Blueprint, make_response, redirect, jsonify, \
@@ -120,6 +121,35 @@ def react_post(post_id):
 
 @bp.get("/past-shows")
 def react_past_shows():
+	person_map = db.session.query(
+		func.jsonb_object_agg(
+			text("results.id"), text("results.info")
+		)
+	).select_from(
+		union(
+			db.session.query(
+				Member.id.label("id"),
+				func.jsonb_build_object(
+					"name", Member.firstname + " " + Member.lastname,
+					"shows", func.array_to_json(func.array_agg(func.distinct(MSL.show_id)))
+				).label("info")
+			).join(
+				MSL, MSL.member_id == Member.id
+			).filter(Member.associated_user.is_(None)).group_by(Member),
+			db.session.query(
+				User.id.label("id"),
+				func.jsonb_build_object(
+					"name", User.firstname + " " + User.lastname,
+					"shows", func.array_to_json(func.array_agg(func.distinct(MSL.show_id)))
+				).label("info")
+			).join(
+				Member, User.id == Member.associated_user
+			).join(
+				MSL, MSL.member_id == Member.id
+			).filter(Member.associated_user.is_not(None)).group_by(User)
+		).alias("results")
+	).scalar()
+
 	data = {
 		"type": "list_shows",
 		"default_layout": "cards",
@@ -133,7 +163,8 @@ def react_past_shows():
 				"season": show.season,
 				"genre": show.genre
 			} for show in Show.query.filter(Show.date<datetime.now()).order_by(Show.date.desc()).all()
-		]
+		],
+		"members": person_map
 	}
 	if "react" in request.args.keys():
 		return jsonify(data)

@@ -15,7 +15,7 @@ from flask_login import current_user, login_required
 # import datetime
 from datetime import timedelta, datetime
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 
 from webapp.models import *
 from flask import current_app as app
@@ -106,7 +106,7 @@ class OrderInfo:
 
 @bp.route("/test")
 def get_ticket_types():
-	ticket_types = []
+	ticket_types = set()
 	for item in (app.square.catalog.search_catalog_items(
 			body={
 				"category_ids": [
@@ -120,7 +120,15 @@ def get_ticket_types():
 	).body.get("items") or []):
 		# print(item["item_data"]["ecom_visibility"], "-", item["item_data"]["name"])
 		if item["item_data"]["ecom_visibility"] in ["VISIBLE", "HIDDEN"]:
-			ticket_types.append(item["item_data"]["name"])
+			ticket_types.update(item["item_data"]["name"])
+
+	end_of_last_show = Show.query.filter(Show.date < datetime.utcnow()).order_by(Show.date.desc()).first().date + timedelta(days=1)
+	mod_to_items = set(db.session.query(
+		func.array_agg(BookingModifications.to_item)
+	).filter(
+		BookingModifications.datetime > end_of_last_show
+	).scalar())
+	ticket_types.update(mod_to_items)
 
 	perf_tree = {}
 	for ticket_type in ticket_types:
@@ -134,11 +142,25 @@ def get_ticket_types():
 	return perf_tree
 
 
-def collect_orders():
+def collect_orders(show_id=""):
 	now = datetime.now() - timedelta(days=1)
-	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
-
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	if show_id == "":
+		end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
+		date_filter = {
+			"created_at": {
+				"start_at": end_of_last_show.strftime(square_date_format)
+			}
+		}
+	else:
+		end_of_this_show = Show.query.get(show_id).date + timedelta(days=1)
+		end_of_last_show = Show.query.filter(Show.date < end_of_this_show).filter(Show.id != show_id).order_by(Show.date.desc()).first().date + timedelta(days=1)
+		date_filter = {
+			"created_at": {
+				"start_at": end_of_last_show.strftime(square_date_format),
+				"end_at": end_of_this_show.strftime(square_date_format),
+			}
+		}
 
 	perf_tree = get_ticket_types()
 
@@ -147,7 +169,8 @@ def collect_orders():
 	results = app.square.orders.search_orders(
 		body={
 			"location_ids": [
-				"0W6A3GAFG53BH"
+				"0W6A3GAFG53BH",
+				"M1D6QJY6BHW9R"
 			],
 			"query": {
 				"sort": {
@@ -155,16 +178,7 @@ def collect_orders():
 					"sort_order": "ASC"
 				},
 				"filter": {
-					"date_time_filter": {
-						"created_at": {
-							"start_at": end_of_last_show.strftime(square_date_format)
-						}
-					},
-					"source_filter": {
-						"source_names": [
-							"Square Online"
-						]
-					},
+					"date_time_filter": date_filter,
 					"state_filter": {
 						"states": [
 							"OPEN",
@@ -229,7 +243,7 @@ def collect_orders():
 				}
 				order_info = OrderInfo(**tickets_info)
 				items.append(order_info)
-			for item in order["line_items"]:
+			for item in order.get("line_items", []):
 				try:
 					if len((mods := BookingModifications
 										.query
@@ -284,13 +298,14 @@ def collect_orders():
 					pass
 
 		for item in items:
+			print(item)
 			keys = list(item.tickets.keys())[0].split(" - ", 2)
 			item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
-			if (existing := perf_tree[keys[0]][keys[1]].get(item.id)) is not None:
+			if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
 				perf_tree[keys[0]][keys[1]][item.id] = existing + item
 			else:
 				perf_tree[keys[0]][keys[1]][item.id] = item
-
+	print(perf_tree)
 	return perf_tree
 
 
@@ -550,7 +565,7 @@ def historic_sales():
 					item_sums = {}
 					item_refunds = []
 					for item in order["line_items"]:
-						if item.get("name") and show.title in item.get("name"):
+						if item.get("name") and show.title.replace("`", "'") in item.get("name"):
 							if "returned_quantities" in item.keys():
 								# print(order["id"])
 								for refund in item["returned_quantities"]:
@@ -574,8 +589,8 @@ def historic_sales():
 			if mod.to_item and mod.from_item and mod.from_item != mod.to_item:
 				if mod.from_item.split(" - ", 2)[-1] == "Adult" and mod.to_item.split(" - ", 2)[-1] == "Junior":
 					# change from adult to junior with partial refund
-					from_value = {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.from_item.split(" - ")[-1]) * mod.change_quantity
-					to_value = {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * mod.change_quantity
+					from_value = {"Adult": 1200, "Child": 1000, "Free": 0}.get(mod.from_item.split(" - ")[-1]) * mod.change_quantity
+					to_value = {"Adult": 1200, "Child": 1000, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * mod.change_quantity
 					expected_refunds += from_value - to_value
 			if mod.ref_num >= 0 and mod.from_item and mod.change_quantity > 0:
 				# change performance
@@ -598,7 +613,7 @@ def historic_sales():
 					item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
 					sums[item_name] = (sums.get(item_name) or 0) + abs(int(mod.change_quantity))
 				sums[mod.to_item] = (sums.get(mod.to_item) or 0) + int(mod.change_quantity)
-				expected_refunds += {"Adult": 1000, "Junior": 800, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * abs(mod.change_quantity)
+				expected_refunds += {"Adult": 1200, "Child": 1000, "Free": 0}.get(mod.to_item.split(" - ")[-1]) * abs(mod.change_quantity)
 
 		payments = []
 		flag = True
@@ -711,6 +726,10 @@ def historic_sales():
 				"net": totals["net"]
 			}
 		}
+		print("TOTALS: ")
+		pprint(totals)
+		print("SUMS: ")
+		pprint(sums)
 		return jsonify(api_results)
 	else:
 		return render_template(

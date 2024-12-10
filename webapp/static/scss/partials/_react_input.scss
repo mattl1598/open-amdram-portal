@@ -1,5 +1,21 @@
 @import "variables";
 
+:root {
+	--ts-pr-min: 1rem !important;
+	//&:has(div.main-outer.mobile) {
+	//	--ts-pr-min: 1.875rem !important;
+	//}
+}
+
+.ts-control, .ts-dropdown {
+	font-size: 1rem;
+	line-height: initial;
+	input {
+		font-size: 1rem;
+		line-height: initial;
+	}
+}
+
 div.react-fancy-input {
 	position: relative;
 	width: 100%;
@@ -164,7 +180,7 @@ div.react-fancy-input {
 
 div.dual_range {
 	div.sliders {
-		width: 20rem;
+		width: 100%;
 		display: flex;
 		font-size: 0;
 		div {

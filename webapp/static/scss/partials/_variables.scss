@@ -84,7 +84,7 @@ $light: (
 
 @mixin mobile($ancestor: "") {
 	@at-root {
-		div.main-outer.mobile #{$ancestor} #{&} {
+		body:has(div.main-outer.mobile) #{$ancestor} #{&} {
 	        @content;
 		}
 	}
@@ -92,7 +92,7 @@ $light: (
 
 @mixin not-mobile($ancestor: "") {
 	@at-root {
-		div.main-outer:not(.mobile) #{$ancestor} #{&} {
+		body:has(div.main-outer:not(.mobile)) #{$ancestor} #{&} {
 	        @content;
 		}
 	}

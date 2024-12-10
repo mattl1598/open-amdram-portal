@@ -1,3 +1,5 @@
+@import "variables";
+
 div#nav {
 	min-height: 3.75rem;
 	position: sticky;
@@ -89,7 +91,7 @@ div.react-nav {
 
 	display: grid;
 	transition: all 500ms;
-	grid-template-columns: min-content 1fr;
+	grid-template-columns: auto 1fr;
 	grid-template-rows: min-content 0fr min-content;
 	grid-template-areas:
 		"name nav"
@@ -195,14 +197,26 @@ div.nav, div.mobile-nav, div.hamburger {
 				display: none;
 
 				flex-direction: row;
-				align-items: stretch;
+				align-items: center !important;
 				justify-content: center;
+
+				min-width: 3.75rem;
+				width: 3.75rem;
+				//height: min-content;
+
 				svg {
+					@include mobile {
+						padding: 0 !important;
+						margin: 0 !important;
+					}
+
+					height: min-content;
+
 					display: block;
 					fill: none;
 					@include theme(stroke, text);
 					stroke-width: 7%;
-					margin: auto 0;
+					//margin: auto 0;
 					//transition: transform 500ms;
 					transition: transform 500ms;
 					transform-origin: 50% 50%;
@@ -269,8 +283,6 @@ div.nav, div.mobile-nav, div.hamburger {
 }
 
 div.title {
-	//margin: 1ch;
-	padding: 0 1ch;
 	@include theme(color, text);
 	@include theme(background-color, bg1);
 	white-space: nowrap;
@@ -279,6 +291,10 @@ div.title {
 	justify-content: flex-start;
 	align-items: center;
 	z-index: 20;
+	padding: 0 .5rem;
+	@include mobile {
+		padding: 0 .25rem !important;
+	}
 
 	a {
 		text-decoration: none;
@@ -289,7 +305,15 @@ div.title {
 		justify-content: flex-start;
 		align-items: center;
 
+		grid-template-columns: min-content 1fr;
+		gap: .5rem;
+
+		@include mobile {
+			gap: .25rem !important;
+		}
+
 		span.icon {
+			grid-area: 1/1/2/2;
 			display: flex;
 			flex-direction: row;
 			justify-content: flex-start;
@@ -299,16 +323,23 @@ div.title {
 		svg {
 			display: inline-block;
 			width: 3em;
-			//fill: inherit;
-			padding-right: 1ch;
 		}
 
 		h1 {
-			display: inline-block;
-			margin-block-start: 0.33em;
-            margin-block-end: 0.33em;
+			margin-block: 0;
 			color: inherit;
 			font-weight: normal;
+
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			column-gap: .5rem;
+
+			row-gap: .025rem;
+			font-size: clamp(1rem, 9vw, 2.5rem);
+			width: max-content;
+			max-width: calc(100vw - 3.75rem - 3.75rem);
+			line-height: calc(clamp(1rem, 9vw, 2.5rem)*.9);
 		}
 
 		&:hover {

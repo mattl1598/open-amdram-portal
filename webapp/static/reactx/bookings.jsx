@@ -19,6 +19,7 @@ function ManageBookings({content}) {
 	let performances = []
 	let mods = []
 	let items = []
+	let show_options = []
 
 	for (let i=0; i<content.performances.length; i++) {
 		let perf = content.performances[i]
@@ -57,6 +58,11 @@ function ManageBookings({content}) {
 		items.push(<option value={ item }>{ item }</option>)
 	}
 
+	for (let i=0; i<content.past_shows.length; i++) {
+		let show = content.past_shows[i]
+		show_options.push(<option value={show.id} selected>{show.title}</option>)
+	}
+
 	function handleFormSubmit(e) {
 		let form = e.target
 		form.classList.add("pending")
@@ -92,7 +98,7 @@ function ManageBookings({content}) {
 					<h2>Modify Bookings: </h2>
 					{/*Form/table goes here*/}
 
-					<form method="POST" action="" id="add_mod"></form>
+					<form method="POST" action="/members/api/bookings/add_booking_mod" id="add_mod"  onSubmit={(e) => handleFormSubmit(e)}></form>
 
 					<table className={"mods"}>
 						<thead>
@@ -147,6 +153,12 @@ function ManageBookings({content}) {
 						</div>
 						<div className="loader"></div>
 					</form>
+				</Tab>
+				<Tab title={"Historic Sales"}>
+					<select defaultValue={""}>
+						<option value="" disabled>Select Show...</option>
+						{show_options}
+					</select>
 				</Tab>
 			</Tabs>
 		</div>

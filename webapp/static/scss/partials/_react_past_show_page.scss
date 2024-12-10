@@ -8,23 +8,42 @@ div.link {
 }
 
 div.details-outer {
-	display: flex;
-	flex-direction: row;
+	display: grid;
+	grid-template-areas:
+		"title title"
+		"text text"
+		"text text"
+	;
+	grid-template-columns: 6fr 4fr;
+	grid-template-rows: auto auto ;
 	width: 100%;
-	gap: 2rem;
+	gap: 1rem;
+
+	h1 {
+		grid-area: title;
+	}
+	div.details-inner {
+		grid-area: text;
+		display: block;
+	}
 
 	div.details-text {
-		width: 60%;
-		display: flex;
+		//grid-area: text;
+		//width: 100%;
+		display: block;
 		flex-direction: column;
 		text-align: center;
-		gap: 0.7rem;
+		//gap: 0.7rem;
+
+		p {
+			margin-block: .6rem;
+		}
 
 		audio {
 			margin: 0 auto;
 		}
 
-		span.directors_producers a {
+		p.directors_producers a {
 			&:not(:only-child):not(:first-of-type):not(:last-of-type)::before {
 				content: ", "
 			}
@@ -37,6 +56,7 @@ div.details-outer {
 			text-decoration: underline;
 		    text-decoration-style: dotted;
 		    text-underline-offset: 0.25ch;
+			padding-bottom: .325rem;
 			&:hover {
 				cursor: pointer;
 			}
@@ -44,6 +64,9 @@ div.details-outer {
 	}
 
 	div.details-cover {
+		//grid-area: text;
+		float: right;
+		margin: 0 0 1rem 1rem;
 		width: 40%;
 		object-fit: contain;
 

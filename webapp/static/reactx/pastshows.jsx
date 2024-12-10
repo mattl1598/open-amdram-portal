@@ -1,6 +1,7 @@
 // TODO LIST
 // TODO: loading bar on link click? + more error catching in router.js
 const alphaNum = RegExp("[^A-Za-z0-9 ]", "g")
+const hasSetDiff = typeof((new Set()).difference) === 'function'
 
 function emp(string) {
 	if (string) {
@@ -11,16 +12,32 @@ function emp(string) {
 }
 
 function ListShows({content}) {
+	let yearMin = Infinity
+	let yearMax = -Infinity
+
+	for (let i = 0; i < content.shows.length; i++) {
+		let showYear = (new Date(content.shows[i].date)).getFullYear()
+		if (showYear > yearMax) {
+			yearMax = showYear
+		}
+		if (showYear < yearMin) {
+			yearMin = showYear
+		}
+	}
+
 	const [displayMode, setDisplayMode] = React.useState(content.default_layout ? content.default_layout : "cards")
 	const [expandSearch, setExpandSearch] = React.useState(false)
+	const [expandFilterMenu, setExpandFilterMenu] = React.useState(false)
 	const [searchTerm, setSearchTerm] = React.useState("")
 	const [sortMode, setSortMode] = React.useState("time_ascending")
 	const [genreFilter, setGenreFilter] = React.useState([])
 	const [seasonFilter, setSeasonFilter] = React.useState([])
-	const [lowerYearFilter, setLowerYearFilter] = React.useState(1976)
-	const [higherYearFilter, setHigherYearFilter] = React.useState(2024)
-	let genreOptions = []
-	let seasonOptions = []
+	const [memberFilter, setMemberFilter] = React.useState([])
+	const [lowerYearFilter, setLowerYearFilter] = React.useState(yearMin)
+	const [higherYearFilter, setHigherYearFilter] = React.useState(yearMax)
+	let memberOptions = []
+	let genreOptions = new Set()
+	let seasonOptions = new Set()
 	const sortSelectRef = React.createRef()
 	let sortingModes = {
 		time_ascending: {reverse: true, order_property: "date", text: "Date (New to Old)", icon: "sort_clock_ascending"},
@@ -64,10 +81,19 @@ function ListShows({content}) {
 			}
 			if (key > 0) {
 				key = `${key.toFixed(18)}${content.shows[i].id}`
+				if (Object.keys(shows).includes(key)) {
+					key += content.shows[i].date
+				}
 				shows[key] = <ShowListItem key={i} item={content.shows[i]}></ShowListItem>
 			}
 		}
 	} else {
+		let memberFilteredShows = new Set(content.shows.map((show)=>{return show.id}));
+		for (let i=0; i<memberFilter.length; i++) {
+			let thisMembersShows = new Set(content.members[memberFilter[i]].shows)
+			memberFilteredShows = memberFilteredShows.intersection(thisMembersShows)
+		}
+
 		for (let i = 0; i < content.shows.length; i++) {
 			let key = content.shows[i][sortingModes[sortMode].order_property] || ""
 			if (Object.keys(shows).includes(key)) {
@@ -75,11 +101,12 @@ function ListShows({content}) {
 			}
 			let showThis = true
 			if (content.shows[i].genre) {
-				genreOptions.push(<option value={content.shows[i].genre}>{content.shows[i].genre}</option>)
+				genreOptions.add(content.shows[i].genre)
 			}
 			if (content.shows[i].season) {
-				seasonOptions.push(<option value={content.shows[i].season}>{content.shows[i].season}</option>)
+				seasonOptions.add(content.shows[i].season)
 			}
+			showThis *= (!memberFilter.length || memberFilteredShows.has(content.shows[i].id))
 			showThis *= (!genreFilter.length || genreFilter.includes(content.shows[i].genre))
 			showThis *= (!seasonFilter.length || seasonFilter.includes(content.shows[i].season))
 			let year = (new Date(content.shows[i].date)).getFullYear()
@@ -88,6 +115,12 @@ function ListShows({content}) {
 				shows[key] = <ShowListItem key={i} item={content.shows[i]}></ShowListItem>
 			}
 		}
+	}
+
+	let memberKeys = Object.keys(content.members)
+	for (let i=0; i<memberKeys.length; i++) {
+		let key = memberKeys[i]
+		memberOptions.push(<option key={key} value={key}>{content.members[key].name}</option>)
 	}
 
 	let sortOptions = []
@@ -99,7 +132,34 @@ function ListShows({content}) {
 	function handleSortChange(e) {
 		setSortMode(e.target.value)
 	}
-	let showChildren = Object.values(Object.fromEntries(Object.entries(shows).sort()))
+
+	function resetYearsFilter() {
+		setLowerYearFilter(yearMin)
+		setHigherYearFilter(yearMax)
+	}
+	function removeGenreFilter(item) {
+		let index = genreFilter.indexOf(item);
+		if (index > -1) {
+			genreFilter.splice(index, 1);
+		}
+		setGenreFilter([...genreFilter])
+	}
+	function removeMemberFilter(item) {
+		let index = memberFilter.indexOf(item);
+		if (index > -1) {
+			memberFilter.splice(index, 1);
+		}
+		setMemberFilter([...memberFilter])
+	}
+	function removeSeasonFilter(item) {
+		let index = seasonFilter.indexOf(item);
+		if (index > -1) {
+			seasonFilter.splice(index, 1);
+		}
+		setSeasonFilter([...seasonFilter])
+	}
+
+	let showChildren = Object.entries(shows).sort().map((a)=>{return a[1]})
 	if (sortingModes[sortMode].reverse) {
 		showChildren.reverse()
 	}
@@ -107,7 +167,7 @@ function ListShows({content}) {
 	return (
 		<div className="content">
 			<h1>{content.title}</h1>
-			<div className="filtering">
+			<div className={`filtering ${expandFilterMenu ? "show_filter_menu" : ""}`}>
 				<div className="search">
 					<Icon icon={"search"} onClick={() => {
 						setExpandSearch(true);
@@ -117,7 +177,7 @@ function ListShows({content}) {
 						<input type="search" onChange={(e) => {
 							setSearchTerm(e.target.value)
 						}} value={searchTerm}/>
-						<Icon icon={"cross"} onClick={() => {
+						<Icon icon={"cross"} className={"cross"} onClick={() => {
 							setExpandSearch(false);
 							setSearchTerm("");
 							setSortMode("time_ascending");
@@ -131,50 +191,73 @@ function ListShows({content}) {
 						<Icon icon={sortingModes[sortMode].icon}></Icon>
 						<span>Sort:&nbsp;</span>
 						<select ref={sortSelectRef} onChange={handleSortChange} name="sortMode" id="sortMode"
-						        value={sortMode}>
+						        value={sortMode} onClick={(e)=>{e.stopPropagation()}}>
 							{sortOptions}
 						</select>
 					</label>
 				</div>
-				<div className="filter">
+				<div className="filter" onClick={()=>{setExpandFilterMenu(!expandFilterMenu)}}>
 					<Icon icon={"filter"}></Icon>
-					<span>Filter</span>
+					<span>Filters
+						{
+							genreFilter.length||seasonFilter.length||lowerYearFilter>yearMin||higherYearFilter>yearMax ?
+							` (${genreFilter.length+seasonFilter.length+(lowerYearFilter>yearMin||higherYearFilter>yearMax)} Applied)`
+							: ""
+						}
+					</span>
 				</div>
-				{
-					genreFilter.length ?
-						<div className={"filters genres"}>
-							{genreFilter.map((val)=>{return (<div>{val}</div>)})}
-						</div>
-						: ""
-				}{
-					seasonFilter.length ?
-						<div className={"filters seasons"}>
-							{seasonFilter.map((val)=>{return (<div>{val}</div>)})}
-						</div>
-						: ""
-				}
+				<div className="filters">
+					{
+						memberFilter.length ?
+							memberFilter.map((val)=>{return (<div className={"member"} onClick={()=>{removeMemberFilter(val)}}>{content.members[val].name}</div>)})
+							: ""
+					}
+					{
+						genreFilter.length ?
+							genreFilter.map((val)=>{return (<div className={"genre"} onClick={()=>{removeGenreFilter(val)}}>{val}</div>)})
+							: ""
+					}{
+						seasonFilter.length ?
+							seasonFilter.map((val)=>{return (<div className={"season"} onClick={()=>{removeSeasonFilter(val)}}>{val}</div>)})
+							: ""
+					}{
+						lowerYearFilter > yearMin || higherYearFilter < yearMax?
+							<div className={"year"} onClick={resetYearsFilter}>{lowerYearFilter} - {higherYearFilter}</div>
+							: ""
+					}
+				</div>
 				<div className="filter_menu">
 					<ul>
-						{/*<li>*/}
-						{/*	Members: <input type="text"/>*/}
-						{/*</li>*/}
+						{
+							hasSetDiff ?
+							<li>
+								Members:
+								<Select id={"member_filter"} selected={memberFilter} setSelected={setMemberFilter} placeholder={"Filter by Members..."}>
+									{memberOptions}
+								</Select>
+							</li> :
+							<React.Fragment></React.Fragment>
+						}
 						<li>
 							Genres:
 							<Select id={"genre_filter"} selected={genreFilter} setSelected={setGenreFilter} placeholder={"Filter by Genre..."}>
-								{genreOptions}
+								{[...genreOptions].map((val)=>{return <option value={val} key={val}>{val}</option>})}
 							</Select>
 						</li>
 						<li>
 							Seasons:
 							<Select id={"season_filter"} selected={seasonFilter} setSelected={setSeasonFilter} placeholder={"Filter by Season..."}>
-								{seasonOptions}
+								{[...seasonOptions].map((val)=>{return <option value={val} key={val}>{val}</option>})}
 							</Select>
 						</li>
 						<li>
 							Years:
-							<Range min={1976} max={2024} lowerVal={lowerYearFilter} higherVal={higherYearFilter} lowerValSetter={setLowerYearFilter} higherValSetter={setHigherYearFilter}></Range>
+							<Range min={yearMin} max={yearMax} lowerVal={lowerYearFilter} higherVal={higherYearFilter} lowerValSetter={setLowerYearFilter} higherValSetter={setHigherYearFilter}></Range>
 						</li>
 					</ul>
+				</div>
+				<div className="resultsCount">
+					{showChildren.length} results found.
 				</div>
 			</div>
 			<div className={`${displayMode}_mode`} id="past_shows">
@@ -213,7 +296,8 @@ function ShowPage({content}) {
 	let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 	let dateObj = new Date(content.show.date)
 	const parser = new DOMParser()
-	let [nodaReview, setNodaReview] = React.useState(parser.parseFromString("<div class='selectMe'><div class='loader'></div></div>", "text/html").querySelector(".selectMe"))
+	let [nodaReview, setNodaReview] = React.useState(<div className='loader'></div>)
+	// let [nodaReview, setNodaReview] = React.useState(parser.parseFromString("<div class='selectMe'><div class='loader'></div></div>", "text/html").querySelector(".selectMe"))
 	let [gotNodaReview, setGotNodaReview] = React.useState(false)
 	let directors = []
 	let producers = []
@@ -285,7 +369,15 @@ function ShowPage({content}) {
 				.then((data) => {return data.text()})
 				.then((data) => {
 					let domObject = parser.parseFromString(data, "text/html")
-					setNodaReview(domObject.querySelector('.page_content:has(h2)'))
+					let queryResults = domObject.querySelectorAll('.page_subheading, .page_content')
+					let temp = []
+					let styleRegex = RegExp(` style="[^"]+">`, "g")
+					for (let i = 0; i < queryResults.length; i++) {
+						let html = String(queryResults[i].innerHTML)
+						html = html.replaceAll(styleRegex, ">")
+						temp.push(<div key={`noda${i}`} dangerouslySetInnerHTML={{__html: html}}></div>)
+					}
+					setNodaReview(<React.Fragment>{temp}</React.Fragment>)
 					setGotNodaReview(true)
 				})
 		}
@@ -294,34 +386,36 @@ function ShowPage({content}) {
 	return (
 		<div className="content">
 			<div className="details-outer">
-				<div className="details-text">
-					<h1>{content.title}</h1>
-					<h3>{content.show.season} - {months[dateObj.getMonth()]} {dateObj.getFullYear()}</h3>
-					<span>Type: {content.show.show_type} {content.show.genre}</span>
-					<span className={"directors_producers"}>Directed by: {directors}</span>
-					<span className={"directors_producers"}>Produced by: {producers}</span>
-					<span>Written by: {content.show.author}</span>
-					{
-						content.show.radio_audio ?
-							<audio src={content.show.radio_audio} controls></audio>
-						:
-							<React.Fragment></React.Fragment>
-					}
-					<Markdown content={content.show.text_blob}></Markdown>
-					{
-						content.show.noda_review ?
-							<details>
-								<summary onClick={getNODAReport}>NODA Review</summary>
-								<div dangerouslySetInnerHTML={{__html: String(nodaReview.innerHTML)}}></div>
-							</details>
-						:
-							<React.Fragment></React.Fragment>
-					}
+				<h1>{content.title}</h1>
+				<div className="details-inner">
+					<div className="details-cover">
+						<Image src={content.show.programme} alt={`${content.show.title} programme cover`}
+						       className="programme"/>
+					</div>
+					<div className="details-text">
+						<h3>{content.show.season} - {months[dateObj.getMonth()]} {dateObj.getFullYear()}</h3>
+						<p>Type: {content.show.show_type} {content.show.genre}</p>
+						<p className={"directors_producers"}>Directed by: {directors}</p>
+						<p className={"directors_producers"}>Produced by: {producers}</p>
+						<p>Written by: {content.show.author}</p>
+						{
+							content.show.radio_audio ?
+								<audio src={content.show.radio_audio} controls></audio>
+								:
+								<React.Fragment></React.Fragment>
+						}
+						<Markdown content={content.show.text_blob}></Markdown>
+						{
+							content.show.noda_review ?
+								<details>
+									<summary onClick={getNODAReport}>NODA Review</summary>
+									<div>{nodaReview}</div>
+								</details>
+								:
+								<React.Fragment></React.Fragment>
+						}
 
-				</div>
-				<div className="details-cover">
-					<Image src={content.show.programme} alt={`${content.show.title} programme cover`}
-					     className="programme"/>
+					</div>
 				</div>
 			</div>
 
@@ -331,7 +425,7 @@ function ShowPage({content}) {
 						<Tab title={"Photos"}>
 							<Gallery key={"photos"} imageLinks={content.photos}></Gallery>
 						</Tab>
-					:
+						:
 						<React.Fragment></React.Fragment>
 				}
 				{
@@ -339,17 +433,17 @@ function ShowPage({content}) {
 						<Tab title={"Videos"}>
 							<Gallery key={"videos"} imageLinks={content.videos} type={"videos"}></Gallery>
 						</Tab>
-					:
+						:
 						<React.Fragment></React.Fragment>
 				}
 			</Tabs>
 
 			<div className="cast_crew">
 				<div className="cast">
-				<h3>Cast:</h3>
+					<h3>Cast:</h3>
 					<table className={"roles_table"}>
 						<tbody>
-							{castRows}
+						{castRows}
 						</tbody>
 					</table>
 				</div>
@@ -357,7 +451,7 @@ function ShowPage({content}) {
 					<h3>Crew:</h3>
 					<table className={"roles_table"}>
 						<tbody>
-							{crewRows}
+						{crewRows}
 						</tbody>
 					</table>
 				</div>

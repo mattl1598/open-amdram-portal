@@ -25,6 +25,17 @@ function Link({href, className, children, style, title="", target="_self", onCli
 	)
 }
 
+function ErrorComponent({content}) {
+	return (
+		<div className="content">
+			<div className="error">
+				<h2>Error {content.title}</h2>
+				<p>{content.message || "An unexpected error occurred. Please try again later."}</p>
+			</div>
+		</div>
+	);
+}
+
 function Frontpage({nextShow, children}) {
 	return (
 		<div className={"content"} key={`content_${nextShow.title}`}>
