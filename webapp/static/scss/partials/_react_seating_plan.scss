@@ -15,6 +15,62 @@ html body#body div.content {
 	max-width: 100% !important;
 }
 
+div.seating-planner:has(> div.ticketPricingPopupContainer.show) {
+	div.controls, div.seats-container, div.orders, div.tickets {
+		-webkit-filter: blur(1rem);
+	    -moz-filter: blur(1rem);
+	    -o-filter: blur(1rem);
+	    -ms-filter: blur(1rem);
+	    filter: blur(1rem);
+		user-select: none;
+		pointer-events: none;
+	}
+}
+
+div.ticketPricingPopupContainer {
+	display: none;
+}
+
+div.ticketPricingPopupContainer.show {
+	display: grid;
+	grid-area: 1 / 1 / -1 / -1;
+	padding: 5rem;
+}
+
+div.ticketPricingPopup {
+	width: max-content;
+	height: auto;
+	z-index: 100;
+
+	place-self: start center;
+	@include theme(background-color, bg2);
+	border-radius: .5rem;
+
+	.popupTitle {
+		display: grid;
+		//width: 100%;
+		grid-template-areas: "title cross";
+		grid-template-columns: 1fr min-content;
+		padding: 0 1rem;
+		place-items: center;
+
+		h2 {
+			grid-area: title;
+			width: min-content;
+			white-space: nowrap;
+		}
+		svg.icon {
+			grid-area: cross;
+			@include theme(fill, text);
+			@include theme(stroke, text);
+			stroke-width: 0.25rem;
+			width: 2.5rem;
+			height: 2.5rem;
+			cursor: pointer;
+		}
+	}
+}
+
 div.controls {
 	grid-area: header;
 	display: grid;
@@ -273,6 +329,10 @@ div.seat {
 		cursor: pointer;
 
 		grid-area: i;
+
+		&:not([title]) {
+			display: none;
+		}
 	}
 
 	&:not(.assigned) .remove {

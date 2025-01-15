@@ -180,6 +180,30 @@ def add_booking_mod():
 	}
 
 
+@bp.post("/members/api/bookings/delete_booking_mod")
+def delete_booking_mod():
+	mod_id = request.json.get("id")
+	if not mod_id:
+		return {
+			"code": 400,
+			"msg": "Booking modification ID is required."
+		}
+
+	booking_mod = db.session.query(BookingModifications).filter_by(id=mod_id).first()
+	if not booking_mod:
+		return {
+			"code": 404,
+			"msg": "Booking modification not found."
+		}
+
+	db.session.delete(booking_mod)
+	db.session.commit()
+	return {
+		"code": 200,
+		"msg": "Booking modification deleted successfully."
+	}
+
+
 @bp.route("/members/bookings/seating/<perf_id>", methods=["GET", "POST"])
 def seating_planner(perf_id):
 	check_page_permission("bookings")

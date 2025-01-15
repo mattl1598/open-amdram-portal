@@ -222,6 +222,7 @@ def collect_orders(show_id=""):
 			items.append(order_info)
 		for i in range(0, len(results.body.get("orders") or [])):
 			order = results.body["orders"][i]
+			# pprint(order)
 			mods = (BookingModifications
 						.query
 						.filter_by(ref_num=i)
@@ -287,7 +288,7 @@ def collect_orders(show_id=""):
 							"ticket_type": item["name"],
 							"ticket_quantity": item["quantity"],
 							"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-							"note": order["fulfillments"][0]["pickup_details"]["note"],
+							"note": order["fulfillments"][0]["pickup_details"].get("note"),
 							"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
 							"id": order["id"],
 							"ref": i
@@ -295,17 +296,17 @@ def collect_orders(show_id=""):
 						order_info = OrderInfo(**tickets_info)
 						items.append(order_info)
 				except KeyError as e:
+					# print(e)
 					pass
 
 		for item in items:
-			print(item)
 			keys = list(item.tickets.keys())[0].split(" - ", 2)
 			item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
 			if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
 				perf_tree[keys[0]][keys[1]][item.id] = existing + item
 			else:
 				perf_tree[keys[0]][keys[1]][item.id] = item
-	print(perf_tree)
+	pprint(perf_tree)
 	return perf_tree
 
 

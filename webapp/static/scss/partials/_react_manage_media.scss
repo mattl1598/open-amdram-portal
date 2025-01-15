@@ -4,6 +4,7 @@ div.container {
 
 	div.details {
 		display: flex;
+		align-self: flex-start;
 		position: sticky;
 		top: 0;
 		flex-direction: column;

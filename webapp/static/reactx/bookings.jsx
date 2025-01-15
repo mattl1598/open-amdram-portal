@@ -17,7 +17,8 @@ function ManageBookings({content}) {
 	let seats_sat = 0
 	let seats_total = 0
 	let performances = []
-	let mods = []
+	// let mods = []
+	const [mods, setMods] = React.useState([])
 	let items = []
 	let show_options = []
 
@@ -37,30 +38,34 @@ function ManageBookings({content}) {
 		)
 	}
 
-	for (let i=0; i<content.mods.length; i++) {
-		let mod = content.mods[i]
-		mods.push(
-			<tr>
-				<td className={"info"} title={ mod.id }><Icon icon="important"></Icon></td>
-				<td className={"center"}>{ mod.ref }</td>
-				<td>{ mod.from_item || "" }</td>
-				<td className={"center"}>{ mod.change_quantity }</td>
-				<td className={"wide"}>{ mod.to_item }</td>
-				<td>{ mod.note || "" }</td>
-				<td className={"center"}><input type={"checkbox"} checked={mod.is_reservation ? "checked" : ""} onClick="return false;"></input></td>
-				<td className={"center"}><a href={`/members/bookings?delete=${ mod.id }`}>Delete</a></td>
-			</tr>
-		)
-	}
+	React.useEffect(()=>{
+		let tempMods = []
+		for (let i=0; i<content.mods.length; i++) {
+			let mod = content.mods[i]
+			tempMods.push(
+				<tr key={i}>
+					<td className={"info"} title={ mod.id }><Icon icon="important"></Icon></td>
+					<td className={"center"}>{ mod.ref }</td>
+					<td>{ mod.from_item || "" }</td>
+					<td className={"center"}>{ mod.change_quantity }</td>
+					<td className={"wide"}>{ mod.to_item }</td>
+					<td>{ mod.note || "" }</td>
+					<td className={"center"}><input type={"checkbox"} checked={mod.is_reservation ? "checked" : ""} readOnly={true} onClick={(e)=>{e.preventDefault()}}></input></td>
+					<td className={"center"}><a onClick={(e)=>{deleteBookingMod(e, mod.id)}}>Delete</a></td>
+				</tr>
+			)
+		}
+		setMods([...tempMods])
+	}, [content])
 
 	for (let i=0; i<content.items.length; i++) {
 		let item = content.items[i];
-		items.push(<option value={ item }>{ item }</option>)
+		items.push(<option key={i} value={ item }>{ item }</option>)
 	}
 
 	for (let i=0; i<content.past_shows.length; i++) {
 		let show = content.past_shows[i]
-		show_options.push(<option value={show.id} selected>{show.title}</option>)
+		show_options.push(<option key={show.id} value={show.id} selected>{show.title}</option>)
 	}
 
 	function handleFormSubmit(e) {
@@ -83,9 +88,35 @@ function ManageBookings({content}) {
 		})
 	}
 
+
+	function deleteBookingMod(e, modId) {
+		e.preventDefault()
+		fetch('/members/api/bookings/delete_booking_mod', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({id: modId}),
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.code === 200) {
+				displayAlerts([{title: `Success`, content: data.msg}])
+				context.functions.refresh(); // Refresh the content like in `handleFormSubmit`
+			} else {
+				console.error('Error deleting mod:', data.msg);
+				displayAlerts([{title: `Error: ${data.code}`, content: data.msg}])
+			}
+		})
+		.catch(error => {
+			console.error('Request error:', error);
+		});
+	}
+
 	return (
 		<div className="content">
 			<h1>{content.title}</h1>
+			<h3>{mods.length}</h3>
 			<Tabs>
 				<Tab title={"Performances"}>
 					<h2>Performances: </h2>
@@ -96,10 +127,6 @@ function ManageBookings({content}) {
 				</Tab>
 				<Tab title={"Modify Bookings"}>
 					<h2>Modify Bookings: </h2>
-					{/*Form/table goes here*/}
-
-					<form method="POST" action="/members/api/bookings/add_booking_mod" id="add_mod"  onSubmit={(e) => handleFormSubmit(e)}></form>
-
 					<table className={"mods"}>
 						<thead>
 						<tr>
@@ -124,7 +151,7 @@ function ManageBookings({content}) {
 								<datalist id="items_list">
 									{items}
 								</datalist>
-								<input type="text" list="items_list" name="from_item"
+								<input form="add_mod" type="text" list="items_list" name="from_item"
 								       placeholder="From (Name or Item)"/>
 							</td>
 							<td className="center"><input form="add_mod" type="number" min="1"
@@ -142,6 +169,13 @@ function ManageBookings({content}) {
 						</tr>
 						</tfoot>
 					</table>
+					<form method="POST" action="/members/api/bookings/add_booking_mod" id="add_mod"
+					      onSubmit={(e) => handleFormSubmit(e)}>
+						<div className="form">
+							<span className="msg"></span>
+						</div>
+						<div className="loader"></div>
+					</form>
 				</Tab>
 				<Tab title={"Manage Performances"}>
 					<h2>Add New Performance:</h2>

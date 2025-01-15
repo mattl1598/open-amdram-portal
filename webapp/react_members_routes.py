@@ -1,6 +1,7 @@
 import io
 import json
 import uuid
+from datetime import timedelta
 
 import pyotp
 import qrcode
@@ -371,6 +372,142 @@ def account_settings():
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.get("/members/get_subs")
+def get_subs():
+	check_page_permission("get_subs")
+	date_string = KeyValue.query.get("square_subs_updated").value
+	date_split = date_string.split(".")
+	date_split[-1].ljust(6 - len(date_split[-1]), "0")
+	sq_updated = datetime.fromisoformat(".".join(date_split))
+	current_date = datetime.now()
+
+	oldest_entry_year = db.session.query(
+		SubsPayment.datetime
+	).order_by(
+		SubsPayment.datetime.asc()
+	).limit(1).first().datetime.year
+
+	if "startyear" in request.args.keys():
+		year = int(request.args.get("startyear"))
+		most_recent_july_1st = datetime(year, 6, 1)
+	else:
+		# Calculate the most recent July 1st that has passed
+		if current_date.month > 6 or (current_date.month == 6 and current_date.day >= 1):
+			most_recent_july_1st = datetime(current_date.year, 6, 1)
+		else:
+			most_recent_july_1st = datetime(current_date.year - 1, 6, 1)
+
+	# Get the datestamp for midnight on the most recent July 1st
+	midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+	paid = list(SubsPayment.query
+				.filter(SubsPayment.datetime > midnight_july_1st)
+				.filter(midnight_july_1st + timedelta(weeks=52) > SubsPayment.datetime)
+				.order_by(SubsPayment.datetime.asc())
+				.with_entities(
+						SubsPayment.name,
+						SubsPayment.membership_type,
+						SubsPayment.amount_paid,
+						SubsPayment.payment_fee,
+						SubsPayment.payment_id,
+						SubsPayment.refunded
+					).all()
+			)
+	detailed = "detailed" in request.args.keys()
+	results = []
+	types = {}
+	totals = {"total": 0, "fees": 0, "refunds": 0, "net": 0}
+	for entry in paid:
+		totals["total"] = totals["total"] + entry.amount_paid
+		totals["fees"] = totals["fees"] + entry.payment_fee
+		if entry.refunded:
+			totals["refunds"] = totals["refunds"] + entry.amount_paid
+			totals["net"] = totals["net"] + entry.amount_paid - entry.payment_fee - entry.amount_paid
+		else:
+			totals["net"] = totals["net"] + entry.amount_paid - entry.payment_fee
+		if detailed:
+			new_result = {
+				"name": entry.name,
+				"type": entry.membership_type,
+				"amount": entry.amount_paid,
+				"fee": entry.payment_fee
+			}
+			types[entry.membership_type] = types.get(entry.membership_type, 0) + 1
+			if entry.payment_fee is None:
+				sq_results = app.square.payments.get_payment(
+					payment_id=entry.payment_id,
+				)
+				if sq_results.is_success():
+					fees = sq_results.body.get("payment", {}).get("processing_fee", {})
+					for fee in fees:
+						new_result["fee"] = new_result.get("fee", 0) + fee.get("amount_money", {}).get("amount", 0)
+		else:
+			new_result = {
+				"name": entry.name
+			}
+		results.append(new_result)
+
+	data = {
+		"type": "get_subs",
+		"results": results,
+		"types": types,
+		"detailed": detailed,
+		"oldest_entry_year": oldest_entry_year,
+		"since": midnight_july_1st,
+		"sq_updated": sq_updated
+	}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.post("/members/api/update_subs")
+def update_subs():
+	latest_square_date = SubsPayment.query.filter_by(source="square").order_by(
+		SubsPayment.datetime.desc()).first().datetime
+	latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(
+		SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
+
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	results = app.square.orders.search_orders(
+		body={
+			"location_ids": [
+				"0W6A3GAFG53BH"
+			],
+			"query": {
+				"filter": {
+					"date_time_filter": {
+						"created_at": {
+							"start_at": latest_square_date.strftime(square_date_format)
+						}
+					},
+					"source_filter": {
+						"source_names": [
+							"Checkout Link"
+						]
+					},
+					"state_filter": {
+						"states": [
+							"OPEN",
+							"COMPLETED"
+						]
+					}
+				}
+			}
+		}
+	)
+	if results.is_error():
+		return {
+			"code": 500,
+			"msg": "Square API Error"
+		}
+
 
 
 @bp.post("/members/api/account_settings/start_subscription")

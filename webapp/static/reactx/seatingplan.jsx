@@ -58,10 +58,12 @@ function SeatingPlanner({content}) {
 	)
 }
 
-function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, date, showName, authors}) {
+function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, initialPricing, date, showName, authors}) {
 	const context = React.useContext(app)
 	const [rowCount, setRowCount] = React.useState(defaultRowCount)
 	const [assignments, setAssignments] = React.useState(initialAssignment)
+	const [ticketPricing, setTicketPricing] = React.useState(initialPricing)
+	const [showPricingPopup, setShowPricingPopup] = React.useState(false)
 	const [previewAssignments, setPreviewAssignments] = React.useState({})
 	let rows = []
 	let assignedOrders = []
@@ -186,7 +188,8 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 		    },
 			body: JSON.stringify({
 				layout: {rowCount: rowCount, hiddenSeats: hiddenSeats, newSeats: newSeats, fullWidth: fullWidth},
-				assignments: assignments
+				assignments: assignments,
+				ticket_pricing: ticketPricing // TODO: add frontend and backend for ticket pricing
 			})
 		}).then((response) => {
 			return response.json()
@@ -357,21 +360,44 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, da
 		setHiddenSeats([...newHiddenSeats])
 	}
 
+	function togglePricingPopup(event) {
+		event.preventDefault()
+		setShowPricingPopup(!showPricingPopup)
+	}
+
 	return (
 		<div className={"seating-planner"}>
+			<div className={`ticketPricingPopupContainer ${showPricingPopup ? 'show' : ''}`}>
+				<div className="ticketPricingPopup">
+					<span className="popupTitle">
+						<h2>Set Pricing for this Performance</h2>
+						<Icon icon={"cross"} onClick={(e) => togglePricingPopup(e)}></Icon>
+					</span>
+					<p>
+						Pricing for tickets can be configured below. Adjust the ticket prices as needed for this
+						specific performance to align with your pricing strategy. Modify and save the changes to apply
+						updates.
+					</p>
+				</div>
+			</div>
 			<div className={"controls"}>
 				<div className={"rows"}>
 					<h2>Show Date: {date}</h2>
 					<h2>Rows: <strong onClick={() => setRowCount(rowCount - 1)}>-</strong> {rowCount} <strong
 						onClick={() => setRowCount(rowCount + 1)}>+</strong></h2>
 				</div>
+
+				<div className="rows">
+					<select id={"hiddenSeatSelect"} onChange={(e) => handleHiddenSeatSelect(e)}
+					        placeholder="Select seats to hide">
+						{seatOptions}
+					</select>
+					<button className={"setPricingButton"} onClick={(e) => togglePricingPopup(e)}>Set Pricing</button>
+				</div>
 				{/*<input type="number" value={rowCount} onChange={(e) => setRowCount(e.target.value)}/>*/}
-				<select id={"hiddenSeatSelect"} onChange={(e) => handleHiddenSeatSelect(e)} placeholder="Select seats to hide">
-					{seatOptions}
-				</select>
 				<div>
-					<h2>Assigned: {Object.values(assignments).filter(Boolean).length}/{fullWidth*rowCount - hiddenSeats.length}</h2>
-					<a href="#" onClick={(e)=>{save(e)}} className={"button"}>Save</a>
+					<h2>Assigned: {Object.values(assignments).filter(Boolean).length}/{fullWidth * rowCount - hiddenSeats.length}</h2>
+					<a href="#" onClick={(e) =>{save(e)}} className={"button"}>Save</a>
 				</div>
 			</div>
 			<div className={"seats-container"}>

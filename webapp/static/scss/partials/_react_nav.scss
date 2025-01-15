@@ -3,6 +3,7 @@
 div#nav {
 	min-height: 3.75rem;
 	position: sticky;
+	align-self: flex-start;
 	top: 0;
 	z-index: 100;
 }

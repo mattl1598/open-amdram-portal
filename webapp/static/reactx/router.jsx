@@ -50,7 +50,7 @@ function App() {
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
-			data.push({type: "simple", title: "Tickets Available", icon: "ticket", link: "/tickets", linkText: "Purchase Tickets", target: "_blank"})
+			data.push({type: "simple", title: `${siteJson.next_show.title} - Tickets Available`, icon: "ticket", link: "/tickets", linkText: "Purchase Tickets", target: "_blank"})
 		}
 
 		// MEMBER DOCS
@@ -227,18 +227,11 @@ function App() {
 					</Frontpage>
 				]
 			}
-
+			console.log("redraw content")
 			setContent(tempContent)
 			setSidebarExtras(tempSidebarExtras)
 		}
 	}, [postJson, siteJson])
-
-	function refresh(withSiteData=false) {
-		if (withSiteData) {
-			getSiteJson()
-		}
-		setPathIncrementer(pathIncrementer+1)
-	}
 
 	function setPath(newPath) {
 		setPathState(newPath)
@@ -255,6 +248,16 @@ function App() {
 		    .then(data => {
 				setPostJson({...data, requestURL: url, requestTime: Date.now()})
 		    })
+		}
+	}
+
+	function refresh(withSiteData=false) {
+		if (withSiteData) {
+			getSiteJson()
+			setPathIncrementer(pathIncrementer+1)
+		} else {
+			getPostJson(pathState)
+			setPathIncrementer(pathIncrementer+1)
 		}
 	}
 
