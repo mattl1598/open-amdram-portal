@@ -92,9 +92,12 @@ class OrderInfo:
 		return self
 
 	def merge(self, new_order) -> None:
-		if self.id == new_order.id and self.date == new_order.date:
-			if self.note != new_order.note:
-				self.note += " " + new_order.note
+		# if self.id == new_order.id and self.date == new_order.date:
+		if self.ref == new_order.ref:
+			if self.note != new_order.note and self.note is not None:
+				self.note += " " + (new_order.note or "")
+			else:
+				self.note = new_order.note or ""
 			for k, v in new_order.tickets.items():
 				self.tickets[k] = v + self.tickets.setdefault(k, 0)
 		else:

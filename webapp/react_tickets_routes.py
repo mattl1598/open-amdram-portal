@@ -6,12 +6,12 @@ from flask import Blueprint, make_response, redirect, render_template, request, 
 from flask_login import current_user, login_required
 from datetime import timedelta, datetime
 
-from sqlalchemy import func, or_, text
+from sqlalchemy import case, func, or_, select, text
 from webapp.models import *
 from flask import current_app as app
 
 from webapp.react_permissions import check_page_permission
-from webapp.tickets_routes import collect_orders, OrderInfo
+from webapp.tickets_routes import collect_orders, get_ticket_types, OrderInfo
 
 bp = Blueprint("react_tickets_routes", __name__)
 
@@ -257,6 +257,159 @@ def save_seating(perf_id):
 	}
 
 
+def test_collect_orders(show_id=""):
+	now = datetime.now() - timedelta(days=1)
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	if show_id == "":
+		end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(
+			days=1)
+		date_filter = {
+			"created_at": {
+				"start_at": end_of_last_show.strftime(square_date_format)
+			}
+		}
+	else:
+		end_of_this_show = Show.query.get(show_id).date + timedelta(days=1)
+		end_of_last_show = Show.query.filter(Show.date < end_of_this_show).filter(Show.id != show_id).order_by(
+			Show.date.desc()).first().date + timedelta(days=1)
+		date_filter = {
+			"created_at": {
+				"start_at": end_of_last_show.strftime(square_date_format),
+				"end_at": end_of_this_show.strftime(square_date_format),
+			}
+		}
+
+	perf_tree = get_ticket_types()
+	results = app.square.orders.search_orders(
+		body={
+			"location_ids": [
+				"0W6A3GAFG53BH",
+				"M1D6QJY6BHW9R"
+			],
+			"query": {
+				"sort": {
+					"sort_field": "CREATED_AT",
+					"sort_order": "ASC"
+				},
+				"filter": {
+					"date_time_filter": date_filter,
+					"state_filter": {
+						"states": [
+							"OPEN",
+							"COMPLETED"
+						]
+					},
+					"fulfillment_filter": {
+						"fulfillment_types": [
+							"PICKUP"
+						]
+					}
+				}
+			}
+		}
+	)
+
+	if results.is_error():
+		print("Error:", results.errors)
+		return {
+			"code": 500,
+			"msg": f"Square API Error {results.errors}"
+		}
+
+	reservations = db.session.query(
+		func.json_agg(func.json_build_object(
+			"ticket_type", BookingModifications.to_item,
+			"ticket_quantity", BookingModifications.change_quantity,
+			"name", BookingModifications.from_item,
+			"note", case(
+					[
+						(BookingModifications.is_reservation == True, "Reserved - "),
+						(BookingModifications.is_reservation == False, "Comped - ")
+					]
+				) + (BookingModifications.note or ""),
+			"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+			"id", BookingModifications.id,
+			"ref", BookingModifications.ref_num,
+		))
+	).filter(
+		BookingModifications.ref_num < 0,
+		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
+		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
+	).scalar()
+
+	movements_subquery = select(
+		BookingModifications.ref_num.label("ref_num"),
+		func.json_agg(func.json_build_object(
+			"from", func.json_build_object(
+				"ticket_type", BookingModifications.from_item,
+				"ticket_quantity", BookingModifications.change_quantity * -1,
+				"name", "",
+				"note", BookingModifications.note or "",
+				"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+				"id", BookingModifications.id,
+				"ref", BookingModifications.ref_num,
+			),
+			"to", func.json_build_object(
+				"ticket_type", BookingModifications.to_item,
+				"ticket_quantity", BookingModifications.change_quantity,
+				"name", "",
+				"note", BookingModifications.note or "",
+				"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+				"id", BookingModifications.id,
+				"ref", BookingModifications.ref_num,
+			)
+		)).label("mods")
+	).filter(
+		BookingModifications.ref_num >= 0,
+		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
+		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
+	).group_by(BookingModifications.ref_num).subquery()
+
+	movements = db.session.query(
+		func.json_object_agg(
+			movements_subquery.c.ref_num,
+			movements_subquery.c.mods
+		)
+	).scalar()
+
+	items = [OrderInfo(**tickets_info) for tickets_info in reservations]
+	for i in range(0, len(results.body.get("orders") or [])):
+		order = results.body["orders"][i]
+		for item in order.get("line_items", []):
+			tickets_info = {
+				"ticket_type": item["name"],
+				"ticket_quantity": item["quantity"],
+				"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+				"note": order["fulfillments"][0]["pickup_details"].get("note"),
+				"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
+				"id": order["id"],
+				"ref": i
+			}
+			order_info = OrderInfo(**tickets_info)
+			items.append(order_info)
+		for move in movements.get(str(i), []):
+			order_data = {
+				"id": order["id"],
+				"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+				"note": order["fulfillments"][0]["pickup_details"].get("note"),
+			}
+			from_info = move.get("from") | order_data
+			to_info = move.get("to") | order_data
+			items.append(OrderInfo(**from_info))
+			items.append(OrderInfo(**to_info))
+
+	for item in items:
+		keys = list(item.tickets.keys())[0].split(" - ", 2)
+		item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
+		if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
+			perf_tree[keys[0]][keys[1]][item.id] = existing + item
+		else:
+			perf_tree[keys[0]][keys[1]][item.id] = item
+	# pprint(perf_tree)
+	return perf_tree
+	# return json.dumps(perf_tree, default=OrderInfo.default)
+
+
 @bp.get("/members/api/orders/<show>/<perf>")
 def orders_api(show, perf):
 	"""admin"""
@@ -276,7 +429,7 @@ def orders_api(show, perf):
 		Show.date.desc()
 	).first().id
 
-	perf_tree = collect_orders(show_id=show_id)
+	perf_tree = test_collect_orders(show_id=show_id)
 	if "<" in show or "<" in perf:
 		abort(404)
 	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'")).get(perf) or {}).values()), default=OrderInfo.default)))
