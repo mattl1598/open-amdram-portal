@@ -315,16 +315,14 @@ def react_past_show_page(show_id, title=""):
 						"role", MSL.role_name,
 						"id", Member.id,
 						"name", case(
-							[
-								(Member.associated_user.is_(None), func.concat(Member.firstname, " ", Member.lastname)),
-								(
-									and_(
-										Member.firstname == User.firstname,
-										Member.lastname == User.lastname
-									),
-									func.concat(Member.firstname, " ", Member.lastname)
-								)
-							],
+							(Member.associated_user.is_(None), func.concat(Member.firstname, " ", Member.lastname)),
+							(
+								and_(
+									Member.firstname == User.firstname,
+									Member.lastname == User.lastname
+								),
+								func.concat(Member.firstname, " ", Member.lastname)
+							),
 							else_=func.concat(User.firstname, " ", User.lastname, " (as ", Member.firstname, " ", Member.lastname, ")")
 						),
 						"order", MSL.order_val
