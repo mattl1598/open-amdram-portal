@@ -299,9 +299,9 @@ def manage_media(**kwargs):
 		)
 
 
+# @bp.route("/media/<media_id>/<filename>")
 @bp.route("/photo/<media_id>")
 @bp.route("/video/<media_id>")
-@bp.route("/media/<media_id>/<filename>")
 def get_photo(media_id, **kwargs):
 	route = request.url_rule.rule[1:].split("/")[0]
 	refresh = "refresh" in request.args.keys()
@@ -342,7 +342,7 @@ def get_photo(media_id, **kwargs):
 			return response
 		else:
 			abort(404)
-	elif route == "media":
+	elif route == "media" or kwargs["modernise"] == "media":
 		# pprint(time.time()-start)
 		item = StaticMedia.query.filter_by(id=media_id, filename=kwargs["filename"]).first_or_404()
 		if not refresh and item.cache_expires and item.cache_url and item.cache_expires > datetime.now():

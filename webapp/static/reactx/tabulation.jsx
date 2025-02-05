@@ -24,7 +24,6 @@ function Tabs({redrawInt, children}) {
 				temp_tabs[child.props.title] = child
 			}
 		}
-
 		setTabTitles(temp_tab_titles)
 		setTabs(temp_tabs)
 	}, [children, currentTabTitle, redrawInt])
@@ -60,9 +59,15 @@ function Tabs({redrawInt, children}) {
 	}
 }
 
-function Tab({title, children}) {
+function Tab({title, children, redrawInt}) {
+	const [internalRedrawInt, setInternalRedrawInt] = React.useState(0)
+
+	React.useEffect(()=>{
+		setInternalRedrawInt(internalRedrawInt+redrawInt+1)
+	}, [redrawInt, children])
+
 	return (
-		<div className="tab_content">
+		<div className="tab_content" data-redraw={internalRedrawInt}>
 			{children}
 		</div>
 	)

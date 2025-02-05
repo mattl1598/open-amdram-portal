@@ -344,14 +344,29 @@ div.seat {
 	}
 }
 
+@media print {
+	div.content {
+		padding: 0 !important;
+		margin: 0 !important;
+	}
+
+	div.tickets {
+		//padding: 0 !important;
+		//width: 297mm !important;
+	}
+}
+
 div.tickets {
 	grid-area: tickets;
 
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: auto;
-	gap: 1rem;
-	padding: 1rem calc(sqrt(2)*1rem);
+	gap: 12mm 16mm;
+	//padding: 1rem calc(sqrt(2)*1rem);
+	padding: 8mm;
+
+	//background-color: red;
 
 	h1, h2, h3 {
 		margin-block-start: 0;
@@ -363,6 +378,9 @@ div.tickets {
 		border: 2px solid;
 		@include theme(border-color, text);
 		padding: .8rem calc(sqrt(2)*.8rem);
+		//margin: 16mm;
+		//outline: blue solid 6mm;
+		//background-color: blue;
 
 		display: grid;
 		grid-template-columns: auto 1fr min-content;
@@ -466,7 +484,7 @@ div.tickets div.ticket:nth-child(9n-8) {
 	}
 
 	div.tickets {
-		gap: 1rem calc(sqrt(2)*1rem);
+		//gap: 1rem calc(sqrt(2)*1rem);
 	}
 
 	div.ticket:nth-child(9n-8),div.ticket:nth-child(9n-7),div.ticket:nth-child(9n-6),  {

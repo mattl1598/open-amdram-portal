@@ -6,6 +6,7 @@ from flask import Blueprint, make_response, redirect, render_template, request, 
 from flask_login import current_user, login_required
 from datetime import timedelta, datetime
 
+from jinja2.lexer import TOKEN_DOT
 from sqlalchemy import case, func, or_, select, text
 from webapp.models import *
 from flask import current_app as app
@@ -27,7 +28,8 @@ def extract_numbers(string):
 def bookings():
 	check_page_permission("bookings")
 	now = datetime.utcnow()
-	end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(days=1)
+	show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first()
+	end_of_last_show = show.date + timedelta(days=1)
 
 	mods = db.session.query(
 		func.coalesce(func.json_agg(
@@ -78,7 +80,7 @@ def bookings():
 		).order_by(
 			Performance.date.asc()
 		).filter(
-			Performance.date > datetime.utcnow()
+			Performance.show_id == show.id
 		).subquery().alias("results")
 	).scalar()
 
@@ -257,6 +259,7 @@ def save_seating(perf_id):
 	}
 
 
+# TODO: replace name with collect_orders in all uses
 def test_collect_orders(show_id=""):
 	now = datetime.now() - timedelta(days=1)
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -279,7 +282,8 @@ def test_collect_orders(show_id=""):
 			}
 		}
 
-	perf_tree = get_ticket_types()
+	# perf_tree = get_ticket_types()
+	perf_tree = {}
 	results = app.square.orders.search_orders(
 		body={
 			"location_ids": [
@@ -435,10 +439,11 @@ def orders_api(show, perf):
 	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'")).get(perf) or {}).values()), default=OrderInfo.default)))
 
 
-@bp.get("/members/api/historic_sales/<show_id>")
-def historic_sales_api(show_id):
+@bp.post("/members/api/bookings/historic_sales")
+def historic_sales_api():
 	check_page_permission("bookings")
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	show_id = request.json.get("showID")
 	show = db.session.query(Show).filter(Show.id == show_id).first()
 	if show is None:
 		return {
@@ -446,7 +451,7 @@ def historic_sales_api(show_id):
 			"msg": "Show not found"
 		}
 
-	perf_tree = collect_orders(show_id=show_id)
+	perf_tree = test_collect_orders(show_id=show_id)
 	ref_map = {}
 	for perfs in perf_tree.values():
 		for perf, orders in perfs.items():
@@ -518,6 +523,7 @@ def historic_sales_api(show_id):
 
 	foh_totals = {
 		"paid": 0,
+		"refunds": 0,
 		"cash": 0,
 		"fees": 0,
 		"net": 0
@@ -717,7 +723,6 @@ def historic_sales_api(show_id):
 	other_sum = 0
 	# point_of_sale_order_ids = [*pos_card_orders]
 	point_of_sale_order_ids = {}
-	# print(point_of_sale_order_ids)
 	for payment in payments:
 		if payment["id"] in payment_ids:
 			# print(payment["id"])
@@ -738,12 +743,14 @@ def historic_sales_api(show_id):
 			} and payment["amount_money"]["amount"] > 0:
 				try:
 					if payment.get("source_type") == "CARD":
-						foh_totals["paid"] += int(payment["amount_money"]["amount"])
-						foh_totals["fees"] += int(
-							sum([i["amount_money"]["amount"] for i in payment.get("processing_fee", [])]))
+						foh_totals["refunds"] += (refund := payment.get("refunded_money", {}).get("amount", 0))
+						foh_totals["paid"] += (paid := int(payment["amount_money"]["amount"]))
+						foh_totals["fees"] += (fee := int(sum([i["amount_money"]["amount"] for i in payment.get("processing_fee", [])])))
+
+						foh_totals["net"] += paid - refund - fee
 					else:
 						foh_totals["cash"] += int(payment["amount_money"]["amount"])
-					point_of_sale_order_ids.append(payment.get("order_id"))
+					point_of_sale_order_ids[payment.get("order_id")] = payment
 				except KeyError as e:
 					errors += 1
 					# pprint(payment)
@@ -754,7 +761,7 @@ def historic_sales_api(show_id):
 				other_sum += payment["amount_money"]["amount"]
 		else:
 			point_of_sale_order_ids[payment.get("order_id")] = payment
-			pprint(payment)
+			# pprint(payment)
 			# TODO: check if payment is FOH using batch retrieve orders.
 
 	print("other sum", other_sum)
@@ -772,5 +779,11 @@ def historic_sales_api(show_id):
 
 	return {
 		"code": 200,
-		"msg": "Success"
+		"msg": "Success",
+		"results": {
+			"showTitle": show.title,
+			"sums": sums,
+			"totals": totals,
+			"foh_totals": foh_totals,
+		}
 	}

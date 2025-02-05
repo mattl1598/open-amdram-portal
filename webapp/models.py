@@ -307,6 +307,8 @@ class StaticMedia(db.Model, NewIdGetter):
 	item_dim = db.Column(db.Text)
 	cache_url = db.Column(db.Text)
 	cache_expires = db.Column(db.DateTime)
+	small_content = db.Column(db.LargeBinary)
+	content = db.Column(db.LargeBinary)
 
 
 class AnalyticsLog(db.Model, NewIdGetter):

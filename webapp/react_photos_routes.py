@@ -16,10 +16,10 @@ from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
-from flask import current_app as app
+from flask import current_app as app, Response
 from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context
 
-from webapp.photos_routes import get_albums, update_access_token
+from webapp.photos_routes import get_albums, get_photo, update_access_token
 from webapp.react_permissions import check_page_permission
 
 bp = Blueprint("react_photos_routes", __name__)
@@ -28,32 +28,16 @@ bp = Blueprint("react_photos_routes", __name__)
 @bp.get("/members/admin/manage_media")
 def manage_media():
 	check_page_permission("admin")
-
 	media_db = db.session.query(StaticMedia).order_by(StaticMedia.date.desc()).all()
-
 	if len(media_db):
-		media_ids = {
-			f"{x.item_id}": f"{x.id}"
-			for x in media_db
-		}
-
-		update_access_token()
-
-		url = f"https://photoslibrary.googleapis.com/v1/mediaItems:batchGet?mediaItemIds="
-		url += f"{'&mediaItemIds='.join(media_ids.keys())}"
-		url += f"&access_token={session.get('access_token')}"
-
-		x = requests.get(url)
-
 		thumbs = [
 			(
-				media_ids[i["mediaItem"]["id"]],
-				f'{i["mediaItem"]["baseUrl"]}=d',
-				i["mediaItem"]["filename"],
+				item.id,
+				f"/media/{item.id}/{item.filename}",
+				item.filename
 			)
-			for i in x.json()["mediaItemResults"]
+			for item in media_db
 		]
-
 	else:
 		thumbs = []
 
@@ -71,6 +55,40 @@ def manage_media():
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.post("/members/api/manage_media/modernise")
+def modernise():
+	check_page_permission("admin")
+	media = db.session.query(
+		StaticMedia
+	).filter(
+		StaticMedia.id == request.form.get("id"),
+		StaticMedia.filename == request.form.get("filename")
+	).first_or_404()
+
+	url = get_photo(request.form.get("id"), filename=request.form.get("filename"), modernise="media").location
+	r = requests.get(url)
+	im = Image.open(io.BytesIO(r.content))
+
+	b_out = io.BytesIO()
+	b_out_small = io.BytesIO()
+
+	max_dimension = 400
+	scale_factor = max_dimension / max(im.width, im.height)
+	new_size = (int(im.width * scale_factor), int(im.height * scale_factor))
+
+	im.save(b_out, format="webp")
+	# Resize the image to the new dimensions
+	im = im.resize(new_size, Image.ANTIALIAS)
+	im.save(b_out_small, format="webp")
+
+	media.content = b_out.getvalue()
+	media.small_content = b_out_small.getvalue()
+
+	db.session.commit()
+
+	return {"code": 200, "msg": "Success"}
 
 
 @bp.post("/members/api/manage_media/delete")
@@ -125,12 +143,21 @@ def upload_static_media(**kwargs):
 		# print(file.content_type)
 		filename = file.filename.replace(' ', '_')
 		file.save(b_in)
-	if filename.rsplit('.', 1)[1] != "webp":
-		b_out = io.BytesIO()
-		with Image.open(b_in) as im:
-			im.save(b_out, format="webp")
-	else:
-		b_out = b_in
+
+	b_out = io.BytesIO()
+	b_out_small = io.BytesIO()
+	with Image.open(b_in) as im:
+		# Calculate the new dimensions to scale the image
+		max_dimension = 400
+		scale_factor = max_dimension / max(im.width, im.height)
+		new_size = (int(im.width * scale_factor), int(im.height * scale_factor))
+
+		im.save(b_out, format="webp")
+		# Resize the image to the new dimensions
+		im = im.resize(new_size, Image.ANTIALIAS)
+		im.save(b_out_small, format="webp")
+	
+
 
 	update_access_token()
 	url = "https://photoslibrary.googleapis.com/v1/uploads"
@@ -140,10 +167,13 @@ def upload_static_media(**kwargs):
 		"X-Goog-Upload-Protocol": "raw"
 	}
 
+	image_data = b_out.getvalue()
+	small_image_data = b_out_small.getvalue()
+
 	x = requests.post(
 		url + f"?access_token={session.get('access_token')}",
 		headers=headers,
-		data=b_out.getvalue()
+		data=image_data
 	)
 
 	albums = {b: a for (a, b) in get_albums()}
@@ -195,7 +225,9 @@ def upload_static_media(**kwargs):
 				x.json()["newMediaItemResults"][0]["mediaItem"]["mediaMetadata"][i]
 				for i in ["width", "height"]
 			]
-		)
+		),
+		content=image_data,
+		small_content=small_image_data
 	)
 
 	db.session.add(new_item)
@@ -333,3 +365,18 @@ def set_show_photos_api():
 		"code": 200,
 		"msg": "Album Updated Successfully"
 	}
+
+
+# @bp.route("/photo/<media_id>")
+# @bp.route("/video/<media_id>")
+# def get_photo(media_id, **kwargs):
+# 	pass
+
+
+@bp.route("/media/<media_id>/<filename>")
+def get_static_media(media_id, **kwargs):
+	media_item = db.session.query(StaticMedia).filter_by(id=media_id).first_or_404()
+	if "lowres" in request.args.keys():
+		return Response(media_item.small_content, mimetype="image/webp")
+	else:
+		return Response(media_item.content, mimetype="image/webp")

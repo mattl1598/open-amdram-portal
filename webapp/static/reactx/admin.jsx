@@ -163,7 +163,7 @@ function ManageMedia({content}) {
 			let image = content.media[i]
 			mediaItems.push(
 				<div key={i} className="media_item" onClick={()=>{setSelectedID(i)}}>
-					<Image src={`${image[1].slice(0,-1)}w200-h200`} alt={image[0]} title={ image[2] } width="200" height="200"/>
+					<Image src={`${image[1]}?lowres`} alt={image[0]} title={ image[2] } width="200" height="200"/>
 				</div>
 			)
 		}
@@ -206,6 +206,15 @@ function ManageMedia({content}) {
 							</div>
 							<div className="loader"></div>
 							{/*<button type="button" id="delete" className="delete" onClick={deleteMe}>Delete</button>*/}
+						</form>
+						<form action="/members/api/manage_media/modernise" id={"moderniseForm"} onSubmit={handleFormSubmit} method="POST">
+							<div className="form">
+								<span className="msg"></span><br/>
+								<input type="hidden" name={"id"} value={selectedUID}/>
+								<input type="hidden" name={"filename"} value={selectedTitle}/>
+								<input type="submit" value={"Modernise"}/>
+							</div>
+							<div className="loader"></div>
 						</form>
 					</div>
 				</div>

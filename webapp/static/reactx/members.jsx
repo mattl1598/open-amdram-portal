@@ -202,6 +202,10 @@ function Show({content, refresh}) {
 		}
 	}
 
+	if (content.directors === undefined) {
+		content.directors = []
+	}
+
 	function handleFileDrop(event) {
         console.log("File(s) dropped");
 		event.preventDefault();

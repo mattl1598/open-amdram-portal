@@ -1,0 +1,38 @@
+div.form {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: auto auto;
+	grid-template-areas:
+		"details blob"
+		"cast crew"
+	;
+	gap: .5rem;
+
+	div.details {
+		grid-area: details;
+	}
+	div.blob {
+		grid-area: blob;
+	}
+	div.cast {
+		grid-area: cast;
+	}
+	div.crew {
+		grid-area: crew;
+	}
+}
+
+img.banner_preview {
+	width: 100%;
+	max-width: 100%;
+	max-height: 10rem;
+	margin: 0 auto;
+	object-fit: contain;
+}
+img.programme_preview {
+	width: 100%;
+	max-width: 100%;
+	max-height: 20rem;
+	margin: 0 auto;
+	object-fit: contain;
+}

@@ -8,6 +8,13 @@ div#nav {
 	z-index: 100;
 }
 
+
+@media print {
+	div#react-nav {
+		display: none;
+	}
+}
+
 div.react-nav {
 	max-width: 100svw;
     overflow: hidden;

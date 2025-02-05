@@ -168,7 +168,7 @@ def react_members_show(show_id):
 	check_page_permission("shows")
 	posts = db.session.query(
 		func.json_build_object(
-			'posts', func.json_agg(
+			'posts', func.coalesce(func.json_agg(
 				func.json_build_object(
 					'id', text("posts.id"),
 					'title', text("posts.title"),
@@ -177,7 +177,7 @@ def react_members_show(show_id):
 					'show_title', text("posts.show_title"),
 					'type', 'post'
 				)
-			)
+			), text("'[]'::json"))
 		)
 	).select_from(
 		db.session.query(
@@ -218,13 +218,17 @@ def react_members_show(show_id):
 		).order_by(Files.date.desc()).scalar_subquery().alias("files")
 	).scalar() or {}
 
-	show_details = db.session.query(
-		func.json_build_object(
-			'id', Show.id,
-			'title', Show.title,
-			"directors", func.array_to_json(func.array_agg(func.distinct(case(
-				(Member.associated_user.is_not(None), Member.associated_user)
-			))))
+	show_directors = db.session.query(
+		func.coalesce(
+			func.json_build_object(
+				'id', Show.id,
+				"directors", func.coalesce(func.json_agg(func.distinct(case(
+					(Member.associated_user.is_not(None), Member.associated_user)
+				))), text("'[]'::json"))
+			),
+			func.json_build_object(
+				"directors", text("'[]'::json")
+			)
 		)
 	).join(
 		MSL, Show.id == MSL.show_id, isouter=True
@@ -238,11 +242,21 @@ def react_members_show(show_id):
 		User, Member.associated_user == User.id, isouter=True
 	).group_by(Show).order_by(Show.date.desc()).scalar() or {}
 
+	show_details = db.session.query(
+		func.json_build_object(
+			'id', Show.id,
+			'title', Show.title
+		)
+	).filter(
+		Show.id == show_id
+	).scalar()
+
 	data = {
 		"type": "members_show",
 		**posts,
 		**files,
-		**show_details
+		**show_details,
+		**show_directors
 	}
 
 	if "react" in request.args.keys():
@@ -364,6 +378,65 @@ def account_settings():
 		}
 	}
 
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.get("/members/manage_shows")
+def manage_shows():
+	check_page_permission("admin")
+	data = {
+		"type": "list_shows",
+		"title": "Manage Shows",
+		"default_layout": "cards",
+		"admin": True,
+		"shows": [
+			{
+				"id": show.id,
+				"title": show.title,
+				"date": show.date.isoformat(),
+				"programme": show.programme or "",
+				"season": show.season,
+				"genre": show.genre
+			} for show in Show.query.filter(Show.date < datetime.now()).order_by(Show.date.desc()).all()
+		]
+	}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.get("/members/manage_shows/<show_id>/<show_title>")
+def manage_show(show_id, show_title):
+	show_details = db.session.query(
+		func.row_to_json(
+			literal_column('show')
+		)
+	).filter(Show.id == show_id).scalar()
+
+	show_options = db.session.query(
+		func.json_build_object(
+			"seasons", func.json_agg(func.distinct(Show.season)),
+			"genres", func.json_agg(func.distinct(Show.genre))
+		)
+	).scalar()
+	data = {
+		"type": "edit_show",
+		"title": "Edit Show",
+		"showDetails": show_details,
+		"showOptions": show_options
+	}
 	if "react" in request.args.keys():
 		return jsonify(data)
 	else:

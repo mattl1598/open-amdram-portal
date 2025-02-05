@@ -21,6 +21,8 @@ function ManageBookings({content}) {
 	const [mods, setMods] = React.useState([])
 	let items = []
 	let show_options = []
+	const [historicSales, setHistoricSales] = React.useState(<div><h3>Please select a show...</h3></div>)
+	const [redrawInt, setRedrawInt] = React.useState(0)
 
 	for (let i=0; i<content.performances.length; i++) {
 		let perf = content.performances[i]
@@ -85,6 +87,9 @@ function ManageBookings({content}) {
 			}
 			form.querySelector("span.msg").innerHTML = data.msg
 			form.classList.remove("pending")
+		}).finally(() => {
+			form.classList.remove("pending")
+			setRedrawInt(redrawInt + 1)
 		})
 	}
 
@@ -113,19 +118,171 @@ function ManageBookings({content}) {
 		});
 	}
 
+	function getHistoricSales(e) {
+		let form = e.target
+		form.classList.add("pending")
+		let formData = {}
+		for (let [key, value] of (new FormData(form)).entries()) {
+			formData[key] = value
+			console.log(key, value);
+       }
+		e.preventDefault()
+		fetch('/members/api/bookings/historic_sales', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(formData),
+		})
+		.then(response => response.json()).then(data => {
+			if (data.code === 200) {
+				displayAlerts([{title: `Success`, content: data.msg}])
+				setHistoricSales(renderHistoricSales(data.results))
+			} else {
+				console.error('Error:', data.msg);
+				displayAlerts([{title: `Error: ${data.code}`, content: data.msg}])
+			}
+		})
+		.catch(error => {
+			console.error('Request error:', error);
+		}).finally(() => {
+			form.classList.remove("pending")
+			setRedrawInt(redrawInt + 1)
+		});
+	}
+
+	function monthStringToInt(month) {
+	    const months = [
+	        "jan", "feb", "mar", "apr", "may", "jun",
+	        "jul", "aug", "sep", "oct", "nov", "dec"
+	    ];
+	    // Normalize input to lowercase and search in the array
+		const searchStr = month.toLowerCase().substring(0,3);
+	    const index = months.indexOf(searchStr);
+	    // Add 1 because arrays are zero-based
+	    return index >= 0 ? index + 1 : null; // Return null if not found
+	}
+
+	function renderHistoricSales(results) {
+		let tickets = []
+		let ticketsTotal = 0
+		let quantityTotal = 0
+		let discountTotal = 0
+		let keys = Object.keys(results.sums)
+		for (let i=0; i<keys.length; i++) {
+			let [_, date, type] = keys[i].split(' - ')
+			let [__, day, month, time] = date.split(" ")
+			day = day.replace(/[^0-9 ]/g, "")
+			if (date.slice(-2) === "pm") {
+				time = String(parseInt(time.replace(/[^0-9 ]/g, "")) + 1200)
+			}
+			let sortValue = parseInt([
+				String(monthStringToInt(month)).padStart(2, "0"),
+				day.padStart(2, "0"),
+				time.padStart(4, "0"),
+				type.charCodeAt(0)
+			].join(""))
+			let obj = {
+				sortValue: sortValue,
+				date: date,
+				type: type,
+				sales: results.sums[keys[i]],
+			}
+			tickets.push(obj)
+		}
+		tickets.sort((a,b)=>{return a.sortValue-b.sortValue})
+		let rows = []
+		let dupDateCount = 1
+		for (let i=tickets.length-1; i>=0; i--) {
+			let salesKeys = Object.keys(tickets[i].sales)
+			for (let j=0; j<salesKeys.length; j++) {
+				let price = salesKeys[j] / 100.0
+				let quantity = tickets[i].sales[salesKeys[j]].amount
+				let discounts = tickets[i].sales[salesKeys[j]].discounts / 100.0
+				let subtotal = parseInt(price)*parseInt(quantity) - parseInt(discounts)
+				ticketsTotal = ticketsTotal + subtotal
+				discountTotal = discountTotal + discounts
+				quantityTotal = quantityTotal + quantity
+				let row = <tr></tr>
+				if (i !== 0 && tickets[i].date === tickets[i-1].date) {
+					row = <tr>
+						<td>{tickets[i].type}</td>
+						<td>{quantity}</td>
+						<td>£{price}</td>
+						<td>£{discounts}</td>
+						<td>£{subtotal}</td>
+					</tr>
+					dupDateCount++
+				} else {
+					row = <tr>
+						<td rowSpan={dupDateCount}>{tickets[i].date}</td>
+						<td>{tickets[i].type}</td>
+						<td>{quantity}</td>
+						<td>£{price.toFixed(2)}</td>
+						<td>£{discounts.toFixed(2)}</td>
+						<td>£{subtotal.toFixed(2)}</td>
+					</tr>
+					dupDateCount = 1
+				}
+
+				rows.unshift(row)
+			}
+		}
+
+		return <div>
+			<h2>{results.showTitle}</h2>
+			<h3>Tickets</h3>
+			<table>
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Type</th>
+						<th>Quantity</th>
+						<th>Price</th>
+						<th>Discounts</th>
+						<th>SubTotal</th>
+					</tr>
+				</thead>
+				<tbody>
+					{rows}
+				</tbody>
+				<tfoot>
+					<tr>
+						<th>Total:</th>
+						<th></th>
+						<th>{quantityTotal}</th>
+						<th></th>
+						<th>£{discountTotal.toFixed(2)}</th>
+						<th>£{ticketsTotal.toFixed(2)}</th>
+					</tr>
+				</tfoot>
+			</table>
+			<h3>Front of House</h3>
+			<table>
+				<tbody>
+					<tr><th>Card Payments</th><td>£{(results.foh_totals.paid / 100).toFixed(2)}</td></tr>
+					<tr><th>Card Fees</th><td>£{(results.foh_totals.fees / 100).toFixed(2)}</td></tr>
+					<tr><th>Refunds</th><td>£{(results.foh_totals.refunds / 100).toFixed(2)}</td></tr>
+					<tr><th>Cash</th><td>£{(results.foh_totals.cash / 100).toFixed(2)}</td></tr>
+					<tr><th>Total</th><td>£{(results.foh_totals.net / 100).toFixed(2)}</td></tr>
+				</tbody>
+			</table>
+		</div>
+	}
+
 	return (
 		<div className="content">
 			<h1>{content.title}</h1>
 			<h3>{mods.length}</h3>
-			<Tabs>
-				<Tab title={"Performances"}>
+			<Tabs redrawInt={redrawInt}>
+				<Tab title={"Performances"} redrawInt={redrawInt}>
 					<h2>Performances: </h2>
 					<ul>
 						{performances}
 					</ul>
 					<h3>Total: {seats_sat}/{seats_total}</h3>
 				</Tab>
-				<Tab title={"Modify Bookings"}>
+				<Tab title={"Modify Bookings"} redrawInt={redrawInt}>
 					<h2>Modify Bookings: </h2>
 					<table className={"mods"}>
 						<thead>
@@ -177,7 +334,7 @@ function ManageBookings({content}) {
 						<div className="loader"></div>
 					</form>
 				</Tab>
-				<Tab title={"Manage Performances"}>
+				<Tab title={"Manage Performances"} redrawInt={redrawInt}>
 					<h2>Add New Performance:</h2>
 					<form action="/members/api/bookings/add_new_performance" onSubmit={(e) => handleFormSubmit(e)}>
 						<div className="form">
@@ -188,11 +345,21 @@ function ManageBookings({content}) {
 						<div className="loader"></div>
 					</form>
 				</Tab>
-				<Tab title={"Historic Sales"}>
-					<select defaultValue={""}>
-						<option value="" disabled>Select Show...</option>
-						{show_options}
-					</select>
+				<Tab title={"Historic Sales"} redrawInt={redrawInt}>
+					<form method="POST" onSubmit={(e)=>{getHistoricSales(e)}} name={"historic_sales"}>
+						<div className="loader"></div>
+						<div className="form">
+							<span className="msg"></span>
+							<select defaultValue={""} name={"showID"}>
+								<option value="" disabled>Select Show...</option>
+								{show_options}
+							</select>
+							<input type="submit" value={"Submit"}/>
+							<div className="data">
+								{historicSales}
+							</div>
+						</div>
+					</form>
 				</Tab>
 			</Tabs>
 		</div>

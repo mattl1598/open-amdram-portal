@@ -51,6 +51,7 @@ function ListShows({content}) {
 	// console.log(displayMode)
 	if (searchTerm.length) {
 		for (let i = 0; i < content.shows.length; i++) {
+			content.shows[i].route = ["/past-shows", "/members/manage_shows"][1*(content.admin || false)]
 			let key = 0
 			let date = new Date(content.shows[i].date)
 			let dateArr = [
@@ -95,6 +96,7 @@ function ListShows({content}) {
 		}
 
 		for (let i = 0; i < content.shows.length; i++) {
+			content.shows[i].route = ["/past-shows", "/members/manage_shows"][1*(content.admin || false)]
 			let key = content.shows[i][sortingModes[sortMode].order_property] || ""
 			if (Object.keys(shows).includes(key)) {
 				key += content.shows[i].date
@@ -116,11 +118,12 @@ function ListShows({content}) {
 			}
 		}
 	}
-
-	let memberKeys = Object.keys(content.members)
-	for (let i=0; i<memberKeys.length; i++) {
-		let key = memberKeys[i]
-		memberOptions.push(<option key={key} value={key}>{content.members[key].name}</option>)
+	if (content.members) { // fix for listing shows for a single member
+		let memberKeys = Object.keys(content.members)
+		for (let i=0; i<memberKeys.length; i++) {
+			let key = memberKeys[i]
+			memberOptions.push(<option key={key} value={key}>{content.members[key].name}</option>)
+		}
 	}
 
 	let sortOptions = []
@@ -277,7 +280,7 @@ function ListShows({content}) {
 
 function ShowListItem({item, order_prop}) {
 	return (
-		<Link className={"link"} href={`/past-shows/${item.id}/${item.title.replace(' ', '_')}`} order={item[order_prop]}>
+		<Link className={"link"} href={`${item.route}/${item.id}/${item.title.replace(' ', '_')}`} order={item[order_prop]}>
 			<div className="image">
 				<Image className={"programme"} src={item.programme} alt={`${item.title} programme cover`}/>
 			</div>
