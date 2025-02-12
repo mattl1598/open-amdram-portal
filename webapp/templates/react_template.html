@@ -61,7 +61,17 @@
 		{% endwith %}
 	</script>
 </head>
-<body id="app" data-data="{{ json.dumps(data) }}" data-path="{{ request.path }}">
+<body>
+	<div id="app" data-data="{{ json.dumps(data) }}" data-path="{{ request.path }}">
+
+	</div>
+	<div class="app_loader">
+		<div class="loading_inner">
+			{{ logo | safe }}
+			<div class="loader"></div>
+{#			<progress></progress>#}
+		</div>
+	</div>
 </body>
 {% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
 {% if env == "development" %}

@@ -1,6 +1,9 @@
 import json
+import traceback
 from datetime import datetime
 from pprint import pprint
+from ssl import SSLError
+
 import requests
 from flask_login import current_user, login_user, logout_user
 from sqlalchemy import and_, cast, literal_column, or_, func, case, String, text
@@ -14,6 +17,7 @@ from flask import current_app as app
 from webapp.models import *
 from webapp.models import MemberShowLink as MSL
 from webapp.react_permissions import default_role_permissions, get_allowed_pages
+from webapp.react_support_routes import discord_notif, request_to_json
 
 bp = Blueprint("react_routes", __name__)
 
@@ -55,7 +59,7 @@ def react():
 		Post.date.desc()
 	).filter(
 		case(
-			(request.path == "/auditions", Post.type == "auditions"),
+			(request.path == "/auditions", Post.type == "auditions",),
 			else_=or_(Post.type == "public", Post.type == "auditions")
 		)
 	).join(
@@ -186,6 +190,12 @@ def react_past_shows():
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.get("/past-shows/m/<person_id>/<name>")
+@bp.get("/past-shows/u/<person_id>/<name>")
+def react_shows_by_person_redirect(person_id, name):
+	return redirect(f"/past-shows/member/{person_id}/{name}")
 
 
 @bp.get("/past-shows/member/<person_id>/<name>")
@@ -432,11 +442,44 @@ def react_about():
 		)
 
 
+@bp.post("/api/contact")
+def contact_form_api():
+	try:
+		discord_notif(
+			f"New Message: {request.json.get('subject')}",
+			f"""
+				Name: {request.json.get('name')}
+				Contact: {request.json.get('contact')}
+				{request.json.get('message')}
+			"""
+		)
+	except SSLError as e:
+		stack_trace = traceback.format_exc()
+		new_error = ErrorLog(
+			id=ErrorLog.get_new_id(),
+			path=request.path,
+			request=request_to_json(request),
+			stacktrace=stack_trace
+		)
+		db.session.add(new_error)
+		db.session.commit()
+		return {
+			"code": 503,
+			"msg": "We couldn’t confirm that your message was sent. "
+					"Please try again later. "
+					"If the issue persists, contact us directly for assistance."
+		}
+	return {
+		"code": 200,
+		"msg": "Message sent!"
+	}
+
+
 @bp.get("/search")
 def react_search():
 	posts = (Post.query
 			.filter(Post.type.in_(["public", "auditions", "blog"]))
-			.filter(Post.date<datetime.now())
+			.filter(Post.date < datetime.now())
 			.order_by(Post.date.desc())
 			.all())
 	members = (Member.query

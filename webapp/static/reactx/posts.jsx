@@ -210,6 +210,66 @@ function MapEmbed({url}) {
 	)
 }
 
+function ContactForm({}) {
+	function handleSubmit(e) {
+		let form = e.target
+		form.classList.add("pending")
+		e.preventDefault()
+		let formData = new FormData(form);
+		fetch(e.target.action, {
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				name: formData.get('name'),
+				contact: formData.get('contact'),
+				subject: formData.get('subject'),
+				message: formData.get('message'),
+			})
+		}).then((response) => {
+			return response.json()
+		}).then((data) => {
+			if (data.code === 200) {
+				form.reset();
+				displayAlerts({title: "Success", content: 'Your message has been sent successfully!'});
+			} else {
+				displayAlerts({title: "Error", content: data.msg});
+			}
+			form.querySelector("span.msg").innerHTML = data.msg
+		}).finally(()=> {
+			form.classList.remove("pending")
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			alert('An unexpected error occurred. Please try again later.');
+		});
+	}
+	return (
+		<div className="contact-form" id={"contactform"}>
+			<h2>Contact Us</h2>
+			<form action="/api/contact" method={"POST"} onSubmit={(e) => {handleSubmit(e)}}>
+				<div className="form">
+					<span className="msg"></span>
+					<Input type={"text"} id={"name"} label={"Name"} required={true}></Input>
+					<Input type={"text"} id={"contact"} label={"Contact Email or Number"} required={true}></Input>
+					<Input type={"select"} id={"subject"} label={"Subject"} defaultValue={""} required={true}>
+						<option value=""></option>
+						<option value="Joining the group">Joining the group</option>
+						<option value="Tickets">Tickets</option>
+						<option value="Group Bookings">Group Bookings</option>
+						<option value="Other">Other</option>
+					</Input>
+					<Input type={"textarea"} id={"message"} label={"Message"} required={true}></Input>
+					<Input type={"submit"} value={"Submit"}></Input>
+				</div>
+				<div className="loader"></div>
+			</form>
+		</div>
+	)
+}
+
 function Redirect({url, text = "the destination"}) {
 	return (
 		<div className="content">

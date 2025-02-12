@@ -342,3 +342,11 @@ class SchedulerLog(db.Model, NewIdGetter):
 	datetime = db.Column(db.DateTime)
 	response_code = db.Column(db.Integer)
 	response_json = db.Column(db.Text)
+
+
+class ErrorLog(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	path = db.Column(db.Text)
+	request = db.Column(db.JSON)
+	stacktrace = db.Column(db.Text)

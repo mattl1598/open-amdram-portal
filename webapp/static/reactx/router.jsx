@@ -58,6 +58,12 @@ function App() {
 			data.push({type: "raw", raw: <Post content={siteJson.memberDocs}></Post>})
 		}
 
+		// CONTACT FORM
+		if (RegExp("^/(about|auditions)", "i").test(pathState)) {
+			// console.log("CONTACT FORM")
+			data.push({type: "raw", raw: <ContactForm></ContactForm>})
+		}
+
 		// SOCIALS
 		if (siteJson.socials) {
 			let socials = []
@@ -229,7 +235,7 @@ function App() {
 					</Frontpage>
 				]
 			}
-			console.log("redraw content")
+			// console.log("redraw content")
 			setContent(tempContent)
 			setSidebarExtras(tempSidebarExtras)
 		}

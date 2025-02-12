@@ -918,6 +918,24 @@ def new_order_webhook():
 		abort(500)
 
 
+def discord_notif(title, msg, colour=0x00ffff):
+	if webhook := db.session.query(KeyValue.value).filter(KeyValue.key == "alerts_webhook").scalar():
+		headers = {'Content-type': 'application/json'}
+		data = {
+			"content": "",
+			"embeds": [
+				{
+					"type": "rich",
+					"title": title,
+					"description": f"{msg}",
+					"color": colour
+				}
+			],
+			"type": 1
+		}
+		requests.post(url=webhook, data=json.dumps(data), headers=headers)
+
+
 def discord_notif_error(title, msg):
 	if webhook := KeyValue.query.get("alerts_webhook"):
 		url = webhook.value

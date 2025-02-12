@@ -8,7 +8,7 @@ from sqlalchemy import literal_column, or_, func, case, text
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from flask import abort, Blueprint, make_response, redirect, jsonify, \
-	render_template, Response, send_file, send_from_directory, url_for, request, session
+	render_template, Request, Response, send_file, send_from_directory, url_for, request, session
 from flask import current_app as app
 
 from webapp.models import *
@@ -87,3 +87,60 @@ def accessibility():
 	session.modified = True
 
 	return redirect(request.referrer)
+
+
+def request_to_json(req: Request):
+	data = {
+		"method": req.method,
+		"path": req.path,
+		"json": req.json,
+		"form": req.form.to_dict(),
+		"args": req.args.to_dict(),
+		"content_type": req.content_type,
+		"endpoint": req.endpoint,
+		"origin": req.referrer,
+	}
+
+	return data
+
+
+def discord_notif(title, msg, colour=0x00ffff):
+	if webhook := db.session.query(KeyValue.value).filter(KeyValue.key == "alerts_webhook").scalar():
+		headers = {'Content-type': 'application/json'}
+		data = {
+			"content": "",
+			"embeds": [
+				{
+					"type": "rich",
+					"title": title,
+					"description": f"{msg}",
+					"color": colour
+				}
+			],
+			"type": 1
+		}
+		requests.post(url=webhook, data=json.dumps(data), headers=headers)
+
+
+def discord_notif_error(title, msg):
+	if webhook := KeyValue.query.get("alerts_webhook"):
+		url = webhook.value
+		headers = {
+			'Content-type': 'application/json'
+		}
+		data = {
+			"content": "",
+			"embeds": [
+				{
+					"type": "rich",
+					"title": f"{title}",
+					"description":
+						f"{msg}",
+					"color": 0xff0000,
+					"url": "https://silchesterplayers.org/members/bookings",
+				}
+			],
+			"type": 1
+		}
+		requests.post(url=url, data=json.dumps(data), headers=headers)
+

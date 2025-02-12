@@ -2,6 +2,7 @@ import io
 import json
 import uuid
 from datetime import timedelta
+from pprint import pprint
 
 import pyotp
 import qrcode
@@ -428,7 +429,8 @@ def manage_show(show_id, show_title):
 	show_options = db.session.query(
 		func.json_build_object(
 			"seasons", func.json_agg(func.distinct(Show.season)),
-			"genres", func.json_agg(func.distinct(Show.genre))
+			"genres", func.json_agg(func.distinct(Show.genre)),
+			"showTypes", func.json_agg(func.distinct(Show.show_type))
 		)
 	).scalar()
 	data = {
@@ -445,6 +447,29 @@ def manage_show(show_id, show_title):
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.post("/members/api/manage_shows/<show_id>")
+def edit_show(show_id):
+	form_json = request.json
+
+	if not form_json:
+		return {
+			"code": 400,
+			"msg": "Error: Form is empty."
+		}
+
+	db.session.query(
+		Show
+	).filter(
+		Show.id == show_id
+	).update(form_json)
+
+	db.session.commit()
+	return {
+		"code": 200,
+		"msg": "Show saved successfully",
+	}
 
 
 @bp.get("/members/get_subs")

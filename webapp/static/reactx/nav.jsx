@@ -16,7 +16,7 @@ const memberNavItemsMaster = {
 	bookings: {title: "Manage Bookings", link: "/members/bookings", class: "", icon: "ticket"},
 	admin: {title: "Admin Tools", link: "/members/admin", class: "", icon: "admin", subNav: [
 		{title: "Manage Media", link: "/members/admin/manage_media"},
-		{title: "Manage Shows", link: "/members/admin/manage-shows"},
+		{title: "Manage Shows", link: "/members/manage_shows"},
 		{title: "Add Show Photos", link: "/members/admin/set_show_photos"},
 		{title: "Add New Members", link: "/members/admin/add-show-member"},
 		{title: "Manage Users", link: "/members/admin/manage_users"},

@@ -28,18 +28,22 @@ bp = Blueprint("react_photos_routes", __name__)
 @bp.get("/members/admin/manage_media")
 def manage_media():
 	check_page_permission("admin")
-	media_db = db.session.query(StaticMedia).order_by(StaticMedia.date.desc()).all()
-	if len(media_db):
-		thumbs = [
-			(
-				item.id,
-				f"/media/{item.id}/{item.filename}",
-				item.filename
-			)
-			for item in media_db
-		]
-	else:
-		thumbs = []
+
+	thumbs = list(db.session.query(
+		func.coalesce(
+			func.json_agg(
+				aggregate_order_by(
+					func.json_build_array(
+						StaticMedia.id,
+						func.concat("/media/", StaticMedia.id, "/", StaticMedia.filename),
+						StaticMedia.filename
+					),
+					StaticMedia.date.desc()
+				)
+			),
+			'[]'
+		)
+	).scalar())
 
 	data = {
 		"type": "manage_media",

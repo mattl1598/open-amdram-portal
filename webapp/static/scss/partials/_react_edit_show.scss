@@ -1,9 +1,11 @@
-div.form {
+div.show_form {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	grid-template-rows: auto auto;
+	grid-template-rows: auto;
 	grid-template-areas:
+		"msg msg"
 		"details blob"
+		"save save"
 		"cast crew"
 	;
 	gap: .5rem;
@@ -13,6 +15,12 @@ div.form {
 	}
 	div.blob {
 		grid-area: blob;
+	}
+	span.msg {
+		grid-area: msg;
+	}
+	div.save {
+		grid-area: save;
 	}
 	div.cast {
 		grid-area: cast;

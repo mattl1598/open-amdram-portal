@@ -65,7 +65,7 @@ def create_app():
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
 
-		db.create_all()
+		# db.create_all()
 
 		qrcode = QRcode()
 		qrcode.init_app(app)
@@ -140,7 +140,8 @@ def create_app():
 			datetime=datetime,
 			json=json,
 			env=app.envs.app_environment,
-			square_environment=app.envs.square_environment
+			square_environment=app.envs.square_environment,
+			logo=db.session.query(KeyValue).filter(KeyValue.key == "site_logo").first().value
 		)
 
 		# @app.context_processor
