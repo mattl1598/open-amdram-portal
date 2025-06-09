@@ -338,13 +338,13 @@ def account_settings():
 	).scalar()
 
 	active_subs = db.session.query(
-		func.json_agg(func.json_build_object(
+		func.coalesce(func.json_agg(func.json_build_object(
 			"id", Subscription.id,
 			"plan", Subscription.plan,
 			"name", Subscription.name,
 			"plan_name", SubscriptionPlan.name,
 			"plan_amount", SubscriptionPlan.amount,
-		))
+		)), '[]')
 	).filter(
 		Subscription.user_id == current_user.id,
 		Subscription.active,
