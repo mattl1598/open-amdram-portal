@@ -1,13 +1,15 @@
 import io
 import json
 import uuid
+import re
 from datetime import timedelta
 from pprint import pprint
 
 import pyotp
 import qrcode
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import and_, case, column, extract, func, literal, not_, or_, sql, literal_column, union_all, text
+from sqlalchemy import and_, case, column, extract, func, literal, not_, or_, sql, literal_column, union_all, text, \
+	update
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 from webapp.models import MemberShowLink as MSL
@@ -345,7 +347,8 @@ def account_settings():
 		))
 	).filter(
 		Subscription.user_id == current_user.id,
-		Subscription.active
+		Subscription.active,
+		Subscription.square_env == app.envs.square_environment
 	).join(SubscriptionPlan, Subscription.plan == SubscriptionPlan.id).scalar()
 
 	key = current_user.otp_secret or session.get("key") or pyotp.random_base32()
@@ -420,6 +423,7 @@ def manage_shows():
 
 @bp.get("/members/manage_shows/<show_id>/<show_title>")
 def manage_show(show_id, show_title):
+	check_page_permission("admin")
 	show_details = db.session.query(
 		func.row_to_json(
 			literal_column('show')
@@ -433,11 +437,26 @@ def manage_show(show_id, show_title):
 			"showTypes", func.json_agg(func.distinct(Show.show_type))
 		)
 	).scalar()
+
+	current_roles = db.session.query(
+		func.json_build_object(
+			"role", MSL.role_name,
+			"cast_or_crew", MSL.cast_or_crew,
+			"orderVal", MSL.order_val,
+			"members", func.json_agg(MSL.member_id)
+		)
+	).filter(
+		MSL.show_id == show_id
+	).group_by(
+		MSL.order_val, MSL.cast_or_crew, MSL.role_name
+	).order_by(MSL.order_val).all()
+
 	data = {
 		"type": "edit_show",
 		"title": "Edit Show",
 		"showDetails": show_details,
-		"showOptions": show_options
+		"showOptions": show_options,
+		"currentRoles": [x[0] for x in current_roles]
 	}
 	if "react" in request.args.keys():
 		return jsonify(data)
@@ -449,9 +468,12 @@ def manage_show(show_id, show_title):
 		)
 
 
-@bp.post("/members/api/manage_shows/<show_id>")
-def edit_show(show_id):
+@bp.post("/members/api/manage_shows")
+def edit_show():
+	check_page_permission("admin")
 	form_json = request.json
+
+	pprint(form_json)
 
 	if not form_json:
 		return {
@@ -459,22 +481,118 @@ def edit_show(show_id):
 			"msg": "Error: Form is empty."
 		}
 
-	db.session.query(
-		Show
-	).filter(
-		Show.id == show_id
-	).update(form_json)
+	show_id = form_json.get("showID")
+	if not show_id:
+		show_id = Show.get_new_id()
+		show = Show(
+			show_id=show_id,
+			**form_json.get("showDetails", {})
+		)
+		db.session.add(show)
+	else:
+		db.session.query(
+			Show
+		).filter(
+			Show.id == show_id
+		).update(form_json.get("showDetails", {}))
 
 	db.session.commit()
+	if form_json.get("roles"):
+		db_roles = db.session.query(
+			MSL
+		).filter(MSL.show_id == show_id).all()
+
+		db_roles_lookup = {"exact": {}, "order": {}}
+		for role in db_roles:
+			db_roles_lookup["exact"][(role.role_name, role.member_id, role.cast_or_crew, role.order_val)] = role.id
+			db_roles_lookup["order"][(role.role_name, role.member_id, role.cast_or_crew)] = role.id
+
+		updates = []
+		new = []
+		dont_delete = set()
+		for role in form_json.get("roles", []):
+			for member in role.get("members", []):
+				if id := db_roles_lookup["exact"].get((role["role"], member, role["cast_or_crew"], role["orderVal"])):
+					dont_delete.add(id)
+					del db_roles_lookup["exact"][(role["role"], member, role["cast_or_crew"], role["orderVal"])]
+				elif id := db_roles_lookup["order"].get((role["role"], member, role["cast_or_crew"])):
+					del db_roles_lookup["order"][(role["role"], member, role["cast_or_crew"])]
+					dont_delete.add(id)
+					updates.append({"id": id, "order_val": role["orderVal"]})
+				else:
+					new.append(
+						MSL(
+							id=MSL.get_new_id(),
+							show_id=show_id,
+							cast_or_crew=role["cast_or_crew"],
+							role_name=role["role"],
+							member_id=member,
+							order_val=role["orderVal"],
+						)
+					)
+
+		delete_these = (set(db_roles_lookup["exact"].values()) | set(db_roles_lookup["order"].values())) - dont_delete
+
+		db.session.query(MSL).filter(MSL.id.in_(delete_these)).delete()
+		db.session.execute(update(MSL), updates)
+		db.session.add_all(new)
+		db.session.commit()
+
 	return {
 		"code": 200,
 		"msg": "Show saved successfully",
 	}
 
 
+@bp.get("/members/api/get_members")
+def get_members():
+	check_page_permission("admin")
+	return db.session.query(
+		func.json_agg(
+			aggregate_order_by(
+				func.json_build_object(
+					"value", Member.id,
+					"text", Member.firstname + " " + Member.lastname,
+				),
+				Member.lastname.asc(), Member.firstname.asc()
+			)
+		)
+	).select_from(
+		Member
+	).scalar()
+
+
+@bp.post("/members/api/add_member")
+def add_member():
+	check_page_permission("admin")
+	name_split = request.json.get("name").rsplit(" ", 1)
+	if len(name_split) == 2:
+		firstname, lastname = name_split
+	elif len(name_split) == 1:
+		firstname, lastname = name_split[0], ""
+	else:
+		return {
+			"code": 400,
+			"msg": "Error: Invalid name."
+		}
+	new_member = Member(
+		id=Member.get_new_id(),
+		firstname=firstname,
+		lastname=lastname
+	)
+
+	db.session.add(new_member)
+	db.session.commit()
+	return {
+		"code": 200,
+		"newMember": {"id": new_member.id, "name": new_member.firstname + " " + new_member.lastname},
+		"members": get_members()
+	}
+
+
 @bp.get("/members/get_subs")
 def get_subs():
-	check_page_permission("get_subs")
+	check_page_permission("admin")
 	date_string = KeyValue.query.get("square_subs_updated").value
 	date_split = date_string.split(".")
 	date_split[-1].ljust(6 - len(date_split[-1]), "0")
@@ -489,16 +607,19 @@ def get_subs():
 
 	if "startyear" in request.args.keys():
 		year = int(request.args.get("startyear"))
-		most_recent_july_1st = datetime(year, 6, 1)
+		most_recent_july_1st = datetime(year, 7, 1)
 	else:
 		# Calculate the most recent July 1st that has passed
-		if current_date.month > 6 or (current_date.month == 6 and current_date.day >= 1):
-			most_recent_july_1st = datetime(current_date.year, 6, 1)
+		if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+			most_recent_july_1st = datetime(current_date.year, 7, 1)
 		else:
-			most_recent_july_1st = datetime(current_date.year - 1, 6, 1)
+			most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
 
 	# Get the datestamp for midnight on the most recent July 1st
 	midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+
+	print(midnight_july_1st)
+
 	paid = list(SubsPayment.query
 				.filter(SubsPayment.datetime > midnight_july_1st)
 				.filter(midnight_july_1st + timedelta(weeks=52) > SubsPayment.datetime)
@@ -512,6 +633,7 @@ def get_subs():
 						SubsPayment.refunded
 					).all()
 			)
+
 	detailed = "detailed" in request.args.keys()
 	results = []
 	types = {}
@@ -544,6 +666,7 @@ def get_subs():
 			new_result = {
 				"name": entry.name
 			}
+			print(entry)
 		results.append(new_result)
 
 	data = {
@@ -552,8 +675,9 @@ def get_subs():
 		"types": types,
 		"detailed": detailed,
 		"oldest_entry_year": oldest_entry_year,
-		"since": midnight_july_1st,
-		"sq_updated": sq_updated
+		"totals": totals,
+		# "since": midnight_july_1st,
+		# "sq_updated": sq_updated.isoformat()
 	}
 	if "react" in request.args.keys():
 		return jsonify(data)
@@ -565,12 +689,19 @@ def get_subs():
 		)
 
 
-@bp.post("/members/api/update_subs")
+@bp.get("/members/api/update_subs")
 def update_subs():
 	latest_square_date = SubsPayment.query.filter_by(source="square").order_by(
 		SubsPayment.datetime.desc()).first().datetime
 	latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(
 		SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
+
+	existing_orders = db.session.query(
+		func.coalesce(func.json_agg(SubsPayment.order_id), '[]')
+	).filter(
+		SubsPayment.source == "square",
+		SubsPayment.order_id.is_not(None)
+	).scalar()
 
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 	results = app.square.orders.search_orders(
@@ -605,7 +736,51 @@ def update_subs():
 			"code": 500,
 			"msg": "Square API Error"
 		}
+	else:
+		for order in results.body.get("orders", []):
+			if order.get("id") not in existing_orders:
+				for item in order.get("line_items", []):
+					details = {}
+					for modifier in item.get("modifiers", []):
+						regex = r"^>(.*) \(([ABCDE])\): (.*)$"
+						match = re.search(regex, modifier.get('name'))
+						details[match[2]] = match[3]
 
+					payment = app.square.payments.get_payment(
+						payment_id=order.get("tenders")[0].get("payment_id"),
+					)
+
+					pprint(payment)
+					pprint(order)
+
+					fees = payment.body.get("payment", {}).get("processing_fee", [])
+					payment_fee = 0
+					for fee in fees:
+						payment_fee += fee.get("amount_money", {}).get("amount", 0)
+
+					new_payment = SubsPayment(
+						id=SubsPayment.get_new_id(),
+						user_id=None,
+						membership_type=item.get("name").replace("Membership - ", "").lower(),
+						amount_paid=item.get("total_money", {}).get("amount", 0),
+						datetime=order.get("created_at"),
+						name=details.get("A"),
+						email=details.get("C"),
+						phone_number=details.get("B").replace(" ", ""),
+						e_con_name=details.get("D"),
+						e_con_phone=details.get("E").replace(" ", ""),
+						order_id=order.get("id"),
+						payment_id=order.get("tenders")[0].get("payment_id"),
+						source="square",
+						payment_fee=payment_fee,
+						refunded=bool(len(payment.body.get("refund_ids", [])))
+					)
+					# db.session.add(new_payment)
+		# db.session.commit()
+		return {
+			"code": 200,
+			"msg": "OK"
+		}
 
 
 @bp.post("/members/api/account_settings/start_subscription")
@@ -1018,7 +1193,7 @@ def set_admin_settings():
 def add_new_subs_plan():
 	check_page_permission("admin")
 	current_plan_names = db.session.query(
-		func.json_agg(SubscriptionPlan.name)
+		func.coalesce(func.json_agg(SubscriptionPlan.name), '[]')
 	).filter(SubscriptionPlan.square_env == app.envs.square_environment).scalar()
 	if (name := request.form.get('levelName').lower()) in current_plan_names:
 		return {

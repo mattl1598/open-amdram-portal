@@ -193,7 +193,7 @@ function Show({content, refresh}) {
 					<Link href={link} className={"icon"}><Icon icon={"pdf"}></Icon></Link>
 					<Link href={link} className="filetext"><span className="title"><h4>{file.title}</h4></span></Link>
 					{
-						context.siteJson.current_user.is_authenticated && (content.directors.includes(context.siteJson.current_user.id) || context.siteJson.current_user.role) === "admin" ?
+						context.siteJson.current_user.is_authenticated && (content.directors?.includes(context.siteJson.current_user.id) || context.siteJson.current_user.role) === "admin" ?
 						<button type={"button"} onClick={(event) => handleFileDelete(event,`${file.id}`)} className="delete"><span className="delete">Delete?</span></button>
 							: ""
 					}
@@ -387,7 +387,7 @@ function AccountSettings({content, refresh}) {
 		}
 	}
 
-	for (let i=0; i<(content.subs.options||[]).length; i++) {
+	for (let i=0; i<(content.subs.active||[]).length; i++) {
 		let sub = content.subs.active[i]
 		active_subs.push(
 			<div key={i} className={"sub_form"} id={sub.id}>

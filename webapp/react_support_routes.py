@@ -35,6 +35,14 @@ def react(filename):
 		abort(404)
 
 
+@bp.get("/js/<string:filename>")
+def js(filename):
+	fp = 'static/js/' + filename
+	response = make_response(send_file(fp.replace("\\", "/")))
+	response.headers['mimetype'] = 'text/js'
+	return response
+
+
 @bp.route("/css/<string:filename>", methods=["GET"])
 @bp.route("/static/css/<string:filename>", methods=["GET"])
 def css(filename):
@@ -58,6 +66,16 @@ def css(filename):
 		except OSError as e:
 			print(e)
 			abort(404)
+
+
+@bp.get("/models/<string:filename>")
+def model(filename):
+	return send_from_directory("static/models", filename)
+
+	# fp = 'static/models/' + filename
+	# response = make_response(send_file(fp.replace("\\", "/")))
+	# response.headers['mimetype'] = 'text/js'
+	# return response
 
 
 # noinspection PyUnresolvedReferences

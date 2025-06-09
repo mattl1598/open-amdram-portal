@@ -21,7 +21,8 @@
 		<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 		<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 		<script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/2.0.1/remarkable.min.js" referrerpolicy="no-referrer"></script>
-		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+{#		<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>#}
+		<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 	{% else %}
 		<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
 		<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -40,6 +41,13 @@
 
 	<link href="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/css/tom-select.css" rel="stylesheet">
 	<script src="https://cdn.jsdelivr.net/npm/tom-select@latest/dist/js/tom-select.complete.min.js"></script>
+
+	<script src="/js/tasks-vision.js"></script>
+	<script src="/js/face-api.js"></script>
+
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite/dist/tf-tflite.min.js"></script>
 
 	<link href="/static/css/react.css" rel="stylesheet" type="text/css">
 

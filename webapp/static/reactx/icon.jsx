@@ -54,28 +54,55 @@ for (let i = 0; i < tags.length; i++) {
 	)
 }
 
-function Icon({icon, timeline, onClick, className}) {
-	let d = iconPaths[icon]
-	const context = React.useContext(app)
-	if (icon === "siteLogo") {
+function Icon({icon="", timeline, onClick, className, tabIndex, children}) {
+	let opts = {}
+	function handleEnter(e) {
+		let keycode = (e.keyCode ? e.keyCode : e.which);
+		if (keycode === '13' || keycode === 13) {
+			onClick()
+		}
+	}
+	if (tabIndex !== undefined) {
+		opts.tabIndex = tabIndex
+		opts.onKeyPress=handleEnter
+	}
+	if (Object.keys(iconPaths).includes(icon) || icon === "siteLogo") {
+		let d = iconPaths[icon]
+		const context = React.useContext(app)
+		if (icon === "siteLogo") {
+			return (
+				<span {...opts} className={"icon"} onClick={onClick} dangerouslySetInnerHTML={{__html: context.siteJson.site_logo}}></span>
+			)
+		}
+
+
 		return (
-			<span className={"icon"} onClick={onClick} dangerouslySetInnerHTML={{__html: context.siteJson.site_logo}}></span>
+			<svg {...opts} className={`icon ${className}`} viewBox="0 0 50 50" onClick={onClick}>
+				<path d={ d }></path>
+				{timeline === "up" ? (
+					<path shapeRendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
+					) : null
+				}
+				{timeline === "down" ? (
+					<path shapeRendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
+					) : null
+				}
+			</svg>
+		)
+	} else if (icon !== "") {
+		return (
+			<div {...opts} onClick={onClick} className={"react_icon"}>
+				<span className={`material-symbols-outlined ${className}`}>{icon}</span>
+			</div>
+		)
+	} else {
+		return (
+			<div {...opts} onClick={onClick} className={"react_icon"}>
+				<span className={`material-symbols-outlined ${className}`}>{children}</span>
+			</div>
 		)
 	}
 
-	return (
-		<svg className={`icon ${className}`} viewBox="0 0 50 50" onClick={onClick}>
-			<path d={ d }></path>
-			{timeline === "up" ? (
-				<path shapeRendering="crispEdges" d="m 24.5 5 l 0 -35 l 1 0 l 0 35 l -1 0 z"></path>
-				) : null
-			}
-			{timeline === "down" ? (
-				<path shapeRendering="crispEdges" d="m 24.5 26 l 0 27 l 1 0 l 0 -27 l -1 0 z"></path>
-				) : null
-			}
-		</svg>
-	)
 }
 
 function QRCode({data}) {

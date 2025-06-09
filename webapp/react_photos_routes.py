@@ -12,12 +12,12 @@ from flask_login import current_user, login_required
 from PIL import Image
 from pprint import pprint
 
-from sqlalchemy import func
+from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from webapp.models import KeyValue, Show, ShowPhotos, StaticMedia, db
+from webapp.models import KeyValue, Show, ShowImage, ShowPhotos, StaticMedia, db
 from flask import current_app as app, Response
-from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context, send_file
 
 from webapp.photos_routes import get_albums, get_photo, update_access_token
 from webapp.react_permissions import check_page_permission
@@ -78,13 +78,13 @@ def modernise():
 	b_out = io.BytesIO()
 	b_out_small = io.BytesIO()
 
-	max_dimension = 400
-	scale_factor = max_dimension / max(im.width, im.height)
+	max_width, max_height = 400, 400
+	scale_factor = min(max_width / im.width, max_height / im.height)
 	new_size = (int(im.width * scale_factor), int(im.height * scale_factor))
 
 	im.save(b_out, format="webp")
 	# Resize the image to the new dimensions
-	im = im.resize(new_size, Image.ANTIALIAS)
+	im = im.resize(new_size, Image.Resampling.LANCZOS)
 	im.save(b_out_small, format="webp")
 
 	media.content = b_out.getvalue()
@@ -160,76 +160,73 @@ def upload_static_media(**kwargs):
 		# Resize the image to the new dimensions
 		im = im.resize(new_size, Image.ANTIALIAS)
 		im.save(b_out_small, format="webp")
+		width = im.width
+		height = im.height
 	
 
 
-	update_access_token()
-	url = "https://photoslibrary.googleapis.com/v1/uploads"
-	headers = {
-		"Content-type": "application/octet-stream",
-		"X-Goog-Upload-Content-Type": "image/webp",
-		"X-Goog-Upload-Protocol": "raw"
-	}
+	# update_access_token()
+	# url = "https://photoslibrary.googleapis.com/v1/uploads"
+	# headers = {
+	# 	"Content-type": "application/octet-stream",
+	# 	"X-Goog-Upload-Content-Type": "image/webp",
+	# 	"X-Goog-Upload-Protocol": "raw"
+	# }
 
 	image_data = b_out.getvalue()
 	small_image_data = b_out_small.getvalue()
 
-	x = requests.post(
-		url + f"?access_token={session.get('access_token')}",
-		headers=headers,
-		data=image_data
-	)
+	# x = requests.post(
+	# 	url + f"?access_token={session.get('access_token')}",
+	# 	headers=headers,
+	# 	data=image_data
+	# )
 
-	albums = {b: a for (a, b) in get_albums()}
+	# albums = {b: a for (a, b) in get_albums()}
+	#
+	# if "OADP_Website_Media" in albums.keys():
+	# 	album_id = albums.get("OADP_Website_Media")
+	# else:
+	# 	x = requests.post(
+	# 		url=f"https://photoslibrary.googleapis.com/v1/albums?access_token={session.get('access_token')}",
+	# 		json={
+	# 			"album": {
+	# 				"title": "OADP_Website_Media"
+	# 			}
+	# 		}
+	# 	)
+	# 	album_id = x.json().get("id")
 
-	if "OADP_Website_Media" in albums.keys():
-		album_id = albums.get("OADP_Website_Media")
-	else:
-		x = requests.post(
-			url=f"https://photoslibrary.googleapis.com/v1/albums?access_token={session.get('access_token')}",
-			json={
-				"album": {
-					"title": "OADP_Website_Media"
-				}
-			}
-		)
-		album_id = x.json().get("id")
+	# url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
+	# headers = {
+	# 	"Content-type": "application/json"
+	# }
+	# data = {
+	# 	"albumId": album_id,
+	# 	"newMediaItems": [
+	# 		{
+	# 			"description": "",
+	# 			"simpleMediaItem": {
+	# 				"fileName": f"{filename.rsplit('.', 1)[0]}.webp",
+	# 				"uploadToken": f"{x.content.decode('utf-8')}"
+	# 			}
+	# 		}
+	# 	]
+	# }
 
-	url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
-	headers = {
-		"Content-type": "application/json"
-	}
-	data = {
-		"albumId": album_id,
-		"newMediaItems": [
-			{
-				"description": "",
-				"simpleMediaItem": {
-					"fileName": f"{filename.rsplit('.', 1)[0]}.webp",
-					"uploadToken": f"{x.content.decode('utf-8')}"
-				}
-			}
-		]
-	}
-
-	x = requests.post(
-		url + f"?access_token={session.get('access_token')}",
-		headers=headers,
-		data=json.dumps(data)
-	)
+	# x = requests.post(
+	# 	url + f"?access_token={session.get('access_token')}",
+	# 	headers=headers,
+	# 	data=json.dumps(data)
+	# )
 	# pprint(x.json())
 
 	new_item = StaticMedia(
 		id=StaticMedia.get_new_id(),
-		item_id=x.json()["newMediaItemResults"][0]["mediaItem"]["id"],
-		filename=x.json()["newMediaItemResults"][0]["mediaItem"]["filename"],
-		item_type=x.json()["newMediaItemResults"][0]["mediaItem"]["mimeType"],
-		item_dim=",".join(
-			[
-				x.json()["newMediaItemResults"][0]["mediaItem"]["mediaMetadata"][i]
-				for i in ["width", "height"]
-			]
-		),
+		item_id="",
+		filename=f"{filename.rsplit('.', 1)[0]}.webp",
+		item_type="image/webp",
+		item_dim=f"{width},{height}",
 		content=image_data,
 		small_content=small_image_data
 	)
@@ -384,3 +381,114 @@ def get_static_media(media_id, **kwargs):
 		return Response(media_item.small_content, mimetype="image/webp")
 	else:
 		return Response(media_item.content, mimetype="image/webp")
+
+
+@bp.route("/photo_new/<photo_id>")
+def get_image(photo_id):
+	if "lowres" in request.args.keys():
+		image = db.session.query(
+			ShowImage.reduced_image,
+			ShowImage.filename
+		).filter_by(id=photo_id).first_or_404()
+		return send_file(io.BytesIO(image.reduced_image), download_name=image.filename, mimetype="image/webp")
+	else:
+		image = db.session.query(
+			ShowImage.full_image,
+			ShowImage.filename
+		).filter_by(id=photo_id).first_or_404()
+		return send_file(io.BytesIO(image.full_image), download_name=image.filename, mimetype="image/webp")
+
+
+@bp.get("/members/manage_shows/photos/<show_id>/<show_title>")
+def manage_photos(show_id, show_title):
+	photos = db.session.query(
+		func.coalesce(func.json_agg(aggregate_order_by(
+			func.json_build_object(
+				"id", ShowImage.id,
+				"filename", ShowImage.filename,
+				"rWidth", ShowImage.reduced_width,
+				"rHeight", ShowImage.reduced_height,
+				"width", ShowImage.width,
+				"height", ShowImage.height,
+				"order_value", ShowImage.order_value,
+				"featured", ShowImage.featured,
+			), ShowImage.order_value.asc(), ShowImage.filename.asc())
+		), '[]')
+	).filter(
+		ShowImage.show_id == show_id
+	).scalar()
+
+	data = {
+		"type": "manage_show_photos",
+		"title": f"{show_title} Photos",
+		"showID": show_id,
+		"photos": photos,
+	}
+
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.post("/members/api/set_show_images_order")
+def set_show_images_order():
+	data = request.json
+	db.session.execute(update(ShowImage), data)
+	db.session.commit()
+
+	return {
+		"code": 200,
+		"msg": "Image metadata Updated Successfully"
+	}
+
+
+@bp.post("/members/api/upload_show_image")
+def upload_show_images():
+	form = request.form
+	if 'file' not in request.files:
+		return jsonify({"code": 400, "msg": "No file part in the request"}), 400
+
+	file = request.files['file']
+	if file.filename == '':
+		return jsonify({"code": 400, "msg": "No file selected for uploading"}), 400
+
+	b_in = io.BytesIO(file.read())
+	b_out = io.BytesIO()
+	b_out_small = io.BytesIO()
+
+	height = 0
+	width = 0
+	reduced_height = 0
+	reduced_width = 0
+
+	with Image.open(b_in) as im:
+		width = im.size[0]
+		height = im.size[1]
+		im.save(b_out, format="webp", optimize=True, quality=80)
+		im.thumbnail((400,400,), resample=Image.Resampling.BOX)
+		reduced_width = im.size[0]
+		reduced_height = im.size[1]
+		im.save(b_out_small, format="webp", optimize=True, quality=85)
+		
+	new_image = ShowImage(
+		id=ShowImage.get_new_id(),
+		show_id=request.form.get("show_id"),
+		filename=file.filename,
+		width=width,
+		height=height,
+		reduced_height=reduced_height,
+		reduced_width=reduced_width,
+		full_image=b_out.getvalue(),
+		reduced_image=b_out_small.getvalue()
+	)
+
+	db.session.add(new_image)
+	db.session.commit()
+
+	return jsonify({"code": 200, "msg": f"Photo '{file.filename}' uploaded successfully"}), 200
+	

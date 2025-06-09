@@ -5,6 +5,7 @@ from sqlalchemy.ext.mutable import MutableDict
 # noinspection PyPackageRequirements
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin
+from sqlalchemy.orm import deferred
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -35,7 +36,7 @@ class Files(db.Model, NewIdGetter):
 	show_id = db.Column(db.String(16))
 	name = db.Column(db.String(100))
 	content = db.Column(db.LargeBinary)
-	date = db.Column(db.DateTime, default=datetime.utcnow())
+	date = db.Column(db.DateTime, default=datetime.utcnow)
 
 	def __repr__(self):
 		return f"Files('{self.id}', '{self.show_id}', '{self.name}', '{self.content}', '{self.date}')"
@@ -52,7 +53,7 @@ class Post(db.Model, NewIdGetter):
 	author = db.Column(db.String(16), db.ForeignKey('user.id'))
 	title = db.Column(db.String(80))
 	content = db.Column(db.Text)
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	views = db.Column(db.Integer, default=0)
 	linked_files = db.Column(MutableDict.as_mutable(db.JSON))
 
@@ -67,7 +68,7 @@ class PrizeDrawEntry(db.Model, NewIdGetter):
 	email = db.Column(db.String(120), unique=True)
 	phone_number = db.Column(db.String(13), unique=True)
 	terms_agreed = db.Column(db.String(20))
-	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
 class User(UserMixin, db.Model, NewIdGetter):
@@ -126,12 +127,12 @@ class SubsPayment(db.Model, NewIdGetter):
 	membership_type = db.Column(db.String(16))
 	amount_paid = db.Column(db.Integer)
 	payment_fee = db.Column(db.Integer)
-	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	name = db.Column(db.String(50))
 	email = db.Column(db.String(120))
-	phone_number = db.Column(db.String(13))
+	phone_number = db.Column(db.String(30))
 	e_con_name = db.Column(db.String(50))
-	e_con_phone = db.Column(db.String(13))
+	e_con_phone = db.Column(db.String(30))
 	order_id = db.Column(db.String(192))
 	payment_id = db.Column(db.String(192))
 	source = db.Column(db.String(6))
@@ -143,7 +144,7 @@ class Subscription(db.Model, NewIdGetter):
 	user_id = db.Column(db.String(16), db.ForeignKey('user.id'))
 	plan = db.Column(db.String(16), db.ForeignKey('subscription_plan.id'))
 	active = db.Column(db.Boolean, default=True)
-	start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	sub_for = db.Column(db.String(16))
 	name = db.Column(db.String(50))
 	phone_number = db.Column(db.String(13))
@@ -170,7 +171,7 @@ class SubscriptionPlan(db.Model, NewIdGetter):
 
 class BookingModifications(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
-	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	ref_num = db.Column(db.Integer)
 	from_item = db.Column(db.Text)
 	change_quantity = db.Column(db.Integer)
@@ -209,7 +210,7 @@ class MemberShowLink(db.Model, NewIdGetter):
 
 class BlogPost(db.Model):
 	id = db.Column(db.String(16), primary_key=True)
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	title = db.Column(db.Text, nullable=False)
 	category = db.Column(db.Text, nullable=False)
 	content = db.Column(db.Text, nullable=False)
@@ -247,7 +248,7 @@ def load_user(user_id):
 
 class Show(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	season = db.Column(db.String(8))
 	show_type = db.Column(db.Text)
 	title = db.Column(db.Text)
@@ -284,10 +285,24 @@ class ShowPhotos(db.Model, NewIdGetter):
 		return f"ShowPhotos('{self.id}', '{self.show_id}', '{self.photo_url}', '{self.photo_type}', '{self.photo_desc}')"
 
 
+class ShowImage(db.Model, NewIdGetter):
+	id = db.Column(db.String(16), primary_key=True)
+	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
+	filename = db.Column(db.Text)
+	height = db.Column(db.Integer)
+	width = db.Column(db.Integer)
+	full_image = deferred(db.Column(db.LargeBinary))
+	reduced_image = deferred(db.Column(db.LargeBinary))
+	reduced_height = db.Column(db.Integer)
+	reduced_width = db.Column(db.Integer)
+	order_value = db.Column(db.Integer, default=0)
+	featured = db.Column(db.Boolean, default=False)
+
+
 class Performance(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	layout = db.Column(db.JSON)
 	seat_assignments = db.Column(db.JSON)
 
@@ -300,7 +315,7 @@ class Performance(db.Model, NewIdGetter):
 
 class StaticMedia(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	item_id = db.Column(db.Text)
 	filename = db.Column(db.Text)
 	item_type = db.Column(db.String(30))
@@ -313,7 +328,7 @@ class StaticMedia(db.Model, NewIdGetter):
 
 class AnalyticsLog(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
-	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	server = db.Column(db.Text)
 	session_id = db.Column(db.Text)
 	session_email = db.Column(db.Text)
@@ -329,9 +344,9 @@ class Scheduler(db.Model, NewIdGetter):
 	enabled = db.Column(db.Boolean)
 	is_running = db.Column(db.Boolean)
 	last_response_code = db.Column(db.Integer)
-	last_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	last_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	interval = db.Column(db.Interval)
-	next_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	next_execution = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 	scheduler_log = db.relationship('SchedulerLog', backref='Scheduler', lazy=True)
 
@@ -346,7 +361,7 @@ class SchedulerLog(db.Model, NewIdGetter):
 
 class ErrorLog(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
-	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+	datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	path = db.Column(db.Text)
 	request = db.Column(db.JSON)
 	stacktrace = db.Column(db.Text)

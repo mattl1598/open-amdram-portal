@@ -1,4 +1,12 @@
-
+function handleClick(e) {
+	if (alsoOnClick !== undefined) {
+		alsoOnClick()
+	}
+	if (target !== "_blank") {
+		e.preventDefault()
+		context.functions.setPath(href)
+	}
+}
 function Link({href, className, children, style, title="", target="_self", onClick=handleClick, alsoOnClick}) {
 	const context = React.useContext(app)
 	function handleClick(e) {

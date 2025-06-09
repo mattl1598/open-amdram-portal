@@ -204,6 +204,8 @@ function App() {
 				tempContent.push(<ManageMedia key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></ManageMedia>)
 			} else if(postJson.type === "edit_show") {
 				tempContent.push(<EditShow key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></EditShow>)
+			} else if(postJson.type === "manage_show_photos") {
+				tempContent.push(<PastShowPhotos key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></PastShowPhotos>)
 			} else if(postJson.type === "show_photos_form") {
 				tempContent.push(<ShowPhotosForm key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></ShowPhotosForm>)
 			} else if(postJson.type === "accounting") {

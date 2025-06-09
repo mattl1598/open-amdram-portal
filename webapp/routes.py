@@ -925,15 +925,15 @@ def newsletter():
 			abort(500)
 
 
-@bp.route("/js/<string:filename>", methods=["GET"])
-def js(filename):
-	fp = 'static/js/' + filename
-	try:
-		response = make_response(send_file(fp.replace("\\", "/")))
-		response.headers['mimetype'] = 'text/javascript'
-		return response
-	except OSError:
-		abort(404)
+# @bp.route("/js/<string:filename>", methods=["GET"])
+# def js(filename):
+# 	fp = 'static/js/' + filename
+# 	try:
+# 		response = make_response(send_file(fp.replace("\\", "/")))
+# 		response.headers['mimetype'] = 'text/javascript'
+# 		return response
+# 	except OSError:
+# 		abort(404)
 
 
 # @bp.route("/react/<string:filename>", methods=["GET"])

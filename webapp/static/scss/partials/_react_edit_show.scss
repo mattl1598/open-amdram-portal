@@ -1,3 +1,5 @@
+@import "variables";
+
 div.show_form {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -30,6 +32,95 @@ div.show_form {
 	}
 }
 
+div.cast div, div.crew div {
+	div.role_sub_form {
+		display: grid;
+			grid-template-columns: 1rem 1fr .25rem 1.75fr auto;
+		grid-template-rows: auto;
+		column-gap: 0;
+		place-items: start;
+		//overflow: hidden;
+		transition: grid-template-columns .5s ease;
+
+		//&:hover {
+		//	grid-template-columns: 1rem 1fr .25rem 1.75fr;
+		//}
+
+		* {
+			grid-row: 1/2;
+		}
+
+		div.react_icon:first-of-type {
+			padding-top: 1.3rem;
+			grid-column: 1/2;
+			place-self: center;
+			cursor: grab;
+			margin-left: -.325rem;
+		}
+
+		div.react_icon:last-of-type {
+			padding-top: 1.3rem;
+			grid-column: 5/6;
+			place-self: center;
+			cursor: pointer;
+			//margin-left: 1rem;
+			overflow: hidden;
+
+			display: grid;
+			grid-template-columns: 0 0;
+			transition: grid-template-columns .5s ease;
+		}
+
+		div.hover_right:hover + div.react_icon:last-of-type, div.react_icon:last-of-type:hover, div.react_icon:last-of-type:focus-visible {
+			grid-template-columns: .25rem 1.5rem;
+		}
+
+
+
+		div.hover_right {
+			display: block;
+			grid-column: 4/5;
+			width: 2rem;
+			margin-left: auto;
+			height: 100%;
+			z-index: 100;
+			&:active {
+				pointer-events: none;
+			}
+		}
+
+		div.react-fancy-input {
+			grid-column: 2/3;
+		}
+
+		div.members {
+			grid-column: 4/5;
+			width: 100%;
+			display: grid;
+			grid-template-columns: 1fr;
+			grid-template-rows: 1.2rem auto;
+			margin-top: .0625rem;
+
+			label {
+				grid-column: 1/2;
+				grid-row: 1/2;
+				text-transform: uppercase;
+			}
+
+			select, div.ts-wrapper {
+				width: 100%;
+				grid-column: 1/2;
+				grid-row: 2/3;
+
+				.ts-control {
+					min-height: 2.6rem;
+					border-radius: .4375rem;
+				}
+			}
+		}
+	}
+}
+
 img.banner_preview {
 	width: 100%;
 	max-width: 100%;
@@ -43,4 +134,159 @@ img.programme_preview {
 	max-height: 20rem;
 	margin: 0 auto;
 	object-fit: contain;
+}
+
+div.buttons {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 2rem;
+}
+
+div.manage_show_images {
+	//display: flex;
+	//flex-direction: row;
+	//flex-wrap: wrap;
+	//justify-content: center;
+
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	grid-auto-flow: row;
+	place-items: center;
+
+	row-gap: 1rem;
+
+	flex-basis: 8rem;
+	margin-block: 1rem;
+
+	div.droppable {
+		align-self: stretch;
+		width: 1rem;
+		margin: .25rem;
+		border: .125rem dashed;
+		border-color: #00000000;
+	}
+
+	&.dragging div.droppable {
+		@include theme(border-color, text);
+	}
+
+	div.arrange {
+		display: grid;
+		grid-template-columns: min-content min-content;
+		grid-template-rows: min-content;
+
+		div.droppable {
+			grid-area: 1 / 1 / 2 / 2;
+		}
+		div.draggable {
+			grid-area: 1 /2 / 2 / 3;
+		}
+	}
+
+	div.draggable {
+		width: 8rem;
+		height: 8rem;
+		border-width: .125rem;
+		border-style: solid;
+		@include theme(border-color, accent1);
+
+		cursor: grab;
+		&:active {
+	        cursor: grabbing;
+		}
+
+		display: grid;
+		grid-template-columns: 1fr min-content;
+		grid-template-rows: 1fr min-content;
+
+		div.react_icon {
+			grid-column: 2/3;
+			grid-row: 2/3;
+			span {
+				display: block;
+				&.fill {
+					font-variation-settings: "FILL" 1;
+				}
+			}
+			cursor: pointer;
+		}
+
+		img {
+			grid-area: 1 / 1 / 3 / 3;
+			object-fit: cover;
+			width: 100%;
+			height: 100%;
+			//aspect-ratio: 1;
+			//width: 8rem;
+			//height: 8rem;
+		}
+	}
+}
+
+div.photo_form {
+	div.multiFileFormContainer {
+		&:not(&:has(form.pending)) {
+			div.progress {
+				display: none;
+			}
+		}
+		&:has(form.pending) {
+			div.progress {
+				display: grid;
+				place-items: center;
+			}
+		}
+	}
+}
+
+div.tabs_container {
+	width: 100%;
+	max-width: 100%;
+
+	div.current_tab {
+		width: 100%;
+		max-width: 100%;
+		div.tab_content {
+			width: 100%;
+			max-width: 100%;
+		}
+	}
+}
+
+div.faceDetection {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: auto;
+	//overflow: hidden;
+	//width: 100%;
+	//max-width: 100%;
+	div.frontFaces {
+		div {
+			display: flex;
+			flex-direction: row;
+			div {
+				position: relative;
+				overflow: hidden;
+			}
+			img {
+				position: absolute;
+				object-fit: cover;
+			}
+		}
+	}
+	div.images {
+		overflow: hidden;
+		width: 100%;
+		max-width: 100%;
+	}
+	div.images > img {
+		//max-width: 10rem;
+		//max-height: 10rem;
+		object-fit: none;
+		overflow: hidden;
+	}
+	canvas {
+		width: 100%;
+	}
 }

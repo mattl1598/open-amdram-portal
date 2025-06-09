@@ -4,7 +4,7 @@ function Input(
 		onInput, onChange, onClick,
 		value, label="", required=false,
 		stateful=false, children,
-		className
+		className, form=""
 	}
 	) {
 	const opts = {}
@@ -15,6 +15,9 @@ function Input(
 		opts.value = value
 	} else {
 		opts.defaultValue = value
+	}
+	if (form !== "") {
+		opts.form = form
 	}
 	if (type === "textarea") {
 		return (
@@ -48,7 +51,7 @@ function Input(
 	}
 }
 
-function Select({id, children, placeholder, selected, setSelected}) {
+function Select({id, children, placeholder, selected, setSelected, options=[], create=true}) {
 	const ref = React.createRef()
 	let currentSelection = [...selected]
 	React.useEffect(()=>{
@@ -56,7 +59,10 @@ function Select({id, children, placeholder, selected, setSelected}) {
 			maxItems: 200,
 			allowEmptyOption: true,
 			hidePlaceholder: false,
+			hideSelected: true,
 			items: currentSelection,
+			options: options,
+			create: create,
 			onItemAdd: function(){
 				this.setTextboxValue('');
 				this.refreshOptions();
@@ -64,12 +70,23 @@ function Select({id, children, placeholder, selected, setSelected}) {
 	        onChange: handleChange
 		})
 	}, [])
+
+	React.useEffect(() => {
+		let tempSelected = [...currentSelection];
+		ref.current.tomselect.clearOptions()
+		ref.current.tomselect.addOptions(options)
+		ref.current.tomselect.refreshOptions()
+		ref.current.tomselect.refreshItems()
+		setSelected([...tempSelected])
+	}, [options])
+
 	React.useEffect(()=>{
 		if (currentSelection !== selected) {
 			ref.current.tomselect.setValue(selected, true)
 			currentSelection = selected
 		}
 	}, [selected])
+
 	function handleChange(e) {
 		if (e !== currentSelection) {
 			currentSelection = [...e]

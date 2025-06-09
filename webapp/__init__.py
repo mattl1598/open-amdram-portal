@@ -65,7 +65,7 @@ def create_app():
 		login_manager.init_app(app)
 		# login_manager.login_view = 'routes.members'
 
-		# db.create_all()
+		db.create_all()
 
 		qrcode = QRcode()
 		qrcode.init_app(app)

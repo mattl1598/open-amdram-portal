@@ -52,7 +52,8 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 					<span className="icon"><Icon icon={item.icon}></Icon></span>
 					<span className="text">{item.linkText}</span>
 				</Link>
-				<Carousel5 photos={item.photos} showTitle={item.linkText}></Carousel5>
+				{/*todo fix this v*/}
+				{/*<Carousel5 photos={item.photos} showTitle={item.linkText}></Carousel5>*/}
 			</div>
 		)
 	}

@@ -1,4 +1,4 @@
-function Tabs({redrawInt, children}) {
+function Tabs({redrawInt=0, children}) {
 	const [currentTabTitle, setCurrentTabTitle] = React.useState(children[0].props.title)
 	const [currentTabContent, setCurrentTabContent] = React.useState(children[0])
 	const [currentOtherTabsContent, setCurrentOtherTabsContent] = React.useState([])
@@ -59,7 +59,7 @@ function Tabs({redrawInt, children}) {
 	}
 }
 
-function Tab({title, children, redrawInt}) {
+function Tab({title, children, redrawInt=0}) {
 	const [internalRedrawInt, setInternalRedrawInt] = React.useState(0)
 
 	React.useEffect(()=>{
