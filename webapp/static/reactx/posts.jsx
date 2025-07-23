@@ -1,19 +1,21 @@
-function handleClick(e) {
-	if (alsoOnClick !== undefined) {
-		alsoOnClick()
-	}
-	if (target !== "_blank") {
-		e.preventDefault()
-		context.functions.setPath(href)
-	}
-}
-function Link({href, className, children, style, title="", target="_self", onClick=handleClick, alsoOnClick}) {
+// function handleClick(e) {
+// 	if (alsoOnClick !== undefined) {
+// 		alsoOnClick()
+// 	}
+// 	if (target !== "_blank") {
+// 		e.preventDefault()
+// 		context.functions.setPath(href)
+// 	}
+// }
+function Link({href, className, children, style, title="", target="_self", onClick="null", alsoOnClick="null"}) {
 	const context = React.useContext(app)
 	function handleClick(e) {
-		if (alsoOnClick !== undefined) {
+		if (alsoOnClick !== "null") {
 			alsoOnClick()
 		}
-		if (target !== "_blank") {
+		if (onClick !== "null") {
+			onClick(e)
+		} else if (target !== "_blank") {
 			e.preventDefault()
 			context.functions.setPath(href)
 		}
@@ -23,7 +25,7 @@ function Link({href, className, children, style, title="", target="_self", onCli
 		<a
 			className={className}
 			href={href}
-			onClick={(e) => {onClick(e)}}
+			onClick={(e) => {handleClick(e)}}
 			style={style}
 			target={target}
 			title={title}
@@ -113,7 +115,11 @@ function Post({content}) {
 					<h3 className={"details"}><a href={""} onClick={(e) => {handleBack(e)}}>◀  Back</a><span>{content.show_title}</span><span>{date.toLocaleString().slice(0, -3)}</span></h3>
 				: ""
 			}
-			<h1>{content.title}</h1>
+			{
+				content.frontpage && content.show_title === content.title ?
+					"" :
+					<h1>{content.title}</h1>
+			}
 			<Markdown className={"post_content"} content={content.content}></Markdown>
 			{
 				content.files ?

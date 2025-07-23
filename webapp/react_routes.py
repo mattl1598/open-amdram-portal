@@ -49,7 +49,8 @@ def react():
 			"files", func.array_remove(func.array_agg(
 						text("file_details::jsonb")
 					), None),
-			"frontpage", request.path == "/"
+			"frontpage", request.path == "/",
+			"show_title", func.array_agg(Show.title)[1]
 		)
 	).outerjoin(
 		files_subquery, Post.id == text("post_id")
@@ -303,16 +304,15 @@ def react_past_show_page(show_id, title=""):
 			func.coalesce(
 				func.json_agg(
 					func.json_build_array(
-						func.concat("/", photo_type, "/", ShowPhotos.photo_url),
-						func.split_part(ShowPhotos.photo_desc, ",", 1),
-						func.split_part(ShowPhotos.photo_desc, ",", 2)
+						func.concat("/", photo_type, "_new/", ShowImage.id),
+						ShowImage.width,
+						ShowImage.height
 					)
 				),
 				'[]'
 			)
 		).filter(
-			ShowPhotos.show_id == show_id,
-			ShowPhotos.photo_type == photo_type
+			ShowImage.show_id == show_id,
 		).scalar_subquery()
 		for photo_type in ["photo", "video"]
 	]
@@ -363,53 +363,6 @@ def react_past_show_page(show_id, title=""):
 		)
 	).filter(Show.id == show_id).scalar()
 
-	# return "TEST"
-	#
-	# show = Show.query.get(show_id)
-	# if show is None:
-	# 	abort(404)
-	# data = {
-	# 	"type": "past_show",
-	# 	"title": show.title,
-	# 	"show": {
-	# 		"id": show.id,
-	# 		"title": show.title,
-	# 		"subtitle": show.subtitle,
-	# 		"date": show.date.isoformat(),
-	# 		"season": show.season,
-	# 		"programme": show.programme or "",
-	# 		"author": show.author,
-	# 		"genre": show.genre,
-	# 		"show_type": show.show_type,
-	# 		"noda_review": show.noda_review,
-	# 		"text_blob": show.text_blob,
-	# 		"radio_audio": show.radio_audio
-	# 	},
-	# 	"photos": [
-	# 		[f"/photo/{photo.photo_url}", *photo.photo_desc.split(",")]
-	# 		for photo in show.show_photos
-	# 		if photo.photo_type == "photo"
-	# 	],
-	# 	"videos": [
-	# 		[f"/video/{photo.photo_url}", *photo.photo_desc.split(",")]
-	# 		for photo in show.show_photos
-	# 		if photo.photo_type == "video"
-	# 	],
-	# 	"cast": sorted([
-	# 		{
-	# 			"role": link.role_name,
-	# 			"id": link.member.id,
-	# 			"name": f"{link.member.firstname} {link.member.lastname}" if (link.member.associated_user is not None) and (link.member.user.firstname == link.member.firstname) and (link.member.user.lastname == link.member.lastname) else f"{link.member.user.firstname} {link.member.user.lastname} (as {link.member.firstname} {link.member.lastname})",
-	# 			"order": link.order_val,
-	# 		} for link in show.member_show_link if link.cast_or_crew == "cast"], key=lambda x: x.get("order") or 0),
-	# 	"crew": sorted([
-	# 		{
-	# 			"role": link.role_name,
-	# 			"id": link.member.id,
-	# 			"name": f"{link.member.firstname} {link.member.lastname}",
-	# 			"order": link.order_val,
-	# 		} for link in show.member_show_link if link.cast_or_crew == "crew"], key=lambda x: x.get("order") or 0),
-	# }
 	if "react" in request.args.keys():
 		return jsonify(data)
 	else:

@@ -10,6 +10,7 @@ function App() {
 	const [memberNavItemsToShow, setMemberNavItemsToShow] = React.useState({})
 	const [postJson, setPostJson] = React.useState(document.querySelector("#app").dataset.data || "{}")
 	const [content, setContent] = React.useState([]);
+	const [cart, setCart] = React.useState([])
 	const [sidebarData, setSidebarData] = React.useState([]);
 	const [sidebarExtras, setSidebarExtras] = React.useState([]);
 	const [showSidebar, setShowSidebar] = React.useState(true)
@@ -51,7 +52,9 @@ function App() {
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
 			data.push({type: "simple", title: `${siteJson.next_show.title} - Tickets Available`, icon: "ticket", link: "/tickets", linkText: "Purchase Tickets", target: "_blank"})
+
 		}
+		// data.push({type: "cart"}) // TODO: move up
 
 		// MEMBER DOCS
 		if (RegExp("^/members/", "i").test(pathState) && siteJson.memberDocs) {
@@ -110,7 +113,7 @@ function App() {
 			})
 		}
 		setSidebarData([
-			...data
+			...data,
 		])
 	}, [siteJson, pathState, pathIncrementer])
 

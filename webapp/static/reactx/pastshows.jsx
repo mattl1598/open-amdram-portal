@@ -282,7 +282,7 @@ function ShowListItem({item, order_prop}) {
 	return (
 		<Link className={"link"} href={`${item.route}/${item.id}/${item.title.replace(' ', '_')}`} order={item[order_prop]}>
 			<div className="image">
-				<Image className={"programme"} src={item.programme} alt={`${item.title} programme cover`}/>
+				<Image className={"programme"} src={`${item.programme}?lowres`} alt={`${item.title} programme cover`}/>
 			</div>
 			<div className="show_title">
 				<h3>{item.title}</h3>

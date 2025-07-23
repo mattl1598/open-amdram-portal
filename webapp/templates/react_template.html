@@ -84,6 +84,7 @@
 {% set react_mimetype = ["text/javascript", "text/babel"][env == "development"] %}
 {% if env == "development" %}
 	<script src="/react/markdown.js" type="{{ react_mimetype }}"></script>
+	<script src="/react/store.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/icon.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/nav.js" type="{{ react_mimetype }}"></script>
 	<script src="/react/alert.js" type="{{ react_mimetype }}"></script>

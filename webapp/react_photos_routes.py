@@ -15,7 +15,7 @@ from pprint import pprint
 from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from webapp.models import KeyValue, Show, ShowImage, ShowPhotos, StaticMedia, db
+from webapp.models import KeyValue, Show, ShowImage, ShowImageData, ShowPhotos, StaticMedia, db
 from flask import current_app as app, Response
 from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context, send_file
 
@@ -378,25 +378,29 @@ def set_show_photos_api():
 def get_static_media(media_id, **kwargs):
 	media_item = db.session.query(StaticMedia).filter_by(id=media_id).first_or_404()
 	if "lowres" in request.args.keys():
-		return Response(media_item.small_content, mimetype="image/webp")
+		return Response(media_item.small_content, mimetype="image/webp", headers={
+			"Cache-Control": "public, max-age=3600"
+		})
 	else:
-		return Response(media_item.content, mimetype="image/webp")
+		return Response(media_item.content, mimetype="image/webp", headers={
+			"Cache-Control": "public, max-age=3600"
+		})
 
 
 @bp.route("/photo_new/<photo_id>")
 def get_image(photo_id):
 	if "lowres" in request.args.keys():
 		image = db.session.query(
-			ShowImage.reduced_image,
+			ShowImageData.reduced_image,
 			ShowImage.filename
 		).filter_by(id=photo_id).first_or_404()
-		return send_file(io.BytesIO(image.reduced_image), download_name=image.filename, mimetype="image/webp")
+		return send_file(io.BytesIO(image.reduced_image), download_name=image.filename, mimetype="image/webp", max_age=3600)
 	else:
 		image = db.session.query(
-			ShowImage.full_image,
+			ShowImageData.full_image,
 			ShowImage.filename
 		).filter_by(id=photo_id).first_or_404()
-		return send_file(io.BytesIO(image.full_image), download_name=image.filename, mimetype="image/webp")
+		return send_file(io.BytesIO(image.full_image), download_name=image.filename, mimetype="image/webp", max_age=3600)
 
 
 @bp.get("/members/manage_shows/photos/<show_id>/<show_title>")
@@ -483,11 +487,16 @@ def upload_show_images():
 		height=height,
 		reduced_height=reduced_height,
 		reduced_width=reduced_width,
+	)
+
+	new_image_data = ShowImageData(
+		id=new_image.id,
 		full_image=b_out.getvalue(),
 		reduced_image=b_out_small.getvalue()
 	)
 
 	db.session.add(new_image)
+	db.session.add(new_image_data)
 	db.session.commit()
 
 	return jsonify({"code": 200, "msg": f"Photo '{file.filename}' uploaded successfully"}), 200

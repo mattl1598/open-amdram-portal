@@ -291,12 +291,16 @@ class ShowImage(db.Model, NewIdGetter):
 	filename = db.Column(db.Text)
 	height = db.Column(db.Integer)
 	width = db.Column(db.Integer)
-	full_image = deferred(db.Column(db.LargeBinary))
-	reduced_image = deferred(db.Column(db.LargeBinary))
 	reduced_height = db.Column(db.Integer)
 	reduced_width = db.Column(db.Integer)
 	order_value = db.Column(db.Integer, default=0)
 	featured = db.Column(db.Boolean, default=False)
+
+
+class ShowImageData(db.Model):
+	id = db.Column(db.String(16), primary_key=True)
+	full_image = deferred(db.Column(db.LargeBinary))
+	reduced_image = deferred(db.Column(db.LargeBinary))
 
 
 class Performance(db.Model, NewIdGetter):

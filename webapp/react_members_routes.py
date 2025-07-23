@@ -408,7 +408,7 @@ def manage_shows():
 				"programme": show.programme or "",
 				"season": show.season,
 				"genre": show.genre
-			} for show in Show.query.filter(Show.date < datetime.now()).order_by(Show.date.desc()).all()
+			} for show in Show.query.order_by(Show.date.desc()).all()
 		]
 	}
 	if "react" in request.args.keys():
@@ -473,7 +473,7 @@ def edit_show():
 	check_page_permission("admin")
 	form_json = request.json
 
-	pprint(form_json)
+	# pprint(form_json)
 
 	if not form_json:
 		return {
