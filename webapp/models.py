@@ -6,6 +6,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin
 from sqlalchemy.orm import deferred
+from pgvector.sqlalchemy import Vector
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -328,6 +329,30 @@ class StaticMedia(db.Model, NewIdGetter):
 	cache_expires = db.Column(db.DateTime)
 	small_content = db.Column(db.LargeBinary)
 	content = db.Column(db.LargeBinary)
+
+
+class Face(db.Model, NewIdGetter):
+	__tablename__ = 'face'
+	id = db.Column(db.String(16), primary_key=True)
+	member_id = db.Column(db.String(16), db.ForeignKey('member.id'), nullable=True)
+	photo_id = db.Column(db.String(16), db.ForeignKey('show_image.id'))
+	x = db.Column(db.Integer)
+	y = db.Column(db.Integer)
+	w = db.Column(db.Integer)
+	h = db.Column(db.Integer)
+	score = db.Column(db.Float)
+	descriptor = db.Column(Vector(128))
+
+	__table_args__ = (
+		db.Index(
+			'ix_face_descriptor_descriptor',
+			descriptor,
+			postgresql_using='ivfflat',
+			postgresql_with={'lists': 100},
+			postgresql_ops={'descriptor': 'vector_l2_ops'}
+		),
+	)
+
 
 
 class AnalyticsLog(db.Model, NewIdGetter):

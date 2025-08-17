@@ -67,7 +67,7 @@ function Frontpage({nextShow, children}) {
 	)
 }
 
-function Files({title, files}) {
+function Files({title, files, children}) {
 	if (files !== undefined && files.length > 0) {
 		let fileTags = []
 
@@ -95,10 +95,23 @@ function Files({title, files}) {
 					<Icon icon={"circle"} timeline={"down"}></Icon>
 					<h2>{title ? title : "Files"}</h2>
 				</span>
+				{ children }
 				{ fileTags }
 			</div>
 		)
 	}
+}
+
+function File({id, href, children, subtext, fileType="file", icon="pdf", target="_self"}) {
+	return (
+		<Link key={id} href={href} className={fileType} target={target}>
+			<Icon icon={icon} timeline={"up"}></Icon>
+			<div className="text">
+				<span className="title"><h3>{children}</h3></span>
+				<span className="text"><span>{subtext}</span></span>
+			</div>
+		</Link>
+	)
 }
 
 function Post({content}) {

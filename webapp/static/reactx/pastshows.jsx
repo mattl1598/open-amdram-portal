@@ -426,7 +426,7 @@ function ShowPage({content}) {
 				{
 					content.photos.length ?
 						<Tab title={"Photos"}>
-							<Gallery key={"photos"} imageLinks={content.photos}></Gallery>
+							<Gallery key={"photos"} imageLinks={content.photos} faces={content.faces}></Gallery>
 						</Tab>
 						:
 						<React.Fragment></React.Fragment>

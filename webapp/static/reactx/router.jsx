@@ -56,6 +56,20 @@ function App() {
 		}
 		// data.push({type: "cart"}) // TODO: move up
 
+		// TICKETS
+		const currentDate = new Date().getTime()
+		const auditions_date = Date.parse(siteJson.auditions_date)
+		if (siteJson.show_auditions && auditions_date > currentDate) {
+			data.push({
+				type: "simple",
+				title: `${siteJson.show_auditions} - Auditions`,
+				icon: "theater_comedy",
+				link: "/auditions",
+				linkText: "See Full Details",
+				target: "_self"
+			})
+		}
+
 		// MEMBER DOCS
 		if (RegExp("^/members/", "i").test(pathState) && siteJson.memberDocs) {
 			data.push({type: "raw", raw: <Post content={siteJson.memberDocs}></Post>})

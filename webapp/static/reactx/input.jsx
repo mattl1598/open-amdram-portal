@@ -51,23 +51,39 @@ function Input(
 	}
 }
 
-function Select({id, children, placeholder, selected, setSelected, options=[], create=true}) {
+function Select({id, children, placeholder, selected, setSelected, options=[], optgroups=[], create=true, maxItems=200}) {
 	const ref = React.createRef()
 	let currentSelection = [...selected]
+	function onInit() {
+		setTimeout(()=>{
+			document.getElementById(id).tomselect.blur()
+			document.getElementById(id).tomselect.close()
+		}, 100)
+	}
 	React.useEffect(()=>{
 		new TomSelect(`#${id}`, {
-			maxItems: 200,
+			maxItems: maxItems,
 			allowEmptyOption: true,
-			hidePlaceholder: false,
+			hidePlaceholder: true,
+			openOnFocus: false,
 			hideSelected: true,
+			closeAfterSelect: maxItems === 1,
 			items: currentSelection,
 			options: options,
+			optgroups: optgroups,
+			optgroupField: "group",
 			create: create,
 			onItemAdd: function(){
 				this.setTextboxValue('');
 				this.refreshOptions();
+				if (maxItems === 1) {
+					this.blur();
+					this.close();
+				}
 			},
-	        onChange: handleChange
+	        onChange: handleChange,
+			onInitialize: onInit,
+
 		})
 	}, [])
 

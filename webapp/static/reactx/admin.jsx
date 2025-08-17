@@ -1,4 +1,5 @@
 function AdminSettings({content, refresh}) {
+	const context = React.useContext(app)
 	function handleFormSubmit(e) {
 		let form = e.target
 		form.classList.add("pending")
@@ -38,6 +39,15 @@ function AdminSettings({content, refresh}) {
 			</div>
 		)
 	}
+	let show_options = []
+	console.log(context.siteJson)
+	for (let i=0; i<context.siteJson.mostRecentMemberShows.length; i++) {
+		console.log(context.siteJson.mostRecentMemberShows[i].title)
+		show_options.push(
+			<option value={context.siteJson.mostRecentMemberShows[i].title}>{context.siteJson.mostRecentMemberShows[i].title}</option>
+		)
+	}
+	console.log(show_options)
 
 	return (
 		<div className="content">
@@ -54,6 +64,11 @@ function AdminSettings({content, refresh}) {
 							<option value="0">Off</option>
 							<option value="1">On</option>
 						</Input>
+						<Input type={"select"} id={"show_auditions"} label="Set Show for Auditions" value={content.settings.show_auditions}>
+							<option value="">None Selected...</option>
+							{show_options}
+						</Input>
+						<Input type={"datetime-local"} id={"auditions_date"} label={"Auditions Date"} value={content.settings.auditions_date}></Input>
 						<Input type={"text"} id={"tickets-link"} label={"Tickets URL"} value={content.settings.ticketsLink}></Input>
 						<Input type={"text"} id={"tickets-hero-photo"} label={"Tickets Hero Photo"} value={content.settings.ticketsHeroPhoto}></Input>
 						<Input type={"text"} id={"socials"} label={"Social Links (comma seperated)"} value={content.settings.socials}></Input>

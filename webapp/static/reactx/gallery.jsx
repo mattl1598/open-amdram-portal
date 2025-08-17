@@ -10,7 +10,7 @@ if (gallery) {
 }
 
 
-function Gallery({imageLinks, type="images"}) {
+function Gallery({imageLinks, faces={}, type="images"}) {
 	const images = []
 
 	for (let i = 0; i <imageLinks.length; i++) {
@@ -23,7 +23,7 @@ function Gallery({imageLinks, type="images"}) {
 			load = true
 		}
 		if (type === "images"){
-			images.push(<Image src={imageLinks[i][0]} width={imageLinks[i][1]} height={imageLinks[i][2]} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
+			images.push(<Image faces={faces[imageLinks[i].id]} src={imageLinks[i].src} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
 		} else if (type === "videos") {
 			images.push(<Video src={imageLinks[i][0]} key={i} className={classname} i={i} inGallery={true}></Video>)
 		}
@@ -32,6 +32,7 @@ function Gallery({imageLinks, type="images"}) {
 	const [imgNum, setImgNum] = React.useState(0)
 	const [imageTags, setImageTags] = React.useState(images)
 	const [fullscreen, setFullscreen] = React.useState(false)
+	const [showFaces, setShowFaces] = React.useState(false)
 	const galleryRef = React.createRef()
 	const imagesRef = React.createRef()
 
@@ -141,6 +142,11 @@ function Gallery({imageLinks, type="images"}) {
 			imagesRef.current.style.transform = `scale(${tempZoom}) translate(${Math.trunc(tempOffsetX)}px, ${Math.trunc(tempOffsetY)}px)`
 		}
 	}
+
+	function toggleFaces() {
+		setShowFaces(!showFaces)
+	}
+
 	if (type === "images") {
 		return (
 			<React.Fragment>
@@ -150,7 +156,7 @@ function Gallery({imageLinks, type="images"}) {
 				     className={"gallery-container " + ["", "fullscreen"][fullscreen*1]}
 				     onKeyUpCapture={(e) => handleKeyPress(e)}
 				>
-					<div className="gallery-images" key={"gallery-images"}
+					<div className={`gallery-images ${showFaces ? "faces" : ""}`} key={"gallery-images"}
 					     ref={imagesRef}
 					     onTouchStart={(event) => handleTouchStart(event)}
 					     onTouchMove={(event) => handleZoom(event)}
@@ -159,6 +165,7 @@ function Gallery({imageLinks, type="images"}) {
 						{ imageTags }
 					</div>
 					<div className={"gallery-controls"}>
+						<div className="arrow faces" onClick={toggleFaces}><Icon>{showFaces ? "face_retouching_off" : "face"}</Icon></div>
 						<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
 						<div className="counter" key={"gallery-counter"}><span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
 						<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
@@ -199,8 +206,10 @@ function Gallery({imageLinks, type="images"}) {
 	}
 }
 
-function Image({src, alt, className, i, load=true, width, height, inGallery=false, title=""}) {
+function Image({src, alt, className, i, load=true, width, height, inGallery=false, title="", faces=[]}) {
 	let elemSrc = ""
+
+	const [faceMarkers, setFaceMarkers] = React.useState([])
 
 	function refreshImage(e) {
 		if (load && !e.target.src.includes("?refresh")) {
@@ -212,11 +221,47 @@ function Image({src, alt, className, i, load=true, width, height, inGallery=fals
 		elemSrc = src
 	}
 
+	React.useEffect(()=>{
+		if (faces.length > 0) {
+			let markers = []
+			for (let i = 0; i < faces.length; i++) {
+				markers.push(<div key={i} className={"face_marker_outer"} style={
+					{
+						left: `${100*faces[i].x/width}%`,
+						top: `${100*faces[i].y/height}%`
+					}
+				}
+				>
+					<div className="face_marker" style={
+						{
+							width: `${100*faces[i].w/width}%`,
+							height: `${100*faces[i].h/height}%`
+						}
+					}>
+
+					</div>
+					<div className="name" style={
+						{
+							left: `${(100*faces[i].w/width) / 2}%`,
+							top: "0px"
+						}
+					}>
+						<span>{faces[i].name}</span>
+					</div>
+				</div>)
+			}
+			setFaceMarkers(markers)
+		}
+	}, [])
+
 	if (inGallery){
 		return (
-			<div key={"div" + i}>
-				<img src={elemSrc} width={width} height={height} alt={alt} key={i} className={className}
+			<div key={"div" + i} style={{aspectRatio: width/height}}>
+				<div className={`img ${className}`} style={{aspectRatio: width/height}}>
+					<img src={elemSrc} width={width} height={height} alt={alt} key={i}
 				     onError={refreshImage}></img>
+					<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
+				</div>
 			</div>
 		)
 	} else {

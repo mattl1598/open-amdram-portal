@@ -1154,6 +1154,8 @@ def admin_settings():
 		"title": "Admin Settings",
 		"settings": {
 			"siteName": settings.get("site-name"),
+			"auditions_date": settings.get("auditions_date"),
+			"show_auditions": settings.get("show_auditions"),
 			"ticketsActive": settings.get("tickets-active"),
 			"ticketsLink": settings.get("tickets-link"),
 			"ticketsHeroPhoto": settings.get("tickets-hero-photo"),

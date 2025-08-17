@@ -247,46 +247,10 @@ div.tabs_container {
 	div.current_tab {
 		width: 100%;
 		max-width: 100%;
+
 		div.tab_content {
 			width: 100%;
 			max-width: 100%;
 		}
-	}
-}
-
-div.faceDetection {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: auto;
-	//overflow: hidden;
-	//width: 100%;
-	//max-width: 100%;
-	div.frontFaces {
-		div {
-			display: flex;
-			flex-direction: row;
-			div {
-				position: relative;
-				overflow: hidden;
-			}
-			img {
-				position: absolute;
-				object-fit: cover;
-			}
-		}
-	}
-	div.images {
-		overflow: hidden;
-		width: 100%;
-		max-width: 100%;
-	}
-	div.images > img {
-		//max-width: 10rem;
-		//max-height: 10rem;
-		object-fit: none;
-		overflow: hidden;
-	}
-	canvas {
-		width: 100%;
 	}
 }

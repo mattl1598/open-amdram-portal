@@ -15,7 +15,7 @@ from pprint import pprint
 from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from webapp.models import KeyValue, Show, ShowImage, ShowImageData, ShowPhotos, StaticMedia, db
+from webapp.models import KeyValue, Member, Show, ShowImage, ShowImageData, ShowPhotos, StaticMedia, db, MemberShowLink as MSL
 from flask import current_app as app, Response
 from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context, send_file
 
@@ -158,68 +158,13 @@ def upload_static_media(**kwargs):
 
 		im.save(b_out, format="webp")
 		# Resize the image to the new dimensions
-		im = im.resize(new_size, Image.ANTIALIAS)
+		im = im.resize(new_size, Image.Resampling.BOX)
 		im.save(b_out_small, format="webp")
 		width = im.width
 		height = im.height
-	
-
-
-	# update_access_token()
-	# url = "https://photoslibrary.googleapis.com/v1/uploads"
-	# headers = {
-	# 	"Content-type": "application/octet-stream",
-	# 	"X-Goog-Upload-Content-Type": "image/webp",
-	# 	"X-Goog-Upload-Protocol": "raw"
-	# }
 
 	image_data = b_out.getvalue()
 	small_image_data = b_out_small.getvalue()
-
-	# x = requests.post(
-	# 	url + f"?access_token={session.get('access_token')}",
-	# 	headers=headers,
-	# 	data=image_data
-	# )
-
-	# albums = {b: a for (a, b) in get_albums()}
-	#
-	# if "OADP_Website_Media" in albums.keys():
-	# 	album_id = albums.get("OADP_Website_Media")
-	# else:
-	# 	x = requests.post(
-	# 		url=f"https://photoslibrary.googleapis.com/v1/albums?access_token={session.get('access_token')}",
-	# 		json={
-	# 			"album": {
-	# 				"title": "OADP_Website_Media"
-	# 			}
-	# 		}
-	# 	)
-	# 	album_id = x.json().get("id")
-
-	# url = "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate"
-	# headers = {
-	# 	"Content-type": "application/json"
-	# }
-	# data = {
-	# 	"albumId": album_id,
-	# 	"newMediaItems": [
-	# 		{
-	# 			"description": "",
-	# 			"simpleMediaItem": {
-	# 				"fileName": f"{filename.rsplit('.', 1)[0]}.webp",
-	# 				"uploadToken": f"{x.content.decode('utf-8')}"
-	# 			}
-	# 		}
-	# 	]
-	# }
-
-	# x = requests.post(
-	# 	url + f"?access_token={session.get('access_token')}",
-	# 	headers=headers,
-	# 	data=json.dumps(data)
-	# )
-	# pprint(x.json())
 
 	new_item = StaticMedia(
 		id=StaticMedia.get_new_id(),
@@ -235,17 +180,11 @@ def upload_static_media(**kwargs):
 	db.session.commit()
 
 	if kwargs.get("mammoth") == "true":
-		# print("mammoth")
 		return {
 			"path": f"/media/{new_item.id}/{new_item.filename}",
 			"filename": f"{new_item.filename}"
 		}
 	else:
-		# return jsonify({
-		# 	"success": True,
-		# 	"url": f"/media/{new_item.id}/{new_item.filename}",
-		# 	"filename": f"{new_item.filename}"
-		# })
 		return {
 			"code": 200,
 			"msg": "Image Uploaded Successfully"
@@ -416,10 +355,24 @@ def manage_photos(show_id, show_title):
 				"height", ShowImage.height,
 				"order_value", ShowImage.order_value,
 				"featured", ShowImage.featured,
-			), ShowImage.order_value.asc(), ShowImage.filename.asc())
+			), ShowImage.filename.asc(), ShowImage.order_value.asc())
 		), '[]')
 	).filter(
 		ShowImage.show_id == show_id
+	).scalar()
+
+	members_in_show = db.session.query(
+		func.coalesce(func.json_agg(
+			func.json_build_object(
+				"id", Member.id,
+				"name", Member.firstname + " " + Member.lastname,
+				"group", MSL.cast_or_crew
+			)
+		), '[]')
+	).join(
+		MSL, MSL.member_id == Member.id
+	).filter(
+		MSL.show_id == show_id
 	).scalar()
 
 	data = {
@@ -427,6 +380,7 @@ def manage_photos(show_id, show_title):
 		"title": f"{show_title} Photos",
 		"showID": show_id,
 		"photos": photos,
+		"members": {x["id"]: x for x in members_in_show}
 	}
 
 	if "react" in request.args.keys():

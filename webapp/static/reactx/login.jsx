@@ -57,7 +57,20 @@ function Login({content}) {
 					</div>
 				</Tab>
 			</Tabs>
-			<Files title={"Members Documents"} files={content.files}></Files>
+			<Files title={"Members Documents"} files={content.files}>
+				<File href={"https://checkout.square.site/buy/2RAQ4QC2TWDCTY6WTQSAXZHG"}
+				      subtext={"Click to pay."} key={"A"} target={"_blank"}
+				      fileType={"file"} icon={"important"}
+				>
+					Adult Membership Subs
+				</File>
+				{/*<File href={"https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT"}*/}
+				{/*      subtext={"Click to pay."} key={"J"} target={"_blank"}*/}
+				{/*      fileType={"file"} icon={"important"}*/}
+				{/*>*/}
+				{/*	Junior Membership Subs*/}
+				{/*</File>*/}
+			</Files>
 		</div>
 	)
 }

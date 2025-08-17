@@ -299,45 +299,72 @@ def react_past_show_page(show_id, title=""):
 		).label("details")
 	).filter(Show.id == show_id).scalar_subquery()
 
-	photos_subquery, videos_subquery = [
-		db.session.query(
-			func.coalesce(
-				func.json_agg(
-					func.json_build_array(
-						func.concat("/", photo_type, "_new/", ShowImage.id),
-						ShowImage.width,
-						ShowImage.height
-					)
-				),
-				'[]'
+	photos_subquery = db.session.query(
+		func.coalesce(
+			func.json_agg(
+				aggregate_order_by(
+					func.json_build_object(
+						"id", ShowImage.id,
+						"src", func.concat("/photo_new/", ShowImage.id),
+						"width", ShowImage.width,
+						"height", ShowImage.height
+					), ShowImage.order_value, ShowImage.filename
+				)
+			),
+			'[]'
+		)
+	).filter(
+		ShowImage.show_id == show_id,
+	).scalar_subquery()
+
+	# Create a subquery to aggregate face details for each image.
+	faces_by_photo = db.session.query(
+		ShowImage.id,
+		func.json_agg(
+			func.json_build_object(
+				"member", Face.member_id,
+				"name", func.concat(Member.firstname, " ", Member.lastname),
+				"x", Face.x,
+				"y", Face.y,
+				"w", Face.w,
+				"h", Face.h,
 			)
-		).filter(
-			ShowImage.show_id == show_id,
-		).scalar_subquery()
-		for photo_type in ["photo", "video"]
-	]
+		).label("faces")
+	).join(
+		Face, Face.photo_id == ShowImage.id
+	).join(
+		Member, Member.id == Face.member_id
+	).group_by(
+		ShowImage.id
+	).subquery()
+
+	# Aggregate the per-image JSON into a single JSON object.
+	faces_subquery = db.session.query(
+		func.json_object_agg(faces_by_photo.c.id, faces_by_photo.c.faces)
+	).select_from(faces_by_photo).scalar_subquery()
 
 	cast_subquery, crew_subquery = [
 		db.session.query(
 			func.coalesce(
 				func.json_agg(
-					aggregate_order_by(func.json_build_object(
-						"role", MSL.role_name,
-						"id", Member.id,
-						"name", case(
-							(Member.associated_user.is_(None), func.concat(Member.firstname, " ", Member.lastname)),
-							(
-								and_(
-									Member.firstname == User.firstname,
-									Member.lastname == User.lastname
+					aggregate_order_by(
+						func.json_build_object(
+							"role", MSL.role_name,
+							"id", Member.id,
+							"name", case(
+								(Member.associated_user.is_(None), func.concat(Member.firstname, " ", Member.lastname)),
+								(
+									and_(
+										Member.firstname == User.firstname,
+										Member.lastname == User.lastname
+									),
+									func.concat(Member.firstname, " ", Member.lastname)
 								),
-								func.concat(Member.firstname, " ", Member.lastname)
+								else_=func.concat(User.firstname, " ", User.lastname, " (as ", Member.firstname, " ", Member.lastname, ")")
 							),
-							else_=func.concat(User.firstname, " ", User.lastname, " (as ", Member.firstname, " ", Member.lastname, ")")
-						),
-						"order", MSL.order_val
-					)
-				, MSL.order_val)),
+							"order", MSL.order_val
+						)
+					, MSL.order_val)),
 				'[]'
 			)
 		).join(
@@ -357,7 +384,8 @@ def react_past_show_page(show_id, title=""):
 			"title", Show.title,
 			"show", details_subquery,
 			"photos", photos_subquery,
-			"videos", videos_subquery,
+			"faces", faces_subquery,
+			"videos", [],
 			"cast", cast_subquery,
 			"crew", crew_subquery
 		)
@@ -573,6 +601,7 @@ def react_logout():
 def site_data():
 	keys = [
 		"site-name", "site_logo",
+		"show_auditions", "auditions_date",
 		"tickets-active", "tickets-link", "tickets-hero-photo",
 		"user_feedback_link",
 		"socials"
