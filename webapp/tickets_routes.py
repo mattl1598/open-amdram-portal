@@ -7,7 +7,7 @@ import dateutil
 import requests
 from pprint import pprint
 from dateutil import parser
-from square.utilities.webhooks_helper import is_valid_webhook_event_signature
+from square_legacy.utilities.webhooks_helper import is_valid_webhook_event_signature
 
 import xlsxwriter
 from flask import Blueprint, make_response, redirect, render_template, request, session, abort, jsonify, url_for
