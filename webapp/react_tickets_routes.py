@@ -30,6 +30,7 @@ def bookings():
 	now = datetime.utcnow()
 	show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first()
 	end_of_last_show = show.date + timedelta(days=1)
+	next_show = Show.query.filter(Show.date > now).order_by(Show.date.asc()).first()
 
 	mods = db.session.query(
 		func.coalesce(func.json_agg(
@@ -80,7 +81,7 @@ def bookings():
 		).order_by(
 			Performance.date.asc()
 		).filter(
-			Performance.show_id == show.id
+			Performance.show_id == next_show.id
 		).subquery().alias("results")
 	).scalar()
 
@@ -321,12 +322,12 @@ def test_collect_orders(show_id=""):
 		}
 
 	reservations = db.session.query(
-		func.json_agg(func.json_build_object(
+		func.coalesce(func.json_agg(func.json_build_object(
 			"ticket_type", BookingModifications.to_item,
 			"ticket_quantity", BookingModifications.change_quantity,
 			"name", BookingModifications.from_item,
 			"note", case(
-					[
+					*[
 						(BookingModifications.is_reservation == True, "Reserved - "),
 						(BookingModifications.is_reservation == False, "Comped - ")
 					]
@@ -334,7 +335,7 @@ def test_collect_orders(show_id=""):
 			"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
 			"id", BookingModifications.id,
 			"ref", BookingModifications.ref_num,
-		))
+		)), '[]')
 	).filter(
 		BookingModifications.ref_num < 0,
 		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
@@ -343,7 +344,7 @@ def test_collect_orders(show_id=""):
 
 	movements_subquery = select(
 		BookingModifications.ref_num.label("ref_num"),
-		func.json_agg(func.json_build_object(
+		func.coalesce(func.json_agg(func.json_build_object(
 			"from", func.json_build_object(
 				"ticket_type", BookingModifications.from_item,
 				"ticket_quantity", BookingModifications.change_quantity * -1,
@@ -362,7 +363,7 @@ def test_collect_orders(show_id=""):
 				"id", BookingModifications.id,
 				"ref", BookingModifications.ref_num,
 			)
-		)).label("mods")
+		)), '[]').label("mods")
 	).filter(
 		BookingModifications.ref_num >= 0,
 		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
@@ -370,10 +371,10 @@ def test_collect_orders(show_id=""):
 	).group_by(BookingModifications.ref_num).subquery()
 
 	movements = db.session.query(
-		func.json_object_agg(
+		func.coalesce(func.json_object_agg(
 			movements_subquery.c.ref_num,
 			movements_subquery.c.mods
-		)
+		), '{}')
 	).scalar()
 
 	items = [OrderInfo(**tickets_info) for tickets_info in reservations]
@@ -436,7 +437,7 @@ def orders_api(show, perf):
 	perf_tree = test_collect_orders(show_id=show_id)
 	if "<" in show or "<" in perf:
 		abort(404)
-	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'")).get(perf) or {}).values()), default=OrderInfo.default)))
+	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'"), {}).get(perf) or {}).values()), default=OrderInfo.default)))
 
 
 @bp.post("/members/api/bookings/historic_sales")
