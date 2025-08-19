@@ -50,7 +50,7 @@ def get_face():
 	return jsonify(faces)
 
 
-if app.envs.face_recognition:
+if False:  # app.envs.face_recognition
 	from deepface import DeepFace
 
 	@bp.post("/api/face_detection/analyse")
