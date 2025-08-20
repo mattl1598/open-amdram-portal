@@ -11,19 +11,22 @@ if (gallery) {
 
 
 function Gallery({imageLinks, faces={}, type="images"}) {
+	const [showFaces, setShowFaces] = React.useState(false)
 	const images = []
 
 	for (let i = 0; i <imageLinks.length; i++) {
 		let classname = "img-hidden"
 		let load = false
+		let shown = false
 		if (i === 0) {
 			classname = ""
+			shown = true
 		}
 		if (i < 0 + lazyLoadDistance || i > imageLinks.length - 0 - lazyLoadDistance){
 			load = true
 		}
 		if (type === "images"){
-			images.push(<Image faces={faces[imageLinks[i].id]} src={imageLinks[i].src} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
+			images.push(<Image faces={faces[imageLinks[i].id]} src={imageLinks[i].src} showFaces={showFaces} shown={shown} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
 		} else if (type === "videos") {
 			images.push(<Video src={imageLinks[i][0]} key={i} className={classname} i={i} inGallery={true}></Video>)
 		}
@@ -32,7 +35,6 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 	const [imgNum, setImgNum] = React.useState(0)
 	const [imageTags, setImageTags] = React.useState(images)
 	const [fullscreen, setFullscreen] = React.useState(false)
-	const [showFaces, setShowFaces] = React.useState(false)
 	const galleryRef = React.createRef()
 	const imagesRef = React.createRef()
 
@@ -57,9 +59,9 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 			let loadNum = wrapImgNum(imgNum + incr*lazyLoadDistance)
 			let tagsCopy = [...imageTags]
 
-			tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} key={oldNum} className={"img-hidden"}></Image>
-			tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} key={newNum} className={""}></Image>
-			tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} key={loadNum} load={true}></Image>
+			tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} showFaces={showFaces} key={oldNum} className={"img-hidden"} shown={false}></Image>
+			tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} showFaces={showFaces} key={newNum} className={""} shown={true}></Image>
+			tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} showFaces={showFaces} key={loadNum} load={true}></Image>
 			setImgNum(newNum)
 			setImageTags([...tagsCopy])
 
@@ -144,6 +146,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 	}
 
 	function toggleFaces() {
+		console.log(!showFaces, "toggle faces")
 		setShowFaces(!showFaces)
 	}
 
@@ -206,60 +209,122 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 	}
 }
 
-function Image({src, alt, className, i, load=true, width, height, inGallery=false, title="", faces=[]}) {
+function Image({src, alt, className, i, load=true, shown=true, showFaces=false, width, height, inGallery=false, title="", faces=[]}) {
 	let elemSrc = ""
 
 	const [faceMarkers, setFaceMarkers] = React.useState([])
-
-	function refreshImage(e) {
-		if (load && !e.target.src.includes("?refresh")) {
-			e.target.src = e.target.src + "?refresh"
-		}
-	}
+	const markersRef = React.useRef([]);
 
 	if (load) {
 		elemSrc = src
 	}
 
-	React.useEffect(()=>{
-		if (faces.length > 0) {
+    React.useEffect(() => {
+       markersRef.current = markersRef.current.slice(0, faces.length);
+    }, [faces]);
+
+	React.useEffect(() => {
+		if(faces.length > 0){
 			let markers = []
 			for (let i = 0; i < faces.length; i++) {
-				markers.push(<div key={i} className={"face_marker_outer"} style={
-					{
-						left: `${100*faces[i].x/width}%`,
-						top: `${100*faces[i].y/height}%`
+				markers.push(
+					<div key={i} ref={el => markersRef.current[i] = el} className={"face_marker_outer"} style={
+						{
+							left: `${100 * faces[i].x / width}%`,
+							top: `${100 * faces[i].y / height}%`
+						}
 					}
-				}
-				>
-					<div className="face_marker" style={
-						{
-							width: `${100*faces[i].w/width}%`,
-							height: `${100*faces[i].h/height}%`
-						}
-					}>
+					>
+						<div className="face_marker" style={
+							{
+								width: `${100 * faces[i].w / width}%`,
+								height: `${100 * faces[i].h / height}%`
+							}
+						}>
 
+						</div>
+						<div className="name" style={
+							{
+								left: `${(100 * faces[i].w / width) / 2}%`,
+								top: "0px"
+							}
+						}>
+							<span>{faces[i].name}</span>
+						</div>
 					</div>
-					<div className="name" style={
-						{
-							left: `${(100*faces[i].w/width) / 2}%`,
-							top: "0px"
-						}
-					}>
-						<span>{faces[i].name}</span>
-					</div>
-				</div>)
+				)
 			}
 			setFaceMarkers(markers)
 		}
 	}, [])
 
+	React.useLayoutEffect(() => {
+		if (shown) {
+			console.log("shown")
+		}
+		if (showFaces) {
+			console.log("showFaces")
+		}
+	    if (faces.length > 0 && markersRef.current.length > 0 && shown && showFaces) {
+	        // Get all name elements with their face data
+	        const nameElementsWithData = markersRef.current.map(marker => {
+	            const nameEl = marker?.querySelector('.name');
+	            const nameText = nameEl?.querySelector('span')?.textContent;
+	            return nameEl ? {
+	                element: nameEl,
+	                name: nameText,
+	                rect: nameEl.getBoundingClientRect()
+	            } : null;
+	        }).filter(Boolean);
+
+	        // Check for overlaps
+	        const overlaps = [];
+	        nameElementsWithData.forEach((item1, index) => {
+				console.log(item1.rect)
+	            nameElementsWithData.forEach((item2, otherIndex) => {
+	                if (index < otherIndex) { // Check each pair only once
+	                    const rect1 = item1.rect;
+	                    const rect2 = item2.rect;
+
+	                    if (!(rect1.right < rect2.left ||
+	                        rect1.left > rect2.right ||
+	                        rect1.bottom < rect2.top ||
+	                        rect1.top > rect2.bottom)) {
+
+	                        overlaps.push({
+	                            name1: item1.name,
+		                        element1: item1.element,
+		                        rect1: item1.rect,
+	                            name2: item2.name,
+		                        element2: item2.element,
+		                        rect2: item2.rect,
+	                        });
+	                    }
+	                }
+	            });
+	        });
+
+	        // Log overlapping pairs
+	        if (overlaps.length > 0) {
+	            console.log('Overlapping name labels detected:');
+	            overlaps.forEach(pair => {
+	                console.log(`- "${pair.name1}" overlaps with "${pair.name2}"`);
+					if (pair.rect1.top > pair.rect2.top) {
+						pair.element1.style.top = pair.rect2.height - Math.abs(pair.rect2.top - pair.rect1.top) + 2 + pair.element1.style.top
+					} else {
+						pair.element2.style.top = pair.rect1.height - Math.abs(pair.rect1.top - pair.rect2.top) + 2 + pair.element2.style.top
+					}
+	            });
+	        }
+	    }
+	}, [shown, showFaces]);
+
+
 	if (inGallery){
 		return (
 			<div key={"div" + i} style={{aspectRatio: width/height}}>
 				<div className={`img ${className}`} style={{aspectRatio: width/height}}>
-					<img src={elemSrc} width={width} height={height} alt={alt} key={i}
-				     onError={refreshImage}></img>
+					<img src={elemSrc} width={width} height={height} alt={alt} key={i}></img>
 					<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
 				</div>
 			</div>
@@ -267,7 +332,7 @@ function Image({src, alt, className, i, load=true, width, height, inGallery=fals
 	} else {
 		return (
 			<img src={elemSrc} width={width} height={height} alt={alt} key={i}
-			     className={className} onError={refreshImage} title={title}>
+			     className={className} title={title}>
 			</img>
 		)
 	}
