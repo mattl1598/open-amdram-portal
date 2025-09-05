@@ -4,7 +4,7 @@ function Input(
 		onInput, onChange, onClick,
 		value, label="", required=false,
 		stateful=false, children,
-		className, form=""
+		className, form="", maxLength=null
 	}
 	) {
 	const opts = {}
@@ -18,6 +18,9 @@ function Input(
 	}
 	if (form !== "") {
 		opts.form = form
+	}
+	if (maxLength !== null) {
+		opts.maxLength = maxLength
 	}
 	if (type === "textarea") {
 		return (

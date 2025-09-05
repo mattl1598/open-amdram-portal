@@ -297,6 +297,51 @@ function ContactForm({}) {
 	)
 }
 
+function PrizeDraw({}) {
+	function handleFormSubmit(e) {
+		let form = e.target
+		form.classList.add("pending")
+		e.preventDefault()
+		let formData = new FormData(form)
+		fetch(form.action, {
+			method: "POST",
+			body: formData
+		}).then((response) => {
+			return response.json()
+		}).then((data) => {
+			// console.log("CODE: ", data.code)
+			if (data.code === 200) {
+				form.reset()
+			}
+			form.querySelector("span.msg").innerHTML = data.msg
+			form.querySelector("div.form").classList.add("hidden")
+			form.classList.remove("pending")
+		})
+	}
+	
+	function handlePhoneChange(e) {
+		e.target.value = e.target.value.replace(/\D/g, '')
+	}
+
+	return (
+		<div className="content">
+			<h1>Prize Draw</h1>
+			<p>Enter your details for a change to win 2 tickets to see our next show, <b>Death by Design</b>, a comedy murder mystery.</p>
+			<p>By entering the draw, you agree to join our audience email newsletter for about upcoming shows.</p>
+			<form action="/api/prizeDraw" onSubmit={handleFormSubmit}>
+				<h2 style={{textAlign: "center"}}><span className="msg"></span></h2>
+				<div className="form">
+					<Input type={"text"} id={"name"} maxLength={50} label={"Name"} required={true}></Input>
+					<Input type={"text"} id={"email"} maxLength={120} label={"Email"} required={true}></Input>
+					<Input type={"text"} id={"phone_number"} onChange={handlePhoneChange} maxLength={13} label={"Phone Number"} required={true}></Input>
+					<Input type={"submit"} value={"Submit"}></Input>
+				</div>
+				<div className="loader"></div>
+			</form>
+		</div>
+	)
+}
+
 function Redirect({url, text = "the destination"}) {
 	return (
 		<div className="content">

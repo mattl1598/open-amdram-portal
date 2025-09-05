@@ -197,6 +197,8 @@ function App() {
 				tempSidebarExtras.push(<MapEmbed key={tempSidebarExtras.length} url={postJson.maps_url}></MapEmbed>)
 			} else if(postJson.type === "search") {
 				tempContent.push(<Search key={tempContent.length} content={postJson}></Search>)
+			} else if(postJson.type === "prize_draw") {
+				tempContent.push(<PrizeDraw key={tempContent.length}></PrizeDraw>)
 			} else if(postJson.type === "list_shows") {
 				tempContent.push(<ListShows key={tempContent.length} content={postJson}></ListShows>)
 			} else if(postJson.type === "past_show") {

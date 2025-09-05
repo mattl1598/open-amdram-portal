@@ -5,6 +5,7 @@ from pprint import pprint
 from ssl import SSLError
 
 import requests
+import sqlalchemy
 from flask_login import current_user, login_user, logout_user
 from sqlalchemy import and_, cast, literal_column, or_, func, case, String, text
 from sqlalchemy.sql import union
@@ -332,6 +333,8 @@ def react_past_show_page(show_id, title=""):
 		).label("faces")
 	).join(
 		Face, Face.photo_id == ShowImage.id
+	).filter(
+		ShowImage.show_id == show_id,
 	).join(
 		Member, Member.id == Face.member_id
 	).group_by(
@@ -525,6 +528,52 @@ def react_tickets():
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.get("/prizedraw")
+def prize_draw():
+	data = {
+		"type": "prize_draw"
+	}
+	if "react" in request.args.keys():
+		return jsonify(data)
+	else:
+		data["initialData"] = True
+		return render_template(
+			"react_template.html",
+			data=data
+		)
+
+
+@bp.post("/api/prizeDraw")
+def prize_draw_api():
+	try:
+		new_entry = PrizeDrawEntry(
+			id=PrizeDrawEntry.get_new_id(),
+			name=request.form.get("name"),
+			email=request.form.get("email"),
+			phone_number=request.form.get("phone_number"),
+			datetime=datetime.utcnow(),
+			terms_agreed=True
+		)
+
+		db.session.add(new_entry)
+		db.session.commit()
+	except sqlalchemy.exc.IntegrityError:
+		return {
+			"code": 400,
+			"msg": "A prize draw entry has already been submitted with these details. </br> We will contact you via phone if you have won."
+		}
+	except sqlalchemy.exc.DataError:
+		return {
+			"code": 400,
+			"msg": "One of the inputs is too long. </br> Please try again."
+		}
+
+	return {
+		"code": 200,
+		"msg": "Your prize draw entry has been submitted. </br> We will contact you via phone if you have won."
+	}
 
 
 @bp.app_errorhandler(401)
