@@ -244,9 +244,9 @@ def create_app():
 		app.register_blueprint(react_support_routes.bp)
 		app.register_blueprint(react_photos_routes.bp)
 		# app.register_blueprint(react_face_detection.bp)
-		if app.envs.face_recognition:
-			from webapp import react_face_analysis
-			app.register_blueprint(react_face_analysis.bp)
+		# if app.envs.face_recognition:
+		# 	from webapp import react_face_analysis
+		# 	app.register_blueprint(react_face_analysis.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():
