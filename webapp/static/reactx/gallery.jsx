@@ -259,64 +259,99 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
 	}, [])
 
 	React.useLayoutEffect(() => {
-		if (shown) {
-			console.log("shown")
-		}
-		if (showFaces) {
-			console.log("showFaces")
-		}
-	    if (faces.length > 0 && markersRef.current.length > 0 && shown && showFaces) {
-	        // Get all name elements with their face data
-	        const nameElementsWithData = markersRef.current.map(marker => {
-	            const nameEl = marker?.querySelector('.name');
-	            const nameText = nameEl?.querySelector('span')?.textContent;
-	            return nameEl ? {
-	                element: nameEl,
-	                name: nameText,
-	                rect: nameEl.getBoundingClientRect()
-	            } : null;
-	        }).filter(Boolean);
+		if (faces.length > 0 && markersRef.current.length > 0 && shown && showFaces) {
+			// Collect all name elements with their bounding data.
+			const nameData = markersRef.current.map(marker => {
+				const nameEl = marker.querySelector('.name');
+				if (!nameEl) return null;
+				// Get current top value (if any) from computed style or fallback to 0.
+				const computedTop = parseFloat(window.getComputedStyle(nameEl).top) || 0;
+				return {
+					element: nameEl,
+					name: nameEl.querySelector('span').textContent,
+					rect: nameEl.getBoundingClientRect(),
+					originalTop: computedTop,
+				};
+			}).filter(Boolean);
 
-	        // Check for overlaps
-	        const overlaps = [];
-	        nameElementsWithData.forEach((item1, index) => {
-				console.log(item1.rect)
-	            nameElementsWithData.forEach((item2, otherIndex) => {
-	                if (index < otherIndex) { // Check each pair only once
-	                    const rect1 = item1.rect;
-	                    const rect2 = item2.rect;
-
-	                    if (!(rect1.right < rect2.left ||
-	                        rect1.left > rect2.right ||
-	                        rect1.bottom < rect2.top ||
-	                        rect1.top > rect2.bottom)) {
-
-	                        overlaps.push({
-	                            name1: item1.name,
-		                        element1: item1.element,
-		                        rect1: item1.rect,
-	                            name2: item2.name,
-		                        element2: item2.element,
-		                        rect2: item2.rect,
-	                        });
-	                    }
-	                }
-	            });
-	        });
-
-	        // Log overlapping pairs
-	        if (overlaps.length > 0) {
-	            console.log('Overlapping name labels detected:');
-	            overlaps.forEach(pair => {
-	                console.log(`- "${pair.name1}" overlaps with "${pair.name2}"`);
-					if (pair.rect1.top > pair.rect2.top) {
-						pair.element1.style.top = pair.rect2.height - Math.abs(pair.rect2.top - pair.rect1.top) + 2 + pair.element1.style.top
-					} else {
-						pair.element2.style.top = pair.rect1.height - Math.abs(pair.rect1.top - pair.rect2.top) + 2 + pair.element2.style.top
+			// Build an overlap graph: each index represents an element.
+			const graph = new Map();
+			nameData.forEach((_, i) => graph.set(i, []));
+			for (let i = 0; i < nameData.length; i++) {
+				const a = nameData[i];
+				for (let j = i + 1; j < nameData.length; j++) {
+					const b = nameData[j];
+					// If the two labels overlap...
+					if (
+						!(a.rect.right < b.rect.left ||
+							a.rect.left > b.rect.right ||
+							a.rect.bottom < b.rect.top ||
+							a.rect.top > b.rect.bottom)
+					) {
+						graph.get(i).push(j);
+						graph.get(j).push(i);
 					}
-	            });
-	        }
-	    }
+				}
+			}
+
+			// Use depth-first search (DFS) to group overlapping labels into clusters.
+			const clusters = [];
+			const visited = new Array(nameData.length).fill(false);
+			for (let i = 0; i < nameData.length; i++) {
+				if (!visited[i]) {
+					const stack = [i];
+					const cluster = [];
+					visited[i] = true;
+					while (stack.length) {
+						const current = stack.pop();
+						cluster.push(current);
+						const neighbors = graph.get(current);
+						for (const neighbor of neighbors) {
+							if (!visited[neighbor]) {
+								visited[neighbor] = true;
+								stack.push(neighbor);
+							}
+						}
+					}
+					clusters.push(cluster);
+				}
+			}
+
+			// Adjust the positions for each overlapping cluster.
+			clusters.forEach(cluster => {
+				if (cluster.length > 1) {
+					// Get the elements for this cluster and sort them by their top coordinate.
+					const clusterElements = cluster.map(i => nameData[i]);
+					clusterElements.sort((a, b) => a.rect.y - b.rect.y);
+
+					// Determine a gap between labels (you can adjust this value).
+					const gap = 2;
+					// Use the smallest original top as the starting point.
+					const baseTop = clusterElements[0].originalTop;
+					const topRect = clusterElements[0].rect;
+
+					let topAdj = 0
+
+					// Position each element in the cluster to avoid overlapping.
+					clusterElements.forEach((item, idx) => {
+						// Here, we assume each label uses its own height from the bounding rect.
+						// You may use a fixed height or different logic if needed.
+						// let topAdj = 0
+						let prev = clusterElements[idx-1]
+						if (idx === 0) {
+							topAdj = 0
+						} else if (idx >= 1) {
+							topAdj = topAdj + item.rect.height - Math.abs(item.rect.y - prev.rect.y) + gap
+						} else {
+							// topAdj = item.rect.height + gap
+						}
+						const newTop = topAdj;
+
+						item.element.style.top = `${newTop}px`;
+					});
+				}
+			});
+		}
 	}, [shown, showFaces]);
 
 

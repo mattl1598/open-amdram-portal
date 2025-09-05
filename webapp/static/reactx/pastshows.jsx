@@ -358,6 +358,56 @@ function ShowPage({content}) {
 			</tr>
 		)
 	}
+	const [castRoles, setCastRoles] = React.useState([])
+	React.useEffect(() => {
+		const photo_keys = Object.keys(content.faces)
+		let tempPhotos = {}
+		for (let i=0; i<content.photos.length; i++) {
+			tempPhotos[content.photos[i].id] = content.photos[i]
+		}
+		let tempFaces = {}
+		for (let i=0; i<photo_keys.length; i++) {
+			const photo_faces = content.faces[photo_keys[i]]
+			for (let j=0; j<photo_faces.length; j++) {
+				let face = photo_faces[j]
+				photo_faces[j].url = `/photo_new/${photo_keys[i]}`
+				photo_faces[j].style = {
+					position: "absolute",
+					width: `${(tempPhotos[photo_keys[i]].width / (face.w)) * 100}%`,
+					height: `${(tempPhotos[photo_keys[i]].height / (face.h)) * 100}%`,
+
+					top: `-${(face.y / face.h) * 100}%`,
+					left: `-${(face.x / face.w) * 100}%`,
+				}
+				if (tempFaces[photo_faces[j].member]) {
+					tempFaces[photo_faces[j].member].push(photo_faces[j])
+				} else {
+					tempFaces[photo_faces[j].member] = [photo_faces[j]]
+				}
+			}
+		}
+		const face_keys = Object.keys(tempFaces)
+		for (let i=0; i<face_keys.length; i++) {
+			tempFaces[face_keys[i]].sort((a, b) => {
+				return b.h*b.w - a.h*a.w
+			})
+		}
+		let tempCast = []
+		for (let i=0; i<content.cast.length; i++) {
+			if (tempFaces[content.cast[i].id]) {
+				tempCast.push(<div className="cast_member">
+					<div className={"photo"}>
+						<img className={"face"} src={`${tempFaces[content.cast[i].id][0].url}`}
+					          style={tempFaces[content.cast[i].id][0].style} alt={`${content.cast[i].name}`}/>
+					</div>
+					<h2>{content.cast[i].name}</h2>
+					<h3>{content.cast[i].role}</h3>
+					<h4>(as ...)</h4>
+				</div>)
+			} else {console.log(content.cast[i].name)}
+		}
+		setCastRoles(tempCast)
+	}, [])
 
 	function getNODAReport() {
 		if (content.show.noda_review && !gotNodaReview) {
@@ -444,11 +494,18 @@ function ShowPage({content}) {
 			<div className="cast_crew">
 				<div className="cast">
 					<h3>Cast:</h3>
-					<table className={"roles_table"}>
-						<tbody>
-						{castRows}
-						</tbody>
-					</table>
+					{
+						Object.keys(content.faces).length ?
+							<div className="cast">
+								{castRoles}
+							</div>
+							:
+							<table className={"roles_table"}>
+								<tbody>
+								{castRows}
+								</tbody>
+							</table>
+					}
 				</div>
 				<div className="crew">
 					<h3>Crew:</h3>

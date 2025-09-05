@@ -86,6 +86,37 @@ div.cast_crew {
 	text-size-adjust: none;
 	font-size: 1.375rem;
 
+	div.cast_member {
+		display: grid;
+		grid-template-areas:
+			"photo name"
+			"photo role"
+			"photo as"
+		;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: auto auto auto;
+		gap: 0.5rem;
+
+		h2 {
+			grid-area: name;
+		}
+		h3 {
+			grid-area: role;
+		}
+		h4 {
+			grid-area: as;
+		}
+		div.photo {
+			grid-area: photo;
+			width: 12.5rem;
+			height: 12.5rem;
+			aspect-ratio: 1;
+			object-fit: fill;
+			position: relative;
+			overflow: hidden;
+		}
+	}
+
 	table {
 		width: 100%;
 		border-collapse: collapse;
