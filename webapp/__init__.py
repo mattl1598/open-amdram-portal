@@ -229,7 +229,7 @@ def create_app():
 
 		print("Registering blueprints")
 
-		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes, react_face_analysis
+		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes  #,
 		# app.register_blueprint(routes.bp)
 		# app.register_blueprint(members_routes.bp)
 		app.register_blueprint(photos_routes.bp)
@@ -243,8 +243,9 @@ def create_app():
 		app.register_blueprint(react_tickets_routes.bp)
 		app.register_blueprint(react_support_routes.bp)
 		app.register_blueprint(react_photos_routes.bp)
-		app.register_blueprint(react_face_detection.bp)
+		# app.register_blueprint(react_face_detection.bp)
 		if app.envs.face_recognition:
+			from webapp import react_face_analysis
 			app.register_blueprint(react_face_analysis.bp)
 
 		@login_manager.unauthorized_handler
