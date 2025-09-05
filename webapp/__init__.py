@@ -131,6 +131,8 @@ def create_app():
 				print("Writing JS to file...")
 				w.write(app_js_min)
 
+		print("Written JS to file.")
+
 		app.jinja_env.globals.update(
 			md=markdown.markdown,
 			str=str,
@@ -224,6 +226,8 @@ def create_app():
 				web_config=web_config,
 				m_shows=m_shows
 			)
+
+		print("Registering blueprints")
 
 		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes, react_face_analysis
 		# app.register_blueprint(routes.bp)
