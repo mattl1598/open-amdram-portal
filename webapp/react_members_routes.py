@@ -9,8 +9,8 @@ import pyotp
 import qrcode
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import and_, case, column, extract, func, literal, not_, or_, sql, literal_column, union_all, text, \
-	update
-from sqlalchemy.dialects.postgresql import aggregate_order_by
+	update, cast
+from sqlalchemy.dialects.postgresql import aggregate_order_by, JSONB
 
 from webapp.models import MemberShowLink as MSL
 from webapp.models import *
@@ -1385,15 +1385,12 @@ def file_direct(file_id, filename):
 				Files.content
 			).filter(
 				Files.id == file_id,
-				or_(
-					Files.show_id == "members_public",
-					db.session.query(
-						func.count(Post.id)
-					).filter(
-						Post.type != "private",
-						Post.linked_files['files'].op("@>")([file_id])
-					).scalar_subquery() >= 1
-				)
+				(Files.show_id == "members_public") | (db.session.query(
+					func.count(Post.id)
+				).filter(
+					Post.type != "private",
+					Post.linked_files['files'].op("?|")("{" + file_id + "}")
+				).scalar_subquery() >= 1)
 			).first_or_404()
 			return send_file(io.BytesIO(file.content), download_name=file.name)
 		else:
@@ -1418,7 +1415,7 @@ def file_direct(file_id, filename):
 						func.count(Post.id)
 					).filter(
 						Post.type != "private",
-						Post.linked_files['files'].op("@>")([file_id])
+						Post.linked_files['files'].op("?|")("{" + file_id + "}")
 					).scalar_subquery() >= 1
 				)
 			).limit(1).scalar()
