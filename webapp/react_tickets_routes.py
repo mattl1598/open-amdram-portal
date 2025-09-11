@@ -368,6 +368,7 @@ def test_collect_orders(show_id=""):
 		BookingModifications.ref_num >= 0,
 		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
 		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
+		BookingModifications.change_quantity >= 1,
 	).group_by(BookingModifications.ref_num).subquery()
 
 	movements = db.session.query(
@@ -377,7 +378,35 @@ def test_collect_orders(show_id=""):
 		), '{}')
 	).scalar()
 
-	items = [OrderInfo(**tickets_info) for tickets_info in reservations]
+	refunds = db.session.query(
+		func.coalesce(
+			func.json_agg(
+				func.json_build_object(
+					"ticket_type", BookingModifications.to_item,
+					"ticket_quantity", BookingModifications.change_quantity,
+					"name", "",
+					"note", BookingModifications.note or "",
+					"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+					"id", BookingModifications.id,
+					"ref", BookingModifications.ref_num,
+				)
+			)
+			, '[]'
+		)
+	).filter(
+		BookingModifications.ref_num >= 0,
+		BookingModifications.change_quantity < 0,
+		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
+		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
+		or_(
+			BookingModifications.from_item == BookingModifications.to_item,
+			BookingModifications.from_item.is_(None),
+			BookingModifications.from_item == ""
+		)
+	).scalar()
+
+	items = []
+
 	for i in range(0, len(results.body.get("orders") or [])):
 		order = results.body["orders"][i]
 		for item in order.get("line_items", []):
@@ -400,8 +429,18 @@ def test_collect_orders(show_id=""):
 			}
 			from_info = move.get("from") | order_data
 			to_info = move.get("to") | order_data
+			to_info["note"] = " - ".join({move.get("to", {}).get("note") or "", order_data["note"] or ""}.difference({""}))
 			items.append(OrderInfo(**from_info))
 			items.append(OrderInfo(**to_info))
+		for refund in refunds:
+			if refund.get("ref") == i:
+				refund["id"] = order["id"]
+
+	items = [
+		*items,
+		*[OrderInfo(**tickets_info) for tickets_info in reservations],
+		*[OrderInfo(**tickets_info) for tickets_info in refunds],
+	]
 
 	for item in items:
 		keys = list(item.tickets.keys())[0].split(" - ", 2)

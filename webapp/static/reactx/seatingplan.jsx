@@ -332,11 +332,13 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, in
 			bucket_lookup = 0
 		}
 		// console.log(order.name, bucket_lookup)
-		tickets_buckets[bucket_lookup].push(newTicket)
-		if (seats_assigned < order.seats) {
-			unassignedOrders.push(newOrder)
-		} else {
-			assignedOrders.push(newOrder)
+		if (order.seats) {
+			tickets_buckets[bucket_lookup].push(newTicket)
+			if (seats_assigned < order.seats) {
+				unassignedOrders.push(newOrder)
+			} else {
+				assignedOrders.push(newOrder)
+			}
 		}
 	}
 	for (let i=1; i<=26; i++) {
