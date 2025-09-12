@@ -715,7 +715,7 @@ function Ticket({groupName, showName, authors, showDate, name, seats}) {
 			<div className={"date"}><h3>{showDate}</h3></div>
 			<div className={"name big"}>Name: <span className={"bold"}>{name}</span></div>
 			<div className={"seats big"}>Seats ({seats.length}): <span className={"bold"}>{shortSeats.join(" ")}</span></div>
-			<div className={"progs big"}><span className="bold">{Math.ceil(seats.length/2)}</span></div>
+			<div className={"progs big"}><span className="bold">{Math.max(1, Math.floor(seats.length/2))}</span></div>
 		</div>
 	)
 }
