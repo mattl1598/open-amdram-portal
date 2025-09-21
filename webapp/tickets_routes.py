@@ -101,6 +101,8 @@ class OrderInfo:
 			for k, v in new_order.tickets.items():
 				self.tickets[k] = v + self.tickets.setdefault(k, 0)
 		else:
+			print(self.__dict__())
+			print(new_order.__dict__())
 			raise ValueError
 
 	def tickets_total(self) -> int:

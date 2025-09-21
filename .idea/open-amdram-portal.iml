@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/venv" />
-      <excludeFolder url="file://$MODULE_DIR$/win-venv" />
-      <excludeFolder url="file://$MODULE_DIR$/.obsidian" />
-    </content>
-    <orderEntry type="jdk" jdkName="Python 3.10 virtualenv at E:\004_Repos\open-amdram-portal\win-venv" jdkType="Python SDK" />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (OADP)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="react-select" level="application" />
-    <orderEntry type="library" name="jeelizFaceFilter" level="application" />
-    <orderEntry type="library" name="@mediapipe/tasks-vision" level="application" />
-    <orderEntry type="library" name="@mediapipe" level="application" />
-    <orderEntry type="library" name="@tensorflow/tfjs" level="application" />
-  </component>
-  <component name="PyDocumentationSettings">
-    <option name="format" value="PLAIN" />
-    <option name="myDocStringFormat" value="Plain" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />
@@ -25,8 +12,5 @@
         <option value="$MODULE_DIR$/webapp/templates" />
       </list>
     </option>
-  </component>
-  <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="py.test" />
   </component>
 </module>

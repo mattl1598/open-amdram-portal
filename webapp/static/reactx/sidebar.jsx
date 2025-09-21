@@ -83,6 +83,9 @@ function SidebarItem({item={type: "raw"}, raw=<div/>}) {
 			</Link>
 		)
 	}
+	// if (item.type === "cart") {
+	// 	return <SidebarCart></SidebarCart>
+	// }
 	if (item.type === "raw") {
 		return (
 			<div className="">

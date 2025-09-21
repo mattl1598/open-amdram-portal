@@ -25,8 +25,8 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 		if (i < 0 + lazyLoadDistance || i > imageLinks.length - 0 - lazyLoadDistance){
 			load = true
 		}
-		if (type === "images"){
-			images.push(<Image faces={faces[imageLinks[i].id]} src={imageLinks[i].src} showFaces={showFaces} shown={shown} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
+		if (type === "images"){ // faces={faces[imageLinks[i].id]} vv
+			images.push(<Image src={imageLinks[i].src} showFaces={showFaces} shown={shown} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
 		} else if (type === "videos") {
 			images.push(<Video src={imageLinks[i][0]} key={i} className={classname} i={i} inGallery={true}></Video>)
 		}
