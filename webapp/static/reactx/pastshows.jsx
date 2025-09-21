@@ -495,7 +495,7 @@ function ShowPage({content}) {
 				<div className="cast">
 					<h3>Cast:</h3>
 					{
-						Object.keys(content.faces).length ?
+						Object.keys(content.faces).length && false ?
 							<div className="cast">
 								{castRoles}
 							</div>
