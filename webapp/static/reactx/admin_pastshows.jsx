@@ -394,11 +394,11 @@ function PastShowPhotos({content}) {
 	return (
 		<div className={"content"}>
 			<Tabs>
-				<Tab title={"FaceDetection"}>
-					<FaceDetection content={content}></FaceDetection>
-				</Tab>
 				<Tab title={"Photo Manager"}>
 					<PhotoManager content={content}></PhotoManager>
+				</Tab>
+				<Tab title={"FaceDetection"}>
+					<FaceDetection content={content}></FaceDetection>
 				</Tab>
 			</Tabs>
 		</div>
