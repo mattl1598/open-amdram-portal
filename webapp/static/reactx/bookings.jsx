@@ -199,18 +199,20 @@ function ManageBookings({content}) {
 				let price = salesKeys[j] / 100.0
 				let quantity = tickets[i].sales[salesKeys[j]].amount
 				let discounts = tickets[i].sales[salesKeys[j]].discounts / 100.0
-				let subtotal = parseInt(price)*parseInt(quantity) - parseInt(discounts)
+				let subtotal = parseInt(price)*parseInt(quantity)
 				ticketsTotal = ticketsTotal + subtotal
 				discountTotal = discountTotal + discounts
 				quantityTotal = quantityTotal + quantity
+				let total = subtotal - discounts
 				let row = <tr></tr>
 				if (i !== 0 && tickets[i].date === tickets[i-1].date) {
 					row = <tr>
 						<td>{tickets[i].type}</td>
 						<td>{quantity}</td>
 						<td>£{price}</td>
-						<td>£{discounts}</td>
 						<td>£{subtotal}</td>
+						<td>£{discounts}</td>
+						<td>£{total}</td>
 					</tr>
 					dupDateCount++
 				} else {
@@ -219,8 +221,9 @@ function ManageBookings({content}) {
 						<td>{tickets[i].type}</td>
 						<td>{quantity}</td>
 						<td>£{price.toFixed(2)}</td>
-						<td>£{discounts.toFixed(2)}</td>
 						<td>£{subtotal.toFixed(2)}</td>
+						<td>£{discounts.toFixed(2)}</td>
+						<td>£{total.toFixed(2)}</td>
 					</tr>
 					dupDateCount = 1
 				}
@@ -228,6 +231,8 @@ function ManageBookings({content}) {
 				rows.unshift(row)
 			}
 		}
+
+		let grandTotal = ticketsTotal - discountTotal
 
 		return <div>
 			<h2>{results.showTitle}</h2>
@@ -239,8 +244,9 @@ function ManageBookings({content}) {
 						<th>Type</th>
 						<th>Quantity</th>
 						<th>Price</th>
-						<th>Discounts</th>
 						<th>SubTotal</th>
+						<th>Discounts</th>
+						<th>Total</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -252,11 +258,29 @@ function ManageBookings({content}) {
 						<th></th>
 						<th>{quantityTotal}</th>
 						<th></th>
-						<th>£{discountTotal.toFixed(2)}</th>
 						<th>£{ticketsTotal.toFixed(2)}</th>
+						<th>£{discountTotal.toFixed(2)}</th>
+						<th>£{grandTotal.toFixed(2)}</th>
 					</tr>
 				</tfoot>
 			</table>
+			<h3>Tickets Totals</h3>
+			<table>
+				<tbody>
+					<tr><th>Card</th><td>£{(results.totals.paid/100).toFixed(2)}</td></tr>
+					<tr><th>Cash</th><td>£{(results.totals.cash/100).toFixed(2)}</td></tr>
+					<tr><th>Refunds</th><td>£{(results.totals.actual_refunds/100).toFixed(2)}</td></tr>
+					{
+						results.totals.expected_refunds !== results.totals.actual_refunds ?
+							<tr><th>Expected Refunds</th><td>£{(results.totals.expected_refunds/100).toFixed(2)}</td></tr>
+						:
+							<React.Fragment></React.Fragment>
+					}
+					<tr><th>Fees</th><td>£{(results.totals.fees/100).toFixed(2)}</td></tr>
+					<tr><th>Total</th><td>£{(results.totals.net/100).toFixed(2)}</td></tr>
+				</tbody>
+			</table>
+
 			<h3>Front of House</h3>
 			<table>
 				<tbody>

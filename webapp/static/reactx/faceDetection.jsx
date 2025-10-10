@@ -4,7 +4,7 @@ function FaceDetection({content}) {
 	const [faces, setFaces] = React.useState([])
 	const [faceForms, setFaceForms] = React.useState([])
 	const [faceBoxes, setFaceBoxes] = React.useState([])
-	const [i, setI] = React.useState(155)
+	const [i, setI] = React.useState(0)
 	const [reRender, setReRender] = React.useState(false)
 
 	const [members, setMembers] = React.useState([])

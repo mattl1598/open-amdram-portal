@@ -64,12 +64,12 @@ function Login({content}) {
 				>
 					Adult Membership Subs
 				</File>
-				{/*<File href={"https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT"}*/}
-				{/*      subtext={"Click to pay."} key={"J"} target={"_blank"}*/}
-				{/*      fileType={"file"} icon={"important"}*/}
-				{/*>*/}
-				{/*	Junior Membership Subs*/}
-				{/*</File>*/}
+				<File href={"https://checkout.square.site/buy/PMRGF2GUVKGHNFZCOJMQQKXT"}
+				      subtext={"Click to pay."} key={"J"} target={"_blank"}
+				      fileType={"file"} icon={"important"}
+				>
+					Junior Membership Subs
+				</File>
 			</Files>
 		</div>
 	)
