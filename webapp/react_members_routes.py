@@ -618,7 +618,8 @@ def get_subs():
 	# Get the datestamp for midnight on the most recent July 1st
 	midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
 
-	print(midnight_july_1st)
+	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+	print(midnight_july_1st.strftime(square_date_format))
 
 	paid = list(SubsPayment.query
 				.filter(SubsPayment.datetime > midnight_july_1st)
@@ -627,14 +628,18 @@ def get_subs():
 				.with_entities(
 						SubsPayment.name,
 						SubsPayment.membership_type,
+						SubsPayment.datetime,
 						SubsPayment.amount_paid,
 						SubsPayment.payment_fee,
 						SubsPayment.payment_id,
+						SubsPayment.source,
 						SubsPayment.refunded
 					).all()
 			)
+	# pprint(paid)
 
-	detailed = "detailed" in request.args.keys()
+	# detailed = "detailed" in request.args.keys()
+	detailed = True
 	results = []
 	types = {}
 	totals = {"total": 0, "fees": 0, "refunds": 0, "net": 0}
@@ -650,8 +655,10 @@ def get_subs():
 			new_result = {
 				"name": entry.name,
 				"type": entry.membership_type,
+				"date": entry.datetime.strftime("%d-%m-%Y"),
 				"amount": entry.amount_paid,
-				"fee": entry.payment_fee
+				"fee": entry.payment_fee,
+				"source": entry.source
 			}
 			types[entry.membership_type] = types.get(entry.membership_type, 0) + 1
 			if entry.payment_fee is None:
@@ -666,7 +673,7 @@ def get_subs():
 			new_result = {
 				"name": entry.name
 			}
-			print(entry)
+			# print(entry)
 		results.append(new_result)
 
 	data = {
@@ -718,7 +725,7 @@ def update_subs():
 					},
 					"source_filter": {
 						"source_names": [
-							"Checkout Link"
+							"Checkout Link",
 						]
 					},
 					"state_filter": {
@@ -752,31 +759,51 @@ def update_subs():
 
 					pprint(payment)
 					pprint(order)
+					if payment.body.get("payment", {}).get("status") == "COMPLETED":
+						fees = payment.body.get("payment", {}).get("processing_fee", [])
+						payment_fee = 0
+						for fee in fees:
+							payment_fee += fee.get("amount_money", {}).get("amount", 0)
 
-					fees = payment.body.get("payment", {}).get("processing_fee", [])
-					payment_fee = 0
-					for fee in fees:
-						payment_fee += fee.get("amount_money", {}).get("amount", 0)
+						new_payment = SubsPayment(
+							id=SubsPayment.get_new_id(),
+							user_id=None,
+							membership_type=item.get("name").replace("Membership - ", "").lower(),
+							amount_paid=item.get("total_money", {}).get("amount", 0),
+							datetime=order.get("created_at"),
+							name=details.get("A"),
+							email=details.get("C"),
+							phone_number=details.get("B").replace(" ", ""),
+							e_con_name=details.get("D"),
+							e_con_phone=details.get("E").replace(" ", ""),
+							order_id=order.get("id"),
+							payment_id=order.get("tenders")[0].get("payment_id"),
+							source="square",
+							payment_fee=payment_fee,
+							refunded=bool(len(payment.body.get("refund_ids", [])))
+						)
+						db.session.add(new_payment)
+		db.session.commit()
 
-					new_payment = SubsPayment(
-						id=SubsPayment.get_new_id(),
-						user_id=None,
-						membership_type=item.get("name").replace("Membership - ", "").lower(),
-						amount_paid=item.get("total_money", {}).get("amount", 0),
-						datetime=order.get("created_at"),
-						name=details.get("A"),
-						email=details.get("C"),
-						phone_number=details.get("B").replace(" ", ""),
-						e_con_name=details.get("D"),
-						e_con_phone=details.get("E").replace(" ", ""),
-						order_id=order.get("id"),
-						payment_id=order.get("tenders")[0].get("payment_id"),
-						source="square",
-						payment_fee=payment_fee,
-						refunded=bool(len(payment.body.get("refund_ids", [])))
-					)
-					# db.session.add(new_payment)
-		# db.session.commit()
+		# current_date = datetime.now()
+		# # Calculate the most recent July 1st that has passed
+		# if current_date.month > 7 or (current_date.month == 7 and current_date.day >= 1):
+		# 	most_recent_july_1st = datetime(current_date.year, 7, 1)
+		# else:
+		# 	most_recent_july_1st = datetime(current_date.year - 1, 7, 1)
+		#
+		# # Get the datestamp for midnight on the most recent July 1st
+		# midnight_july_1st = most_recent_july_1st.replace(hour=0, minute=0, second=0, microsecond=0)
+		#
+		# subs = app.square.payments.list_payments(
+		# 	location_id="BCDSH89GJ3PJB",
+		# 	begin_time=midnight_july_1st.strftime(square_date_format),
+		# 	is_offline_payment=False
+		# )
+		#
+		# pprint([sub for sub in subs.body.get("payments", [])])
+		# print(len(subs.body.get("payments", [])))
+
 		return {
 			"code": 200,
 			"msg": "OK"

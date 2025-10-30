@@ -1,3 +1,9 @@
+Object.assign(String.prototype, {
+	capitalize: function() {
+		return this.charAt(0).toUpperCase() + this.slice(1);
+	}
+})
+
 function Accounting({content}) {
 	if (content.sub_type === "full_year_overview") {
 		const [subsJson, setSubsJson] = React.useState({})
@@ -103,6 +109,73 @@ function Accounting({content}) {
 			</div>
 		)
 	}
+}
 
+function GetSubs({content}) {
+	const context = React.useContext(app)
 
+	function capitalize(string) {
+		return string.charAt(0).toUpperCase() + string.slice(1);
+	}
+
+	function updateSubs(e) {
+		e.preventDefault()
+		fetch("/members/api/update_subs", {}).then(
+			response => response.json()
+		).then(
+			data => {
+				if (data.code === 200) {
+					context.functions.refresh()
+				} else {
+					console.error('Error:', data.msg);
+					displayAlerts([{title: `Error: ${data.code}`, content: data.msg}])
+				}
+			}
+		)
+	}
+
+	return (
+		<div className="content">
+			<h1>Get Subs</h1>
+			<a href="#" onClick={updateSubs}><h3>Update Subs</h3></a>
+			<table className={"table"}>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Datetime</th>
+						<th>Source</th>
+						<th>Amount</th>
+						<th>Fee</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						content.results.map((result, i) => {
+							return (
+								<tr key={i}>
+									<td>{result.name}</td>
+									<td>{result.type.capitalize()}</td>
+									<td>{result.date}</td>
+									<td>{result.source.capitalize()}</td>
+									<td>£{(result.amount/100.0).toFixed(2)}</td>
+									<td>£{(result.fee/100.0).toFixed(2)}</td>
+								</tr>
+							)
+						})
+					}
+				</tbody>
+				<tfoot>
+					<tr>
+						<th>Total:</th>
+						<th>£{(content.totals.net/100.0).toFixed(2)}</th>
+						<th></th>
+						<th>SubTotal:</th>
+						<th>£{(content.totals.total/100.0).toFixed(2)}</th>
+						<th>£{(content.totals.fees/100.0).toFixed(2)}</th>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	)
 }

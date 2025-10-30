@@ -229,6 +229,8 @@ function App() {
 				tempContent.push(<ShowPhotosForm key={tempContent.length} content={postJson} refresh={()=>getPostJson(pathState)}></ShowPhotosForm>)
 			} else if(postJson.type === "accounting") {
 				tempContent.push(<Accounting key={tempContent.length} content={postJson}></Accounting>)
+			} else if(postJson.type === "get_subs") {
+				tempContent.push(<GetSubs key={tempContent.length} content={postJson}></GetSubs>)
 			} else if(postJson.type === "bookings") {
 				tempContent.push(<ManageBookings key={tempContent.length} content={postJson}></ManageBookings>)
 			} else if(postJson.type === "seating") {
