@@ -4,7 +4,7 @@ function getPerfDateString(perf_datetime) {
 	let datetime = new Date(perf_datetime)
 	let weekday = datetime.toDateString().slice(0, 3)
 	let day = datetime.getDate()
-	let ord_suffix = ords[day % 20] || "th"
+	let ord_suffix = day < 31 ? ords[day % 20] || "th" : "st"
 	let month = datetime.toLocaleString('default', { month: 'short' })
 	let hour = datetime.getHours()
 	let mins = datetime.getMinutes()
