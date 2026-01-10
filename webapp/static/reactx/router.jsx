@@ -51,13 +51,31 @@ function App() {
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
-			data.push({type: "simple", title: `${siteJson.next_show.title} - Tickets Available`, icon: "ticket", link: "/tickets", linkText: "Purchase Tickets", target: "_blank"})
-
+			data.push({
+				type: "simple",
+				title: `${siteJson.next_show.title} - Tickets Available`,
+				icon: "ticket",
+				link: "/tickets",
+				linkText: "Purchase Tickets",
+				target: "_blank"
+			})
 		}
 		// data.push({type: "cart"}) // TODO: move up
 
-		// TICKETS
+		// copenhagen tickets
 		const currentDate = new Date().getTime()
+		if (currentDate < Date.parse("2026-02-24T19:30:00Z")) {
+			data.push({
+				type: "simple",
+				title: "Copenhagen - A Silchester Players Special",
+				icon: "ticket",
+				link: "https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR",
+				linkText: "Copenhagen - Tickets Available",
+				target: "_blank"
+			})
+		}
+
+		// AUDITIONS
 		const auditions_date = Date.parse(siteJson.auditions_date)
 		if (siteJson.show_auditions && auditions_date > currentDate) {
 			data.push({
@@ -181,7 +199,24 @@ function App() {
 
 	React.useEffect(() => {
 		if (Object.keys(siteJson).length) {
+			const currentDate = new Date().getTime()
 			let tempContent = []
+			if (currentDate < Date.parse("2026-02-24T19:30:00Z")) {
+				tempContent = [
+					<Post key={0} content={`
+						# Copenhagen - A Silchester Players Special
+						## Calleva Arms - 22nd, 23rd, 24th Feb 2026 7.30pm
+						
+						[### Tickets Available Here](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
+						
+						[![Copenhagen Poster](/media/RARaKfnOmSMxdI-/Copenhagen.webp)](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
+						
+						In 1941, the German physicist Werner Heisenberg made a strange trip to Copenhagen to see his Danish counterpart, Niels Bohr. They were old friends that had revolutionised atomic physics in the 1920s with their work on quantum mechanics and the uncertainty principle. But now the world had changed, and the two men were on opposite sides in a world war. The meeting was fraught with danger and embarrassment, and ended in disaster. In this play Heisenberg meets Bohr and his wife Margrethe once again, to look for answers about what happened, and to work out how we can ever know why we do the things we do.
+	
+						[### Tickets Available Here](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
+					`}></Post>
+				]
+			}
 			let tempSidebarExtras = []
 			setShowSidebar(true)
 
