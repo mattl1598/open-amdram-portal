@@ -275,7 +275,7 @@ function App() {
 					<Frontpage nextShow={siteJson.next_show} key={siteJson.next_show.title}>
 						{tempContent}
 					</Frontpage>,
-					currentDate < Date.parse("2026-02-24T19:30:00Z") ? <Post key={0} content={`
+					currentDate < Date.parse("2026-02-24T19:30:00Z") ? <Post key={10000} content={`
 						# Copenhagen - A Silchester Players Special
 						## Calleva Arms - 22nd, 23rd, 24th Feb 2026 7.30pm
 						
