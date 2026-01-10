@@ -270,23 +270,10 @@ function App() {
 
 			// FRONTPAGE
 			if (postJson.frontpage) {
-				const currentDate = new Date().getTime()
 				tempContent = [
 					<Frontpage nextShow={siteJson.next_show} key={siteJson.next_show.title}>
 						{tempContent}
-					</Frontpage>,
-					currentDate < Date.parse("2026-02-24T19:30:00Z") ? <Post key={10000} content={`
-						# Copenhagen - A Silchester Players Special
-						## Calleva Arms - 22nd, 23rd, 24th Feb 2026 7.30pm
-						
-						[### Tickets Available Here](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
-						
-						[![Copenhagen Poster](/media/RARaKfnOmSMxdI-/Copenhagen.webp)](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
-						
-						In 1941, the German physicist Werner Heisenberg made a strange trip to Copenhagen to see his Danish counterpart, Niels Bohr. They were old friends that had revolutionised atomic physics in the 1920s with their work on quantum mechanics and the uncertainty principle. But now the world had changed, and the two men were on opposite sides in a world war. The meeting was fraught with danger and embarrassment, and ended in disaster. In this play Heisenberg meets Bohr and his wife Margrethe once again, to look for answers about what happened, and to work out how we can ever know why we do the things we do.
-	
-						[### Tickets Available Here](https://silchester-players.square.site/shop/copenhagen-a-silchester-players-special/G3TCW5JOXYQ3LQY7BPQGD4KR)
-					`}></Post> : ""
+					</Frontpage>
 				]
 			}
 			// console.log("redraw content")
