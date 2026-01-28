@@ -700,6 +700,7 @@ def get_subs():
 def update_subs():
 	latest_square_date = SubsPayment.query.filter_by(source="square").order_by(
 		SubsPayment.datetime.desc()).first().datetime
+	print(latest_square_date)
 	latest_known_order_id = SubsPayment.query.filter_by(source="square").order_by(
 		SubsPayment.datetime.desc()).with_entities(SubsPayment.order_id).first().order_id
 
@@ -726,6 +727,7 @@ def update_subs():
 					"source_filter": {
 						"source_names": [
 							"Checkout Link",
+							"Payment Links"
 						]
 					},
 					"state_filter": {
@@ -745,6 +747,7 @@ def update_subs():
 		}
 	else:
 		for order in results.body.get("orders", []):
+			# pprint(order)
 			if order.get("id") not in existing_orders:
 				for item in order.get("line_items", []):
 					details = {}
@@ -753,12 +756,15 @@ def update_subs():
 						match = re.search(regex, modifier.get('name'))
 						details[match[2]] = match[3]
 
+					if len(order.get("tenders", [])) == 0:
+						continue
+
 					payment = app.square.payments.get_payment(
 						payment_id=order.get("tenders")[0].get("payment_id"),
 					)
 
-					pprint(payment)
-					pprint(order)
+					# pprint(payment)
+					# pprint(order)
 					if payment.body.get("payment", {}).get("status") == "COMPLETED":
 						fees = payment.body.get("payment", {}).get("processing_fee", [])
 						payment_fee = 0
