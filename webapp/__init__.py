@@ -117,7 +117,8 @@ def create_app():
 							presets=["es2015", "react"],
 							plugins=[
 								"transform-es2015-destructuring",
-								"transform-object-rest-spread"
+								"transform-object-rest-spread",
+								"transform-nullish-coalescing-operator"
 							]
 						)
 						app_js += "\n"
