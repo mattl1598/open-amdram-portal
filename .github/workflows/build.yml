@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
 
       - name: Install dependencies
@@ -25,11 +25,14 @@ jobs:
       - name: Build ReactX
         run: npm run build:react
 
-      - name: Concatenate compiled JS files
-        run: python scripts/concat-reactx.py
-
-      - name: Upload final browser bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-app-js
-          path: webapp/static/react/app.js
+      - name: Commit generated app.js if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add webapp/static/react/app.js
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update generated React bundle"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
