@@ -343,7 +343,7 @@ def react_past_show_page(show_id, title=""):
 
 	# Aggregate the per-image JSON into a single JSON object.
 	faces_subquery = db.session.query(
-		func.json_object_agg(faces_by_photo.c.id, faces_by_photo.c.faces)
+		func.coalesce(func.json_object_agg(faces_by_photo.c.id, faces_by_photo.c.faces), '{}')
 	).select_from(faces_by_photo).scalar_subquery()
 
 	cast_subquery, crew_subquery = [
@@ -700,16 +700,17 @@ def site_data():
 		).group_by(Show).order_by(Show.date.desc()).limit(10).subquery()
 	).scalar()
 
+	output["square"] = {
+		"appId": app.envs.square_app_id,
+		"membershipLocationId": app.envs.square_membership_location,
+		"webstoreLocationId": app.envs.square_webstore_location
+	}
+
 	if current_user.is_authenticated:
 		output["current_user"] = {
 			"is_authenticated": True,
 			"role": current_user.role,
 			"id": current_user.id
-		}
-
-		output["square"] = {
-			"appId": app.envs.square_app_id,
-			"membershipLocationId": app.envs.square_membership_location
 		}
 
 		output["memberDocs"] = {

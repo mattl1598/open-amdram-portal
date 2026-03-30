@@ -54,7 +54,7 @@ for (let i = 0; i < tags.length; i++) {
 	)
 }
 
-function Icon({icon="", timeline, onClick, className, tabIndex, children}) {
+function Icon({icon="", timeline, onClick, className="", iconStyle="outlined", tabIndex, children}) {
 	let opts = {}
 	function handleEnter(e) {
 		let keycode = (e.keyCode ? e.keyCode : e.which);
@@ -98,19 +98,18 @@ function Icon({icon="", timeline, onClick, className, tabIndex, children}) {
 	} else {
 		return (
 			<div {...opts} onClick={onClick} className={"react_icon"}>
-				<span className={`material-symbols-outlined ${className}`}>{children}</span>
+				<span className={`material-symbols-${iconStyle} ${className}`}>{children}</span>
 			</div>
 		)
 	}
-
 }
 
 function QRCode({data}) {
 	let rows = []
 
-	for (let i=0; i<data.length; i++) {
+	for (let i = 0; i < data.length; i++) {
 		let row = []
-		for (let j=0; j<data[i].length; j++) {
+		for (let j = 0; j < data[i].length; j++) {
 			row.push(<span key={`${i} ${j}`} className={`cell ${data[i][j]}`}></span>)
 		}
 		rows.push(<div key={i} className={"row"}>{row}</div>)

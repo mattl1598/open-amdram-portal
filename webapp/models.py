@@ -258,6 +258,7 @@ class Show(db.Model, NewIdGetter):
 	author = db.Column(db.Text)
 	programme = db.Column(db.Text)
 	banner = db.Column(db.Text)
+	ticket_image = db.Column(db.Text)
 	text_blob = db.Column(db.Text)
 	noda_review = db.Column(db.Text)
 	radio_audio = db.Column(db.Text)

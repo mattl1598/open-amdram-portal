@@ -12,6 +12,7 @@ if (gallery) {
 
 function Gallery({imageLinks, faces={}, type="images"}) {
 	const [showFaces, setShowFaces] = React.useState(false)
+	const [showGrid, setShowGrid] = React.useState(false)
 	const images = []
 
 	for (let i = 0; i <imageLinks.length; i++) {
@@ -26,7 +27,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 			load = true
 		}
 		if (type === "images"){ // faces={faces[imageLinks[i].id]} vv
-			images.push(<Image src={imageLinks[i].src} showFaces={showFaces} shown={shown} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
+			images.push(<Image src={imageLinks[i].src} faces={faces[imageLinks[i].id] ?? []} showFaces={showFaces} shown={shown} width={imageLinks[i].width} height={imageLinks[i].height} key={i} i={i} alt={"Test"} className={classname} load={load} inGallery={true}></Image>)
 		} else if (type === "videos") {
 			images.push(<Video src={imageLinks[i][0]} key={i} className={classname} i={i} inGallery={true}></Video>)
 		}
@@ -52,7 +53,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 
 	// const max_dims =
 
-	function changeImage(incr) {
+	function incrImage(incr) {
 		if (imageTags.length > 1) {
 			let oldNum = wrapImgNum(imgNum)
 			let newNum = wrapImgNum(imgNum + incr)
@@ -62,8 +63,36 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 			tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} showFaces={showFaces} key={oldNum} className={"img-hidden"} shown={false}></Image>
 			tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} showFaces={showFaces} key={newNum} className={""} shown={true}></Image>
 			tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} showFaces={showFaces} key={loadNum} load={true}></Image>
+
+			setShowGrid(false)
 			setImgNum(newNum)
 			setImageTags([...tagsCopy])
+
+			currentZoom = 1
+			currentOffsetX = 0
+			currentOffsetY = 0
+			imagesRef.current.style.transform = `scale(${currentZoom}) translate(${Math.trunc(currentOffsetX)}px, ${Math.trunc(currentOffsetY)}px)`
+		}
+	}
+
+	function changeImage(num) {
+		if (imageTags.length > 1) {
+			let oldNum = wrapImgNum(imgNum)
+			let newNum = wrapImgNum(num)
+			// let loadNum = wrapImgNum(imgNum + incr*lazyLoadDistance)
+			let tagsCopy = [...imageTags]
+
+			for (let i = num-lazyLoadDistance; i < num+lazyLoadDistance; i++) {
+				let loadNum = wrapImgNum(i)
+				tagsCopy[loadNum] = <Image {...tagsCopy[loadNum].props} showFaces={showFaces} key={loadNum} load={true}></Image>
+			}
+
+			tagsCopy[oldNum] = <Image {...tagsCopy[oldNum].props} showFaces={showFaces} key={oldNum} className={"img-hidden"} shown={false}></Image>
+			tagsCopy[newNum] = <Image {...tagsCopy[newNum].props} showFaces={showFaces} key={newNum} load={true} className={""} shown={true}></Image>
+
+			setImgNum(newNum)
+			setImageTags([...tagsCopy])
+			setShowGrid(false)
 
 			currentZoom = 1
 			currentOffsetX = 0
@@ -89,10 +118,14 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 		}
 	}
 
+	function toggleGrid() {
+		setShowGrid(!showGrid)
+	}
+
 	function handleKeyPress(event) {
 		let keyMap = {ArrowLeft: -1, ArrowRight: 1}
 		if (Object.keys(keyMap).includes(event.key)) {
-			changeImage(keyMap[event.key])
+			incrImage(keyMap[event.key])
 		}
 	}
 
@@ -112,7 +145,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 	}
 
 	function handleTouchEnd(e) {
-		if (swipeTouchStartX && swipeTouchStartY && swipeTouchStartT) {
+		if (swipeTouchStartX && swipeTouchStartY && swipeTouchStartT && !showGrid) {
 			let changeX = e.changedTouches[0].pageX - swipeTouchStartX
 			let changeY = e.changedTouches[0].pageY - swipeTouchStartY
 			let changeT = e.timeStamp - swipeTouchStartT
@@ -120,7 +153,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 			let direction = changeX / Math.abs(changeX)
 			let swipeFraction = Math.abs(changeX) / e.view.innerWidth
 			if (swipeFraction/changeT > 0.001) {
-				changeImage(direction * -1)
+				incrImage(direction * -1)
 			}
 		}
 		[swipeTouchStartX, swipeTouchStartY, swipeTouchStartT] = [undefined, undefined, undefined]
@@ -166,12 +199,22 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 					     onTouchEnd={(event) => handleTouchEnd(event)}
 					>
 						{ imageTags }
+						<div className={`gallery-grid ${!showGrid && "hidden"}`}>
+							{imageLinks.map((image, index) => (
+								<div key={index} className="image_grid_item" onClick={() => changeImage(index)}>
+									<img src={`${image.src}?lowres`} alt={`Image ${index + 1}`} loading={"lazy"}/>
+								</div>
+							))}
+						</div>
 					</div>
 					<div className={"gallery-controls"}>
-						<div className="arrow faces" onClick={toggleFaces}><Icon>{showFaces ? "face_retouching_off" : "face"}</Icon></div>
-						<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
+						{ !!(faces && Object.keys(faces).length) && <div className="arrow faces" onClick={toggleFaces}><Icon>{showFaces ? "face_retouching_off" : "face"}</Icon></div> }
+						<div className="arrow" key={"gallery-arrow1"} onClick={() => incrImage(-1)}>{"<"}</div>
 						<div className="counter" key={"gallery-counter"}><span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
-						<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>></div>
+						<div className="arrow faces" key={"gallery-grid"} onClick={toggleGrid}>
+							<Icon iconStyle={"sharp"} className={"filled"}>{["grid_on", "image"][showGrid * 1]}</Icon>
+						</div>
 						<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
 							<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
 						</div>
@@ -195,10 +238,10 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 						{imageTags}
 					</div>
 					<div className={"gallery-controls"}>
-						<div className="arrow" key={"gallery-arrow1"} onClick={() => changeImage(-1)}>{"<"}</div>
+						<div className="arrow" key={"gallery-arrow1"} onClick={() => incrImage(-1)}>{"<"}</div>
 						<div className="counter" key={"gallery-counter"}>
 							<span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
-						<div className="arrow" key={"gallery-arrow2"} onClick={() => changeImage(1)}>></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>></div>
 						<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
 							<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
 						</div>
@@ -209,7 +252,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 	}
 }
 
-function Image({src, alt, className, i, load=true, shown=true, showFaces=false, width, height, inGallery=false, title="", faces=[]}) {
+function Image({src, alt, className, i, load=true, shown=true, showFaces=false, width, height, inGallery=false, title="", faces=[], loading="eager"}) {
 	let elemSrc = ""
 
 	const [faceMarkers, setFaceMarkers] = React.useState([])
@@ -367,7 +410,7 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
 	} else {
 		return (
 			<img src={elemSrc} width={width} height={height} alt={alt} key={i}
-			     className={className} title={title}>
+			     className={className} title={title} loading={loading}>
 			</img>
 		)
 	}

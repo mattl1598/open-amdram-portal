@@ -1,4 +1,8 @@
 div.react_icon {
 	display: grid;
 	place-items: center;
+
+	span.filled {
+		font-variation-settings: "FILL" 1;
+	}
 }
