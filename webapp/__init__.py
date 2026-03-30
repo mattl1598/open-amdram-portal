@@ -93,46 +93,46 @@ def create_app():
 			compile(dirname=("webapp/static/scss/", "webapp/static/css/"), output_style="compressed")
 
 			# compile jsx to js
-			react_path = "webapp/static/react/"
-			if not os.path.isdir(react_path):
-				os.mkdir(react_path)
+			# react_path = "webapp/static/react/"
+			# if not os.path.isdir(react_path):
+			# 	os.mkdir(react_path)
 
-			app_js = ""
-			i = 0
-			print("Compiling JSX to JS...")
+			# app_js = ""
+			# i = 0
 
-			for (_, _, files) in walk("webapp/static/reactx/"):
-				for file in files:
-					print(f"JS {(i := i+1)}/{len(files)}")
-					with open("webapp/static/reactx/" + file, "r", encoding="utf8") as f:
-						# output = dukpy.jsx_compile(
-						# 	f.read(),
-						# 	plugins=[
-						# 		"transform-es2015-destructuring",
-						# 		"transform-object-rest-spread"
-						# 	]
-						# )
-						app_js += dukpy.jsx_compile(
-							f.read(),
-							presets=["es2015", "react"],
-							plugins=[
-								"transform-es2015-destructuring",
-								"transform-object-rest-spread",
-								"transform-nullish-coalescing-operator"
-							]
-						)
-						app_js += "\n"
-					# with open(react_path + file.replace(".jsx", ".js"), "w") as w:
-					# 	w.write(output)
+			# now using github actions to compile jsx
+			# print("Compiling JSX to JS...")
+			#
+			# for (_, _, files) in walk("webapp/static/reactx/"):
+			# 	for file in files:
+			# 		print(f"JS {(i := i+1)}/{len(files)}")
+			# 		with open("webapp/static/reactx/" + file, "r", encoding="utf8") as f:
+			# 			# output = dukpy.jsx_compile(
+			# 			# 	f.read(),
+			# 			# 	plugins=[
+			# 			# 		"transform-es2015-destructuring",
+			# 			# 		"transform-object-rest-spread"
+			# 			# 	]
+			# 			# )
+			# 			app_js += dukpy.jsx_compile(
+			# 				f.read(),
+			# 				plugins=[
+			# 					"transform-es2015-destructuring",
+			# 					"transform-object-rest-spread"
+			# 				]
+			# 			)
+			# 			app_js += "\n"
+			# 		# with open(react_path + file.replace(".jsx", ".js"), "w") as w:
+			# 		# 	w.write(output)
 
-			print("Minifying JS...")
-			app_js_min = jsmin(app_js)
-
-			with open(react_path + "app.js", "w") as w:
-				print("Writing JS to file...")
-				w.write(app_js_min)
-
-		print("Written JS to file.")
+			# print("Minifying JS...")
+			# app_js_min = jsmin(app_js)
+			#
+			# with open(react_path + "app.js", "w") as w:
+			# 	print("Writing JS to file...")
+			# 	w.write(app_js_min)
+			#
+			# print("Written JS to file.")
 
 		app.jinja_env.globals.update(
 			md=markdown.markdown,

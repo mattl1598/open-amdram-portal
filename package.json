@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@babel/cli": "^7.27.0",
+    "@babel/core": "^7.27.0",
+    "@babel/preset-env": "^7.27.0",
+    "@babel/preset-react": "^7.27.0"
+  },
+  "scripts": {
+    "build:jsx": "babel webapp/static/reactx --out-dir .build/reactx --extensions \".jsx\"",
+    "concat:jsx": "python scripts/concat-reactx.py",
+    "build:react": "npm run build:jsx && npm run concat:jsx"
+  }
+}
