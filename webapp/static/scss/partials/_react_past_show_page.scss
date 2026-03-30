@@ -11,18 +11,18 @@ div.content:has(div.gallery-container:not(.fullscreen)) {
 	@include mobile {
 		padding-left: 0.5rem;
 		padding-right: 0.5rem;
-		width: 100dvw !important;
-		box-sizing: border-box;
-	}
-
-	& > div {
-		//width: calc(100dvw - 1rem) !important;
-		width: calc(100% - 0.455rem) !important;
-		max-width: calc(100% - 0.455rem) !important;
+		width: 100vw !important;
 		box-sizing: border-box;
 
-		& div.gallery-container {
-			margin: 0 auto;
+		& > div {
+			//width: calc(100dvw - 1rem) !important;
+			width: calc(100vw - 1rem) !important;
+			max-width: calc(100vw - 1rem) !important;
+			box-sizing: border-box;
+
+			& div.gallery-container {
+				margin: 0 auto;
+			}
 		}
 	}
 }
