@@ -25,4 +25,8 @@ div.tabs_container {
 	div.other_tabs {
 		display: none;
 	}
+
+	div.tab_container {
+		max-width: 100% !important;
+	}
 }
