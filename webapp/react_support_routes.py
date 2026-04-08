@@ -1,4 +1,6 @@
 import json
+import os
+
 import sass
 from datetime import datetime
 from pprint import pprint
@@ -33,6 +35,18 @@ def react(filename):
 		return response
 	except OSError:
 		abort(404)
+
+
+@bp.get("/dev_react/react.js")
+def dev_react():
+	content = ""
+	for (_, _, files) in os.walk("webapp/static/reactx/"):
+		for file in files:
+			with open("webapp/static/reactx/" + file, "r", encoding="utf8") as f:
+				content += f.read()
+	response = make_response(content)
+	response.headers['mimetype'] = "text/jsx"
+	return response
 
 
 @bp.get("/js/<string:filename>")

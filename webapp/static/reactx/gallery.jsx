@@ -400,12 +400,13 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
 
 	if (inGallery){
 		return (
-			<div key={"div" + i} style={{aspectRatio: width/height}}>
-				<div className={`img ${className}`} style={{aspectRatio: width/height}}>
-					<img src={elemSrc} width={width} height={height} alt={alt} key={i}></img>
-					<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
-				</div>
+			// <div key={"div" + i} style={{aspectRatio: width/height}}>
+			// style={{aspectRatio: width/height}}            vvv
+			<div key={"div" + i} className={`img ${className}`} >
+				<img src={elemSrc} width={width} height={height} alt={alt} key={i}></img>
+				<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
 			</div>
+			// </div>
 		)
 	} else {
 		return (

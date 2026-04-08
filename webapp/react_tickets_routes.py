@@ -229,7 +229,7 @@ def seating_planner(perf_id):
 				"initialHiddenSeats", Performance.layout["hiddenSeats"],
 				"initialAssignment", Performance.seat_assignments,
 				"showName", Show.title,
-				"authors", Show.author
+				"authors", func.coalesce(Show.author, "")
 			)
 		).filter(
 			Performance.id == perf_id
@@ -285,12 +285,15 @@ def test_collect_orders(show_id=""):
 
 	# perf_tree = get_ticket_types()
 	perf_tree = {}
+	location_ids = []
+	if app.envs.square_environment == "production":
+		location_ids = ["0W6A3GAFG53BH", "M1D6QJY6BHW9R"]
+	else:
+		location_ids = [app.envs.square_webstore_location]
+
 	results = app.square.orders.search_orders(
 		body={
-			"location_ids": [
-				"0W6A3GAFG53BH",
-				"M1D6QJY6BHW9R"
-			],
+			"location_ids": location_ids,
 			"query": {
 				"sort": {
 					"sort_field": "CREATED_AT",
@@ -415,7 +418,7 @@ def test_collect_orders(show_id=""):
 				"ticket_quantity": item["quantity"],
 				"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
 				"note": order["fulfillments"][0]["pickup_details"].get("note"),
-				"date": order["fulfillments"][0]["pickup_details"]["placed_at"],
+				"date": order["created_at"],
 				"id": order["id"],
 				"ref": i
 			}
@@ -442,14 +445,16 @@ def test_collect_orders(show_id=""):
 		*[OrderInfo(**tickets_info) for tickets_info in refunds],
 	]
 
+	# pprint(items)
 	for item in items:
 		keys = list(item.tickets.keys())[0].split(" - ", 2)
-		item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
-		if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
-			perf_tree[keys[0]][keys[1]][item.id] = existing + item
-		else:
-			perf_tree[keys[0]][keys[1]][item.id] = item
-	# pprint(perf_tree)
+		if len(keys) == 3:
+			item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
+			if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
+				perf_tree[keys[0]][keys[1]][item.id] = existing + item
+			else:
+				perf_tree[keys[0]][keys[1]][item.id] = item
+	pprint(perf_tree)
 	return perf_tree
 	# return json.dumps(perf_tree, default=OrderInfo.default)
 
@@ -502,8 +507,8 @@ def historic_sales_api():
 		end_date = datetime.utcnow()
 	start_date = Show.query.filter(Show.date < show.date).order_by(Show.date.desc()).first().date + timedelta(days=2)
 
-	print(end_date)
-	print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
+	# print(end_date)
+	# print(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
 	results = app.square.orders.search_orders(
 		body={
 			"location_ids": [
@@ -569,6 +574,8 @@ def historic_sales_api():
 		"net": 0
 	}
 
+	test_int = 0
+
 	mods = {}
 	for mod_db in mods_db:
 		mods[mod_db[0]] = mod_db[1]
@@ -580,16 +587,21 @@ def historic_sales_api():
 			valid_payment = True
 		else:
 			valid_payment = True
+
 		try:
 			if order.get("total_money", {}).get("amount", 0) > 0 and order.get("tenders"):
 				for tender in order["tenders"]:
-					if not ((tender.get("card_details") or {}).get("status") == "CAPTURED"):
+					if not (((tender.get("card_details") or {}).get("status") == "CAPTURED") or (tender.get("type") == "CASH")):
 						valid_payment = False
 			else:
 				valid_payment = False
 		except KeyError as e:
 			print("KeyError:", e)
 			# pprint(order)
+
+		if order["id"] == "a1chwKej8tL1VfdIKJyrFH4SrjUZY":
+			# print("CASH???", valid_payment, test_int)
+			test_int += 1
 		if valid_payment:
 			# print(order["id"])
 			valid_order = True
@@ -597,6 +609,10 @@ def historic_sales_api():
 			is_cash = False
 			item_sums = {}
 			item_refunds = []
+
+			if order["id"] == "c6MuH4x9fOhVm5LJ8UkI90iUPCGZY":
+				# bunfight age concern ticket correction
+				order["line_items"][0]["name"] = "Bunfight at the OK Corral - Sat 7th Feb 2:30pm - Adult"
 			for item in order["line_items"]:
 				item_name = item.get("name") or ""
 				if item_name and show.title.replace("`", "'") in item_name:
@@ -666,7 +682,7 @@ def historic_sales_api():
 								# full ticket refund
 								if mod.get("from_item") == mod.get("to_item"):
 									# option for changing paid ticket to free one.
-									item_name = " - ".join([*mod.to_item.split(" - ", 2)[:-1], "Free"])
+									item_name = " - ".join([*mod.get("to_item", "").split(" - ", 2)[:-1], "Free"])
 									if item_sums.get(item_name) and item_sums.get(item_name).get(0):
 										for k, v in {"amount": mod.get("change_quantity", 0), "discounts": 0}.items():
 											item_sums[item_name][0][k] = item_sums[item_name][0][k] + v
@@ -756,20 +772,34 @@ def historic_sales_api():
 		"cash": 0,
 		"fees": 0,
 		"expected_refunds": expected_refunds,
-		"actual_refunds": sum(refunds),
+		"actual_refunds": 0,
 		"net": 0
 	}
 
 	other_sum = 0
 	# point_of_sale_order_ids = [*pos_card_orders]
 	point_of_sale_order_ids = {}
+	flag = True
 	for payment in payments:
 		if payment["id"] in payment_ids:
 			# print(payment["id"])
+			# if payment["id"] == "B8ElDJsNy9MFvar9aukjqKOaPVVZY":
+			# 	print("REFUND???")
+			# 	pprint(payment)
+			# 	flag=False
 			if payment["status"] == "COMPLETED":
 				try:
-					totals["paid"] += int(payment["amount_money"]["amount"])
-					totals["fees"] += int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]]))
+					fee = 0
+					paid = 0
+					refund = 0
+					cash = 0
+					if payment["source_type"] != "CASH":
+						totals["fees"] += (fee := int(sum([i["amount_money"]["amount"] for i in payment["processing_fee"]])))
+						totals["paid"] += (paid := int(payment["amount_money"]["amount"]))
+					else:
+						totals["cash"] += (cash := int(payment["amount_money"]["amount"]))
+					totals["actual_refunds"] += (refund := int(payment.get("refunded_money", {}).get("amount", 0)))
+					totals["net"] += paid + cash - fee - refund
 				except KeyError as e:
 					errors += 1
 					# pprint(payment)
@@ -778,18 +808,23 @@ def historic_sales_api():
 				# print(payment["status"])
 				pass
 		elif payment["id"] in foh_payment_ids:
-			if payment["status"] == "COMPLETED" and payment["application_details"] == {
+			if (payment["status"] == "COMPLETED" and payment["application_details"] == {
 				'square_product': 'SQUARE_POS'
-			} and payment["amount_money"]["amount"] > 0:
+			} and payment["amount_money"]["amount"] > 0
+					and end_date - timedelta(weeks=4) <= datetime.strptime(payment["created_at"], square_date_format) <= end_date):
 				try:
 					if payment.get("source_type") == "CARD":
+						if flag:
+							pprint(payment)
+							flag = False
 						foh_totals["refunds"] += (refund := payment.get("refunded_money", {}).get("amount", 0))
 						foh_totals["paid"] += (paid := int(payment["amount_money"]["amount"]))
 						foh_totals["fees"] += (fee := int(sum([i["amount_money"]["amount"] for i in payment.get("processing_fee", [])])))
 
 						foh_totals["net"] += paid - refund - fee
 					else:
-						foh_totals["cash"] += int(payment["amount_money"]["amount"])
+						foh_totals["cash"] += (cash := int(payment["amount_money"]["amount"]))
+						foh_totals["net"] += cash
 					point_of_sale_order_ids[payment.get("order_id")] = payment
 				except KeyError as e:
 					errors += 1
@@ -804,18 +839,18 @@ def historic_sales_api():
 			# pprint(payment)
 			# TODO: check if payment is FOH using batch retrieve orders.
 
-	print("other sum", other_sum)
-
-	print("SUMS:")
-	pprint(sums)
-	print("REFUNDS:")
-	pprint(refunds)
-	print("EXPECTED REFUNDS:")
-	pprint(expected_refunds)
-	print("TOTALS:")
-	pprint(totals)
-	print("FOH TOTALS:")
-	pprint(foh_totals)
+	# print("other sum", other_sum)
+	#
+	# print("SUMS:")
+	# pprint(sums)
+	# print("REFUNDS:")
+	# pprint(refunds)
+	# print("EXPECTED REFUNDS:")
+	# pprint(expected_refunds)
+	# print("TOTALS:")
+	# pprint(totals)
+	# print("FOH TOTALS:")
+	# pprint(foh_totals)
 
 	return {
 		"code": 200,

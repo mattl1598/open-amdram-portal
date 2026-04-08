@@ -9,7 +9,12 @@ import markdown as markdown
 import requests
 from flask import Flask, redirect, render_template, request, session, abort  # , url_for, session
 from flask_qrcode import QRcode
+
+from square import Square
+from square.core.api_error import ApiError
+from square.environment import SquareEnvironment
 from square_legacy.client import Client as SquareClient
+
 # noinspection PyPackageRequirements
 from sass import compile
 import dukpy
@@ -25,7 +30,8 @@ from sqlalchemy import and_
 # noinspection PyPackageRequirements
 from werkzeug.exceptions import HTTPException
 
-from webapp import react_permissions, react_photos_routes, react_routes, react_members_routes, react_support_routes, \
+from webapp import react_permissions, react_photos_routes, react_routes, react_members_routes, react_store_routes, \
+	react_support_routes, \
 	react_tickets_routes, react_face_detection
 from webapp.svgs import *
 from webapp.models import *
@@ -86,6 +92,17 @@ def create_app():
 			access_token=app.envs.square_access_token,
 			environment=app.envs.square_environment
 		)
+		app.square_new = Square(
+			environment={"sandbox": SquareEnvironment.SANDBOX, "production": SquareEnvironment.PRODUCTION}[app.envs.square_environment],
+			token=app.envs.square_access_token
+		)
+
+		app.cache = {
+			"media": {
+				"lowres": {},
+				"highres": {},
+			}
+		}
 
 		if app.envs.app_environment != "development":
 			# compile scss to css
@@ -242,12 +259,13 @@ def create_app():
 		app.register_blueprint(react_members_routes.bp)
 		app.register_blueprint(react_permissions.bp)
 		app.register_blueprint(react_tickets_routes.bp)
+		app.register_blueprint(react_store_routes.bp)
 		app.register_blueprint(react_support_routes.bp)
 		app.register_blueprint(react_photos_routes.bp)
-		# app.register_blueprint(react_face_detection.bp)
-		# if app.envs.face_recognition:
-		# 	from webapp import react_face_analysis
-		# 	app.register_blueprint(react_face_analysis.bp)
+		app.register_blueprint(react_face_detection.bp)
+		if app.envs.face_recognition:
+			from webapp import react_face_analysis
+			app.register_blueprint(react_face_analysis.bp)
 
 		@login_manager.unauthorized_handler
 		def unauthorized_handler():

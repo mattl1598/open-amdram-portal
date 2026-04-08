@@ -19,6 +19,41 @@ function App() {
 	const [pathHistory, setPathHistory] = React.useState([window.location.pathname])
 	const [pathIncrementer, setPathIncrementer] = React.useState(0)
 	const [popstateEvents, setPopstateEvents] = React.useState([])
+
+	const CART_TTL = 24 * 60 * 60 * 1000 // 24 hours
+	// const CART_TTL = 1 * 1 * 60 * 1000 // 1 minute
+
+	function loadCart() {
+		try {
+			const raw = localStorage.getItem("ticketsCart")
+			if (!raw) return {}
+
+			const parsed = JSON.parse(raw)
+			if (!parsed.savedAt || !parsed.cart) return {}
+
+			if (Date.now() - parsed.savedAt > CART_TTL) {
+				localStorage.removeItem("ticketsCart")
+				return {}
+			}
+
+			return parsed.cart
+		} catch {
+			return {}
+		}
+	}
+
+	const [ticketsCart, setTicketsCart] = React.useState(loadCart)
+
+	React.useEffect(() => {
+		localStorage.setItem(
+			"ticketsCart",
+			JSON.stringify({
+				savedAt: Date.now(),
+				cart: ticketsCart
+			})
+		)
+	}, [ticketsCart])
+
 	let path = window.location.pathname
 
 
@@ -60,7 +95,7 @@ function App() {
 				target: "_blank"
 			})
 		}
-		// data.push({type: "cart"}) // TODO: move up
+		data.push({type: "cart"}) // TODO: move up
 
 		// copenhagen tickets
 		const currentDate = new Date().getTime()
@@ -184,14 +219,30 @@ function App() {
 			}
 		} else if (RegExp("^/members/show/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
 			getPostJson(pathState+`?react`)
+		// } else if (path === "/tickets") {
+		// 	// TODO: NEW TICKETS GO HERE
+		// 	getPostJson(pathState + `?react`)
 		} else if (path === "/tickets") {
-			// setPostJson({
-			// 	type: "redirect",
-			// 	url: siteJson.tickets_link,
-			// 	text: "Tickets Shop",
-			// 	time: 1
-			// })
-			getPostJson(pathState + `?react`)
+			setPostJson({
+				type: "ticket_store",
+				title: "Tickets Store",
+			})
+			// getPostJson(pathState + `?react`)
+		} else if (path === "/tickets/cart") {
+			setPostJson({
+				type: "ticket_cart",
+				title: "Tickets Cart",
+			})
+		} else if (path === "/tickets/checkout") {
+			setPostJson({
+				type: "ticket_checkout",
+				title: "Tickets Checkout",
+			})
+		} else if (path.split("?")[0] === "/tickets/checkout/success") {
+			setPostJson({
+				type: "ticket_success",
+				title: "Purchase Successful",
+			})
 		} else {
 			getPostJson(pathState + `?react`)
 		}
@@ -254,6 +305,12 @@ function App() {
 			} else if(postJson.type === "seating") {
 				setShowSidebar(false)
 				tempContent.push(<SeatingPlanner key={tempContent.length} content={postJson}></SeatingPlanner>)
+			} else if(postJson.type === "ticket_store") {
+				tempContent.push(<TicketStore key={tempContent.length} ticketsActive={siteJson.tickets_active}></TicketStore>)
+			} else if(postJson.type === "ticket_checkout") {
+				tempContent.push(<Checkout key={tempContent.length} ticketsActive={siteJson.tickets_active}></Checkout>)
+			} else if(postJson.type === "ticket_success") {
+				tempContent.push(<CheckoutSuccess key={tempContent.length} ticketsActive={siteJson.tickets_active}></CheckoutSuccess>)
 			} else if(postJson.type === "error") {
 				tempContent.push(<Post key={tempContent.length} content={postJson}></Post>)
 			} else if (postJson.type === "redirect") {
@@ -323,7 +380,7 @@ function App() {
 	})
 
 	return (
-		<app.Provider value={{siteJson, functions: {setPath, refresh}}}>
+		<app.Provider value={{siteJson, ticketsCart, functions: {setPath, refresh, setTicketsCart}}}>
 			<AlertsContainer></AlertsContainer>
 			<Nav navItems={navItems} memberNavItemsToShow={memberNavItemsToShow} siteName={siteJson.site_name} logoSVG={siteJson.logoSVG}>
 				<div className={"main-section"}>

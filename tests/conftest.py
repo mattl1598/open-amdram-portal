@@ -1,9 +1,9 @@
 import pytest
 import webapp
 
-all_routes = [x.rule for x in webapp.create_app().url_map.iter_rules()]
-test = [x for x in webapp.create_app().url_map.iter_rules()][0]
-print(test)
+# all_routes = [x.rule for x in webapp.create_app().url_map.iter_rules()]
+# test = [x for x in webapp.create_app().url_map.iter_rules()][0]
+# print(test)
 
 
 auth_map = {}
@@ -12,8 +12,8 @@ method_map = {}
 option = ""
 
 
-def pytest_addoption(parser):
-	parser.addoption("--auth", dest="auth", action="store", default="public")
+# def pytest_addoption(parser):
+# 	parser.addoption("--auth", dest="auth", action="store", default="public")
 
 
 def pytest_configure(config):
@@ -37,10 +37,12 @@ def pytest_configure(config):
 	# 	"test: mark test as testing test functionality"
 	# )
 
-	config.addinivalue_line(
-		"markers",
-		"all_get: mark test as testing all routes"
-	)
+	# config.addinivalue_line(
+	# 	"markers",
+	# 	"all_get: mark test as testing all routes"
+	# )
+
+	pass
 
 
 @pytest.fixture(scope="session")
@@ -55,10 +57,10 @@ def app():
 		"TESTING": True,
 	})
 
-	# other setup can go here
-	for x in app.url_map.iter_rules():
-		i = x.endpoint.split(".")
-		auth_map[x.rule] = list(filter(None, (getattr(getattr(webapp, i[0]), i[1]).__doc__ or "").split(",")))
+	# # other setup can go here
+	# for x in app.url_map.iter_rules():
+	# 	i = x.endpoint.split(".")
+	# 	auth_map[x.rule] = list(filter(None, (getattr(getattr(webapp, i[0]), i[1]).__doc__ or "").split(",")))
 
 	yield app
 

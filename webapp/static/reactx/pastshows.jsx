@@ -47,6 +47,17 @@ function ListShows({content}) {
 		results_ascending: {reverse: true, order_property: "relevance", text: "Relevance (Most to Least)", icon: "sort_ascending"},
 		results_descending: {reverse: false, order_property: "relevance", text: "Relevance (Least to Most)", icon: "sort_descending"},
 	}
+
+	const [showThumbsReady, setShowThumbsReady] = React.useState(false)
+
+	React.useEffect(() => {
+		window.serviceWorkerReady.then(() => {
+			preloadImages('/show_thumbs')
+		}).then(() => {
+			setShowThumbsReady(true)
+		})
+	}, [])
+
 	let shows = {}
 	// console.log(displayMode)
 	if (searchTerm.length) {
@@ -85,7 +96,7 @@ function ListShows({content}) {
 				if (Object.keys(shows).includes(key)) {
 					key += content.shows[i].date
 				}
-				shows[key] = <ShowListItem key={i} item={content.shows[i]}></ShowListItem>
+				shows[key] = <ShowListItem key={i} item={content.shows[i]} loadThumb={showThumbsReady}></ShowListItem>
 			}
 		}
 	} else {
@@ -114,7 +125,7 @@ function ListShows({content}) {
 			let year = (new Date(content.shows[i].date)).getFullYear()
 			showThis *= (lowerYearFilter <= year && year <= higherYearFilter)
 			if (showThis) {
-				shows[key] = <ShowListItem key={i} item={content.shows[i]}></ShowListItem>
+				shows[key] = <ShowListItem key={i} item={content.shows[i]} loadThumb={showThumbsReady}></ShowListItem>
 			}
 		}
 	}
@@ -278,11 +289,11 @@ function ListShows({content}) {
 	)
 }
 
-function ShowListItem({item, order_prop}) {
+function ShowListItem({item, order_prop, loadThumb}) {
 	return (
 		<Link className={"link"} href={`${item.route}/${item.id}/${item.title.replace(' ', '_')}`} order={item[order_prop]}>
 			<div className="image">
-				<Image className={"programme"} src={`${item.programme}?lowres`} alt={`${item.title} programme cover`} loading={"lazy"}/>
+				<Image className={"programme"} src={`${item.programme}?lowres`} alt={`${item.title} programme cover`} load={loadThumb} loading={"lazy"}/>
 			</div>
 			<div className="show_title">
 				<h3>{item.title}</h3>
@@ -302,6 +313,15 @@ function ShowPage({content}) {
 	let [nodaReview, setNodaReview] = React.useState(<div className='loader'></div>)
 	// let [nodaReview, setNodaReview] = React.useState(parser.parseFromString("<div class='selectMe'><div class='loader'></div></div>", "text/html").querySelector(".selectMe"))
 	let [gotNodaReview, setGotNodaReview] = React.useState(false)
+
+	React.useEffect(() => {
+		if (content.id) {
+			window.serviceWorkerReady.then(() => {
+				preloadImages(`/thumbs/${content.id}`)
+			})
+		}
+	}, [])
+	
 	let directors = []
 	let producers = []
 	let cast = {}
@@ -405,7 +425,7 @@ function ShowPage({content}) {
 						<h3>{content.cast[i].role}</h3>
 						<h4>(as ...)</h4>
 					</div>)
-				} else {console.log(content.cast[i].name)}
+				} else {/*console.log(content.cast[i].name)*/}
 			}
 			setCastRoles(tempCast)
 		}, [])
@@ -521,4 +541,94 @@ function ShowPage({content}) {
 			</div>
 		</div>
 	)
+}
+
+function waitForController() {
+	return new Promise((resolve) => {
+		if (navigator.serviceWorker.controller) {
+			resolve(navigator.serviceWorker.controller)
+			return
+		}
+
+		navigator.serviceWorker.addEventListener(
+			'controllerchange',
+			() => resolve(navigator.serviceWorker.controller),
+			{ once: true }
+		)
+	})
+}
+
+function sendToWorker(message) {
+	return navigator.serviceWorker.ready.then(async (registration) => {
+		const controller = navigator.serviceWorker.controller || registration.active
+
+		if (!controller) {
+			const nextController = await waitForController()
+			if (!nextController) return false
+			return postMessageToWorker(nextController, message)
+		}
+
+		return postMessageToWorker(controller, message)
+	})
+}
+
+function postMessageToWorker(target, message) {
+	return new Promise((resolve) => {
+		const channel = new MessageChannel()
+
+		channel.port1.onmessage = (event) => {
+			resolve(event.data && event.data.ok === true)
+		}
+
+		target.postMessage(message, [channel.port2])
+	})
+}
+
+function registerImageCacheWorker() {
+	if (!('serviceWorker' in navigator)) {
+		console.log("Service worker not in navigator.")
+		return Promise.resolve(null)
+	}
+
+	return navigator.serviceWorker.ready.catch(() => null)
+}
+
+function postToServiceWorker(message) {
+	return navigator.serviceWorker.ready.then((registration) => {
+		const target = registration.active || navigator.serviceWorker.controller
+
+		if (!target) {
+			return false
+		}
+
+		return new Promise((resolve) => {
+			const channel = new MessageChannel()
+
+			channel.port1.onmessage = (event) => {
+				resolve(event.data && event.data.ok === true)
+			}
+
+			target.postMessage(message, [channel.port2])
+		})
+	})
+}
+
+function cacheImagesInWorker(images) {
+	return postToServiceWorker({
+		type: 'CACHE_IMAGES',
+		images: images,
+	})
+}
+
+function preloadImages(url) {
+	// console.log("loading", performance.now())
+	return registerImageCacheWorker().then(() => {
+		return fetch(url)
+			.then((response) => response.json())
+			.then((images) => {
+				cacheImagesInWorker(images).then((ok) => {
+					// console.log("cached", performance.now())
+				})
+			})
+	})
 }

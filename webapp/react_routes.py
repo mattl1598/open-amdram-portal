@@ -1,4 +1,5 @@
 import json
+import os
 import traceback
 from datetime import datetime
 from pprint import pprint
@@ -385,6 +386,7 @@ def react_past_show_page(show_id, title=""):
 		func.json_build_object(
 			"type", "past_show",
 			"title", Show.title,
+			"id", Show.id,
 			"show", details_subquery,
 			"photos", photos_subquery,
 			"faces", faces_subquery,
@@ -758,6 +760,16 @@ def cors():
 	data = request.json
 	response = requests.get(data.get("url"))
 	return response.text
+
+
+@bp.get("/js/service_worker.js")
+def service_worker():
+	response = make_response(
+		send_from_directory(os.path.join(app.root_path, "static"), "js/service_worker.js")
+	)
+	response.headers["Service-Worker-Allowed"] = "/"
+	response.headers["Cache-Control"] = "public, max-age=3600"
+	return response
 
 
 @bp.get("/testmd")

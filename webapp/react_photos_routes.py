@@ -12,12 +12,14 @@ from flask_login import current_user, login_required
 from PIL import Image
 from pprint import pprint
 
-from sqlalchemy import func, update
+from sqlalchemy import values, column, String, func, update
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from webapp.models import KeyValue, Member, Show, ShowImage, ShowImageData, ShowPhotos, StaticMedia, db, MemberShowLink as MSL
+from webapp.models import KeyValue, Member, Show, ShowImage, ShowImageData, ShowPhotos, StaticMedia, db, \
+	MemberShowLink as MSL
 from flask import current_app as app, Response
-from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, copy_current_request_context, send_file
+from flask import abort, Blueprint, redirect, render_template, url_for, request, session, jsonify, make_response, \
+	copy_current_request_context, send_file
 
 from webapp.photos_routes import get_albums, get_photo, update_access_token
 from webapp.react_permissions import check_page_permission
@@ -118,7 +120,7 @@ def delete_static_media():
 		album_id = x.json().get("id")
 	requests.post(
 		url=f"https://photoslibrary.googleapis.com/v1/albums/{album_id}:batchAddMediaItems"
-			f"?access_token={session.get('access_token')}",
+		    f"?access_token={session.get('access_token')}",
 		json={
 			"mediaItemIds": [
 				media_db.item_id
@@ -293,10 +295,10 @@ def set_show_photos_api():
 	for photo in to_remove:
 		ShowPhotos.query \
 			.filter_by(
-				show_id=request.form.get("show"),
-				photo_url=photo[1],
-				photo_type=photo[0]
-			) \
+			show_id=request.form.get("show"),
+			photo_url=photo[1],
+			photo_type=photo[0]
+		) \
 			.delete()
 
 	db.session.commit()
@@ -315,8 +317,15 @@ def set_show_photos_api():
 
 @bp.route("/media/<media_id>/<filename>")
 def get_static_media(media_id, **kwargs):
+	if "lowres" in request.args.keys():
+		if media_id in app.cache["media"]["lowres"].keys():
+			return Response(app.cache["media"]["lowres"][media_id], mimetype="image/webp", headers={
+				"Cache-Control": "public, max-age=3600"
+			})
+
 	media_item = db.session.query(StaticMedia).filter_by(id=media_id).first_or_404()
 	if "lowres" in request.args.keys():
+		app.cache["media"]["lowres"][media_id] = media_item.small_content
 		return Response(media_item.small_content, mimetype="image/webp", headers={
 			"Cache-Control": "public, max-age=3600"
 		})
@@ -324,6 +333,78 @@ def get_static_media(media_id, **kwargs):
 		return Response(media_item.content, mimetype="image/webp", headers={
 			"Cache-Control": "public, max-age=3600"
 		})
+
+
+@bp.get("/show_thumbs")
+def get_show_thumbs():
+	programmes = db.session.query(
+		func.coalesce(
+			func.json_agg(
+				func.distinct(Show.programme)
+			),
+			'[]'
+		)
+	).filter(
+		Show.programme.isnot(None),
+		Show.programme != ''
+	).scalar()
+
+	valid_cache = {x.split("/")[2]: x for x in programmes if x.split("/")[1] == "media"}
+	valid_cache_rows = [
+		(media_id, cache_path)
+		for media_id, cache_path in valid_cache.items()
+	]
+
+	valid_cache_tbl = values(
+		column("id", String),
+		column("url", String),
+		name="valid_cache_tbl"
+	).data(valid_cache_rows).alias("valid_cache_tbl")
+
+	media_items = db.session.query(
+		func.coalesce(
+			func.json_object_agg(
+				func.concat(valid_cache_tbl.c.url, "?lowres"),
+				func.json_build_object(
+					"mimetype", "image/webp",
+					"base64", func.encode(StaticMedia.small_content, "base64")
+				)
+			),
+			"[]"
+		)
+	).join(
+		valid_cache_tbl,
+		valid_cache_tbl.c.id == StaticMedia.id
+	).scalar()
+
+	response = make_response(jsonify(media_items))
+	response.headers["Cache-Control"] = "public, max-age=3600"
+
+	return response
+
+
+@bp.get("/thumbs/<show_id>")
+def get_thumbs(show_id):
+	show_photos = db.session.query(
+		func.coalesce(
+			func.json_object_agg(
+				func.concat('/photo_new/', ShowImageData.id, "?lowres"),
+				func.json_build_object(
+					"mimetype", "image/webp",
+					"base64", func.encode(ShowImageData.reduced_image, 'base64')
+				)
+			),
+			'{}'
+		)
+	).join(
+		ShowImage, ShowImage.id == ShowImageData.id
+	).filter(
+		ShowImage.show_id == show_id
+	).scalar()
+
+	response = make_response(jsonify(show_photos))
+	response.headers["Cache-Control"] = "public, max-age=3600"
+	return response
 
 
 @bp.route("/photo_new/<photo_id>")
@@ -339,7 +420,8 @@ def get_image(photo_id):
 			ShowImageData.full_image,
 			ShowImage.filename
 		).filter_by(id=photo_id).first_or_404()
-		return send_file(io.BytesIO(image.full_image), download_name=image.filename, mimetype="image/webp", max_age=3600)
+		return send_file(io.BytesIO(image.full_image), download_name=image.filename, mimetype="image/webp",
+		                 max_age=3600)
 
 
 @bp.get("/members/manage_shows/photos/<show_id>/<show_title>")
@@ -428,11 +510,11 @@ def upload_show_images():
 		width = im.size[0]
 		height = im.size[1]
 		im.save(b_out, format="webp", optimize=True, quality=80)
-		im.thumbnail((400,400,), resample=Image.Resampling.BOX)
+		im.thumbnail((400, 400,), resample=Image.Resampling.BOX)
 		reduced_width = im.size[0]
 		reduced_height = im.size[1]
 		im.save(b_out_small, format="webp", optimize=True, quality=85)
-		
+
 	new_image = ShowImage(
 		id=ShowImage.get_new_id(),
 		show_id=request.form.get("show_id"),
@@ -454,4 +536,3 @@ def upload_show_images():
 	db.session.commit()
 
 	return jsonify({"code": 200, "msg": f"Photo '{file.filename}' uploaded successfully"}), 200
-	

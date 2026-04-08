@@ -4,7 +4,7 @@ div.sidebar {
 
 	@include not-mobile {
 		flex-direction: column;
-		max-width: 25%;
+		max-width: max-content;
 	}
 	@include mobile {
 		flex-direction: column;
@@ -12,6 +12,7 @@ div.sidebar {
 		//align-items: center;
 		flex-wrap: wrap;
 		width: 100%;
+
 
 		//position: fixed;
 		//right: 0;

@@ -569,11 +569,12 @@ div#past_shows {
 		div.image {
 			width: 100%;
 			overflow: hidden;
+			object-fit: contain;
+			aspect-ratio: 1/sqrt(2);
 		}
 
 		img.programme {
 			max-width: 100%;
-			aspect-ratio: 1/sqrt(2);
 			object-fit: contain;
 		}
 

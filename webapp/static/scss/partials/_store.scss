@@ -39,6 +39,10 @@ div.sidebarCart {
 		}
 	}
 
+	div.cart {
+		max-width: 100%;
+	}
+
 	div.cartItem {
 		--ticketColour: calc((var(--i)) * (360 / (var(--count) + 1)));
 
@@ -51,6 +55,14 @@ div.sidebarCart {
 		grid-template-columns: 1fr 2fr;
 		grid-template-rows: auto auto auto;
 		padding: 0.5rem;
+
+		max-width: 100%;
+
+		div.ticketImage {
+			grid-area: image;
+			aspect-ratio: 1/1;
+			//max-width: 99%;
+		}
 
 		h3 {
 			margin-block: 0;
@@ -134,8 +146,54 @@ div.ticketImage {
 	}
 }
 
+div.content:has(div.store) {
+	@include mobile {
+		padding: 0 0 1rem 0;
+	}
+}
+div.content:has(div.checkout) {
+	@include mobile {
+		padding: 0 0 1rem 0;
+	}
+}
+
 div.store {
+	@include mobile {
+		max-width: 100dvw;
+	}
+
+	div.title {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		grid-template-rows: auto;
+		grid-template-areas:
+			"title cart"
+		;
+		h1.titleText {
+			text-align: center;
+		}
+
+		h2.cart {
+			a > span {
+				text-decoration: underline dotted;
+			}
+
+			div.react_icon span {
+				font-size: 150%;
+				text-decoration: none;
+			}
+		}
+	}
+
+
 	div.tickets {
+		@include mobile {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1rem;
+			padding: 0;
+			max-width: 100dvw;
+		}
 
 		div.ticketItem {
 			--ticketColour: calc((var(--i)) * (360 / (var(--count) + 1)));
@@ -149,15 +207,31 @@ div.store {
 					cursor: default;
 				}
 
-				display: grid;
-				grid-template-columns: 1fr 2fr;
-				grid-template-rows: repeat(4, auto);
-				grid-template-areas:
-					"image heading"
-					"image form"
-					"image form"
-					"image form"
-				;
+				@include mobile {
+					display: grid;
+					grid-template-columns: 1fr;
+					grid-template-rows: repeat(4, auto);
+					grid-template-areas:
+						"image"
+						"heading"
+						"form"
+						"form"
+					;
+					padding: 0;
+					max-width: 100dvw;
+				}
+
+				@include not-mobile {
+					display: grid;
+					grid-template-columns: 1fr 2fr;
+					grid-template-rows: repeat(4, auto);
+					grid-template-areas:
+						"image heading"
+						"image form"
+						"image form"
+						"image form"
+					;
+				}
 
 				column-gap: 0.5rem;
 
@@ -166,150 +240,31 @@ div.store {
 				p.price { display: none; }
 
 				div.form {
-					//grid-area: form;
-					//position: relative;
-					//
-					//div.quantities {
-					//	display: flex;
-					//	flex-direction: column;
-					//	gap: 0.5rem;
-					//
-					//	div.quantityForm {
-					//		display: flex;
-					//		flex-direction: row;
-					//		align-items: center;
-					//		gap: 0.25rem;
-					//
-					//		label, div.step {
-					//			display: flex;
-					//			flex-direction: column;
-					//			user-select: none;
-					//
-					//			span {
-					//				font-weight: bold;
-					//				cursor: pointer;
-					//			}
-					//
-					//			div.type {
-					//				font-weight: bold;
-					//				font-size: 120%;
-					//			}
-					//		}
-					//
-					//		div.react-fancy-input {
-					//			width: auto;
-					//			margin-top: 0 !important;
-					//			text-align: center;
-					//
-					//			input {
-					//				font-size: 120%;
-					//				width: 3rem;
-					//				padding: 0.625rem 0.25rem;
-					//				text-align: center;
-					//				&::-webkit-outer-spin-button, &::-webkit-inner-spin-button {
-					//					-webkit-appearance: none;
-					//					margin: 0;
-					//				}
-					//			}
-					//		}
-					//	}
-					//}
-					//
-					//div.buttons {
-					//	display: flex;
-					//	gap: 0.5rem;
-					//
-					//	position: absolute;
-					//	bottom: 1rem;
-					//	right: 1rem;
-					//}
-					//
-					//div.button {
-					//	display: grid;
-					//	place-items: center;
-					//	border-radius: 50000rem;
-					//	width: max-content;
-					//	padding: 0.625rem 1rem;
-					//
-					//	& > * {
-					//		grid-column: 1/-1;
-					//		grid-row: 1/-1;
-					//	}
-					//
-					//	&:not(.progress):not(.added):hover {
-					//		cursor: pointer;
-					//	}
-					//}
-					//
-					//div.addToCart {
-					//	@include theme(background-color, accent1);
-					//
-					//	&:not(.progress) {
-					//		div.react_icon > span.progressWheel {
-					//			display: none;
-					//		}
-					//	}
-					//
-					//	&.progress {
-					//		h3.callToAction {
-					//			color: #00000000;
-					//		}
-					//		div.react_icon > span.progressWheel {
-					//			@keyframes spin {
-					//				0% {
-					//					transform: rotate(0deg) scale(1.3);
-					//				}
-					//				100% {
-					//						transform: rotate(360deg) scale(1.3);
-					//				}
-					//			}
-					//			animation: spin 1s linear infinite;
-					//		}
-					//	}
-					//	position: relative;
-					//	overflow: hidden;
-					//	@include theme(background-color, accent1);
-					//
-					//	div.react_icon > span {
-					//		transform: scale(1.5);
-					//		transform-origin: center center;
-					//	}
-					//
-					//	// Success state layer (green bg + checkmark inside)
-					//	div.successState {
-					//		position: absolute;
-					//		inset: -0.625rem -1rem;
-					//		display: grid;
-					//		place-items: center;
-					//		background-color: #2ecc71;
-					//		clip-path: circle(0% at calc(100% - 1.5rem) 50%);
-					//		transition: clip-path 500ms ease-in-out;
-					//		z-index: 3;
-					//	}
-					//
-					//	&.added div.successState {
-					//		clip-path: circle(150% at calc(100% - 1.5rem) 50%);
-					//	}
-					//}
-					//
-					//div.close {
-					//	padding: 0.625rem;
-					//	@include theme(background-color, bg4);
-					//}
-				} // ignored
-
-				div.form {
 					grid-area: form;
 					position: relative;
-					display: grid;
-					grid-template-columns: 1fr auto;
-					grid-template-rows: 1fr auto;
-					grid-template-areas:
-						"desc quantities"
-						"desc buttons"
-					;
 
-					padding: 1rem;
+					@include mobile {
+						padding: 1rem;
+						display: grid;
+						grid-template-columns: 1fr auto;
+						grid-template-rows: 1fr auto;
+						grid-template-areas:
+							"desc quantities"
+							"desc quantities"
+							"buttons buttons"
+						;
+						gap: 1rem;
+					}
+					@include not-mobile {
+						padding: 1rem;
+						display: grid;
+						grid-template-columns: 1fr auto;
+						grid-template-rows: 1fr auto;
+						grid-template-areas:
+							"desc quantities"
+							"desc buttons"
+						;
+					}
 
 					div.desc {
 						grid-area: desc;
@@ -455,19 +410,24 @@ div.store {
 				display: none;
 			}
 
-			display: grid;
-			grid-template-areas:
-				"image"
-				"title"
-				"date"
-				"price"
-			;
-			grid-template-columns: 1fr;
-			grid-template-rows: auto auto auto auto;
+			&:not(.active) {
+				display: grid;
+				grid-template-areas:
+					"image"
+					"title"
+					"date"
+					"price"
+				;
+				grid-template-columns: 1fr;
+				grid-template-rows: auto auto auto auto;
+			}
 
 			cursor: pointer;
-			padding: 0.5rem;
 			border-radius: 0.3rem;
+
+			@include not-mobile {
+				padding: 0.5rem;
+			}
 
 			img {
 				grid-area: image;
@@ -540,9 +500,54 @@ div.checkout {
 		flex-direction: column;
 		//gap: 0.5rem;
 
+		@include mobile {
+			box-sizing: border-box;
+			max-width: 100dvw;
+			padding: .25rem;
+			font-size: 90%;
+		}
+
 		div.checkoutRow {
-			display: grid;
-			grid-template-columns: 10rem 1fr 2rem 6rem;
+			@include mobile {
+				display: grid;
+				grid-template-columns: 4rem 1fr 2rem 6rem;
+				grid-template-rows: auto auto;
+				grid-template-areas:
+					"image text text text"
+					"edit edit quantity subtotal"
+				;
+				&.total {
+					grid-template-columns: 1fr auto 2rem 6rem 1fr;
+					grid-template-rows: auto auto;
+					grid-template-areas:
+						"image text quantity subtotal padding"
+						"image text quantity subtotal padding"
+					;
+					* {
+						text-align: center;
+					}
+				}
+			}
+			@include not-mobile {
+				display: grid;
+				grid-template-columns: 10rem 1fr 2rem 6rem;
+				grid-template-rows: auto auto;
+				grid-template-areas:
+					"image text quantity subtotal"
+					"image edit quantity subtotal"
+				;
+				&.total {
+					grid-template-areas:
+						"image text quantity subtotal"
+						"image text quantity subtotal"
+					;
+				}
+			}
+
+
+
+
+
 			align-items: center;
 			gap: 0.5rem;
 			padding: 0.5rem 0;
@@ -550,17 +555,21 @@ div.checkout {
 			font-size: 150%;
 
 			div.ticketImage {
-				grid-column: 1/2;
+				//grid-column: 1/2;
+				grid-area: image;
 
 				canvas {
 					display: block;
 				}
 			}
 			div.checkoutRowText {
-				grid-column: 2/3;
+				//grid-column: 2/3;
+				grid-area: text;
 				display: flex;
 				flex-direction: row;
 				flex-wrap: wrap;
+
+				align-self: end;
 
 				span.title {
 					font-weight: bold;
@@ -575,17 +584,50 @@ div.checkout {
 					justify-self: flex-end;
 				}
 			}
+			div.edit {
+				grid-area: edit;
+				align-self: start;
+				justify-self: end;
+				padding-right: 1rem;
+				font-size: 85%;
+
+				display: flex;
+				flex-direction: row;
+				gap: 1rem;
+			}
 			div.quantity {
-				grid-column: 3/4;
+				//grid-column: 3/4;
+				grid-area: quantity;
 				text-align: right;
 				justify-self: flex-end;
 			}
 			div.subtotal {
-				grid-column: 4/5;
+				//grid-column: 4/5;
+				grid-area: subtotal;
 				font-weight: bold;
 				text-align: right;
 				justify-self: flex-end;
 			}
+		}
+	}
+
+	div.form {
+		@include mobile {
+			padding: .5rem;
+
+			button {
+				@include theme(border-color, accent2);
+			}
+		}
+
+		textarea {
+			height: unset;
+			min-height: 7rem;
+			field-sizing: content;
+		}
+
+		div.msg {
+			text-align: center;
 		}
 	}
 
