@@ -2474,28 +2474,27 @@ function Image({
     }
   }, [shown, showFaces]);
   if (inGallery) {
-    return /*#__PURE__*/React.createElement("div", {
-      key: "div" + i,
-      style: {
-        aspectRatio: width / height
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: `img ${className}`,
-      style: {
-        aspectRatio: width / height
-      }
-    }, /*#__PURE__*/React.createElement("img", {
-      src: elemSrc,
-      width: width,
-      height: height,
-      alt: alt,
-      key: i
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "face_markers",
-      style: {
-        aspectRatio: width / height
-      }
-    }, faceMarkers)));
+    return (
+      /*#__PURE__*/
+      // <div key={"div" + i} style={{aspectRatio: width/height}}>
+      // style={{aspectRatio: width/height}}            vvv
+      React.createElement("div", {
+        key: "div" + i,
+        className: `img ${className}`
+      }, /*#__PURE__*/React.createElement("img", {
+        src: elemSrc,
+        width: width,
+        height: height,
+        alt: alt,
+        key: i
+      }), /*#__PURE__*/React.createElement("div", {
+        className: "face_markers",
+        style: {
+          aspectRatio: width / height
+        }
+      }, faceMarkers))
+      // </div>
+    );
   } else {
     return /*#__PURE__*/React.createElement("img", {
       src: elemSrc,
@@ -4554,6 +4553,14 @@ function ListShows({
       icon: "sort_descending"
     }
   };
+  const [showThumbsReady, setShowThumbsReady] = React.useState(false);
+  React.useEffect(() => {
+    window.serviceWorkerReady.then(() => {
+      preloadImages('/show_thumbs');
+    }).then(() => {
+      setShowThumbsReady(true);
+    });
+  }, []);
   let shows = {};
   // console.log(displayMode)
   if (searchTerm.length) {
@@ -4586,7 +4593,8 @@ function ListShows({
         }
         shows[key] = /*#__PURE__*/React.createElement(ShowListItem, {
           key: i,
-          item: content.shows[i]
+          item: content.shows[i],
+          loadThumb: showThumbsReady
         });
       }
     }
@@ -4619,7 +4627,8 @@ function ListShows({
       if (showThis) {
         shows[key] = /*#__PURE__*/React.createElement(ShowListItem, {
           key: i,
-          item: content.shows[i]
+          item: content.shows[i],
+          loadThumb: showThumbsReady
         });
       }
     }
@@ -4813,7 +4822,8 @@ function ListShows({
 }
 function ShowListItem({
   item,
-  order_prop
+  order_prop,
+  loadThumb
 }) {
   return /*#__PURE__*/React.createElement(Link, {
     className: "link",
@@ -4825,6 +4835,7 @@ function ShowListItem({
     className: "programme",
     src: `${item.programme}?lowres`,
     alt: `${item.title} programme cover`,
+    load: loadThumb,
     loading: "lazy"
   })), /*#__PURE__*/React.createElement("div", {
     className: "show_title"
@@ -4849,6 +4860,13 @@ function ShowPage({
   }));
   // let [nodaReview, setNodaReview] = React.useState(parser.parseFromString("<div class='selectMe'><div class='loader'></div></div>", "text/html").querySelector(".selectMe"))
   let [gotNodaReview, setGotNodaReview] = React.useState(false);
+  React.useEffect(() => {
+    if (content.id) {
+      window.serviceWorkerReady.then(() => {
+        preloadImages(`/thumbs/${content.id}`);
+      });
+    }
+  }, []);
   let directors = [];
   let producers = [];
   let cast = {};
@@ -4962,9 +4980,7 @@ function ShowPage({
             style: tempFaces[content.cast[i].id][0].style,
             alt: `${content.cast[i].name}`
           })), /*#__PURE__*/React.createElement("h2", null, content.cast[i].name), /*#__PURE__*/React.createElement("h3", null, content.cast[i].role), /*#__PURE__*/React.createElement("h4", null, "(as ...)")));
-        } else {
-          console.log(content.cast[i].name);
-        }
+        } else {/*console.log(content.cast[i].name)*/}
       }
       setCastRoles(tempCast);
     }, []);
@@ -5056,6 +5072,75 @@ function ShowPage({
   }, /*#__PURE__*/React.createElement("h3", null, "Crew:"), /*#__PURE__*/React.createElement("table", {
     className: "roles_table"
   }, /*#__PURE__*/React.createElement("tbody", null, crewRows)))));
+}
+function waitForController() {
+  return new Promise(resolve => {
+    if (navigator.serviceWorker.controller) {
+      resolve(navigator.serviceWorker.controller);
+      return;
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', () => resolve(navigator.serviceWorker.controller), {
+      once: true
+    });
+  });
+}
+function sendToWorker(message) {
+  return navigator.serviceWorker.ready.then(async registration => {
+    const controller = navigator.serviceWorker.controller || registration.active;
+    if (!controller) {
+      const nextController = await waitForController();
+      if (!nextController) return false;
+      return postMessageToWorker(nextController, message);
+    }
+    return postMessageToWorker(controller, message);
+  });
+}
+function postMessageToWorker(target, message) {
+  return new Promise(resolve => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = event => {
+      resolve(event.data && event.data.ok === true);
+    };
+    target.postMessage(message, [channel.port2]);
+  });
+}
+function registerImageCacheWorker() {
+  if (!('serviceWorker' in navigator)) {
+    console.log("Service worker not in navigator.");
+    return Promise.resolve(null);
+  }
+  return navigator.serviceWorker.ready.catch(() => null);
+}
+function postToServiceWorker(message) {
+  return navigator.serviceWorker.ready.then(registration => {
+    const target = registration.active || navigator.serviceWorker.controller;
+    if (!target) {
+      return false;
+    }
+    return new Promise(resolve => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = event => {
+        resolve(event.data && event.data.ok === true);
+      };
+      target.postMessage(message, [channel.port2]);
+    });
+  });
+}
+function cacheImagesInWorker(images) {
+  return postToServiceWorker({
+    type: 'CACHE_IMAGES',
+    images: images
+  });
+}
+function preloadImages(url) {
+  // console.log("loading", performance.now())
+  return registerImageCacheWorker().then(() => {
+    return fetch(url).then(response => response.json()).then(images => {
+      cacheImagesInWorker(images).then(ok => {
+        // console.log("cached", performance.now())
+      });
+    });
+  });
 }
 
 "use strict";
@@ -5525,6 +5610,31 @@ function App() {
   const [pathHistory, setPathHistory] = React.useState([window.location.pathname]);
   const [pathIncrementer, setPathIncrementer] = React.useState(0);
   const [popstateEvents, setPopstateEvents] = React.useState([]);
+  const CART_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  // const CART_TTL = 1 * 1 * 60 * 1000 // 1 minute
+
+  function loadCart() {
+    try {
+      const raw = localStorage.getItem("ticketsCart");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (!parsed.savedAt || !parsed.cart) return {};
+      if (Date.now() - parsed.savedAt > CART_TTL) {
+        localStorage.removeItem("ticketsCart");
+        return {};
+      }
+      return parsed.cart;
+    } catch {
+      return {};
+    }
+  }
+  const [ticketsCart, setTicketsCart] = React.useState(loadCart);
+  React.useEffect(() => {
+    localStorage.setItem("ticketsCart", JSON.stringify({
+      savedAt: Date.now(),
+      cart: ticketsCart
+    }));
+  }, [ticketsCart]);
   let path = window.location.pathname;
   React.useEffect(() => {
     if (popstateEvents.length) {
@@ -5561,7 +5671,9 @@ function App() {
         target: "_blank"
       });
     }
-    // data.push({type: "cart"}) // TODO: move up
+    data.push({
+      type: "cart"
+    }); // TODO: move up
 
     // copenhagen tickets
     const currentDate = new Date().getTime();
@@ -5729,14 +5841,30 @@ function App() {
       }
     } else if (RegExp("^/members/show/([A-Za-z0-9-_]{15,16})", "i").test(pathState)) {
       getPostJson(pathState + `?react`);
+      // } else if (path === "/tickets") {
+      // 	// TODO: NEW TICKETS GO HERE
+      // 	getPostJson(pathState + `?react`)
     } else if (path === "/tickets") {
-      // setPostJson({
-      // 	type: "redirect",
-      // 	url: siteJson.tickets_link,
-      // 	text: "Tickets Shop",
-      // 	time: 1
-      // })
-      getPostJson(pathState + `?react`);
+      setPostJson({
+        type: "ticket_store",
+        title: "Tickets Store"
+      });
+      // getPostJson(pathState + `?react`)
+    } else if (path === "/tickets/cart") {
+      setPostJson({
+        type: "ticket_cart",
+        title: "Tickets Cart"
+      });
+    } else if (path === "/tickets/checkout") {
+      setPostJson({
+        type: "ticket_checkout",
+        title: "Tickets Checkout"
+      });
+    } else if (path.split("?")[0] === "/tickets/checkout/success") {
+      setPostJson({
+        type: "ticket_success",
+        title: "Purchase Successful"
+      });
     } else {
       getPostJson(pathState + `?react`);
     }
@@ -5879,6 +6007,21 @@ function App() {
           key: tempContent.length,
           content: postJson
         }));
+      } else if (postJson.type === "ticket_store") {
+        tempContent.push(/*#__PURE__*/React.createElement(TicketStore, {
+          key: tempContent.length,
+          ticketsActive: siteJson.tickets_active
+        }));
+      } else if (postJson.type === "ticket_checkout") {
+        tempContent.push(/*#__PURE__*/React.createElement(Checkout, {
+          key: tempContent.length,
+          ticketsActive: siteJson.tickets_active
+        }));
+      } else if (postJson.type === "ticket_success") {
+        tempContent.push(/*#__PURE__*/React.createElement(CheckoutSuccess, {
+          key: tempContent.length,
+          ticketsActive: siteJson.tickets_active
+        }));
       } else if (postJson.type === "error") {
         tempContent.push(/*#__PURE__*/React.createElement(Post, {
           key: tempContent.length,
@@ -5952,9 +6095,11 @@ function App() {
   return /*#__PURE__*/React.createElement(app.Provider, {
     value: {
       siteJson,
+      ticketsCart,
       functions: {
         setPath,
-        refresh
+        refresh,
+        setTicketsCart
       }
     }
   }, /*#__PURE__*/React.createElement(AlertsContainer, null), /*#__PURE__*/React.createElement(Nav, {
@@ -6992,9 +7137,9 @@ function SidebarItem({
       className: "text"
     }, item.linkText));
   }
-  // if (item.type === "cart") {
-  // 	return <SidebarCart></SidebarCart>
-  // }
+  if (item.type === "cart") {
+    return /*#__PURE__*/React.createElement(SidebarCart, null);
+  }
   if (item.type === "raw") {
     return /*#__PURE__*/React.createElement("div", {
       className: ""
@@ -7162,50 +7307,78 @@ function SquareCard({
 
 "use strict";
 
-function SidebarCart() {
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+function SidebarCart({}) {
   const context = React.useContext(app);
+  const [tickets, setTickets] = React.useState({});
+  const [localCart, setLocalCart] = React.useState({});
+  React.useEffect(() => {
+    fetch("/tickets/stock", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }).then(response => {
+      return response.json();
+    }).then(data => {
+      setTickets(data.performances);
+    });
+  }, []);
+  React.useEffect(() => {
+    setLocalCart(context.ticketsCart);
+  }, [context.ticketsCart]);
+  let ticketsIDs = Object.keys(tickets).sort((a, b) => tickets[a].date > tickets[b].date ? 1 : -1);
   let pricing = {
     Adult: 1200,
     Child: 1000
   };
-  let cart = [{
-    type: "tickets",
-    name: "Death by Design",
-    performance: "Saturday 19th September 2025",
-    tickets: {
-      Adult: 2,
-      Child: 1
-    }
-  }];
   let cartItems = [];
   let total = 0;
-  for (let i = 0; i < cart.length; i++) {
-    let item = cart[i];
-    if (item.type === "tickets") {
-      let tickets = [];
-      for (const [key, value] of Object.entries(item.tickets)) {
-        let type = key;
-        if (value > 1 && key === "Child") {
-          type = "Children";
-        } else if (value > 1) {
-          type = `${key}s`;
+  let tempCart = Object.values(context.ticketsCart);
+  if (ticketsIDs.length) {
+    for (let i = 0; i < tempCart.length; i++) {
+      let item = tempCart[i];
+      if (item.type === "tickets") {
+        let tempTickets = [];
+        let count = 0;
+        for (const [key, value] of Object.entries(item.tickets)) {
+          let type = key;
+          if (value > 1 && key === "Child") {
+            type = "Children";
+          } else if (value > 1) {
+            type = `${key}s`;
+          }
+          if (value) {
+            tempTickets.push(/*#__PURE__*/React.createElement("span", null, type, ": ", value));
+          }
+          total += pricing[key] * value;
+          count += int(value);
         }
-        tickets.push(/*#__PURE__*/React.createElement("span", null, type, ": ", value));
-        total += pricing[key] * value;
+        if (count) {
+          cartItems.push(/*#__PURE__*/React.createElement("div", {
+            key: `cartItem${i}`,
+            className: "cartItem",
+            style: {
+              '--i': ticketsIDs.indexOf(item.id),
+              '--count': ticketsIDs.length
+            }
+          }, /*#__PURE__*/React.createElement(TicketImage, {
+            image: tickets[item.id].image,
+            date: tickets[item.id].date,
+            hue: ticketsIDs.indexOf(item.id) * 360 / (ticketsIDs.length + 1),
+            count: count
+          }), /*#__PURE__*/React.createElement(React.Fragment, null), /*#__PURE__*/React.createElement("h3", {
+            className: "title"
+          }, tickets[item.id].title), /*#__PURE__*/React.createElement("h3", {
+            className: "date"
+          }, datetimeFormatter(tickets[item.id].date)), /*#__PURE__*/React.createElement("h4", {
+            className: "tickets"
+          }, tempTickets)));
+        }
       }
-      cartItems.push(/*#__PURE__*/React.createElement("div", {
-        key: `cartItem${i}`,
-        className: "cartItem"
-      }, /*#__PURE__*/React.createElement("h3", {
-        className: "showName"
-      }, item.name), /*#__PURE__*/React.createElement("h3", {
-        className: "performance"
-      }, item.performance), /*#__PURE__*/React.createElement("h4", {
-        className: "tickets"
-      }, tickets)));
     }
   }
-  if (cart.length) {
+  if (cartItems.length) {
     return /*#__PURE__*/React.createElement("div", {
       className: "sidebarCart"
     }, /*#__PURE__*/React.createElement("h2", {
@@ -7213,7 +7386,7 @@ function SidebarCart() {
     }, "Shopping Cart"), /*#__PURE__*/React.createElement("div", {
       className: "cart"
     }, cartItems), /*#__PURE__*/React.createElement(Link, {
-      href: "/store/checkout"
+      href: "/tickets/checkout"
     }, /*#__PURE__*/React.createElement("h3", {
       className: "checkout button"
     }, "Checkout")), /*#__PURE__*/React.createElement("h3", {
@@ -7223,7 +7396,664 @@ function SidebarCart() {
     return /*#__PURE__*/React.createElement(React.Fragment, null);
   }
 }
-function Cart() {}
+function datetimeFormatter(date) {
+  const datetime = new Date(date);
+  const day = ["Sun", "Mon", "Tues", "Weds", "Thurs", "Fri", "Sat"][datetime.getDay()];
+  const ord = n => n > 3 && n < 21 ? "th" : n % 10 == 1 ? "st" : n % 10 == 2 ? "nd" : n % 10 == 3 ? "rd" : "th";
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][datetime.getMonth()];
+  const ampm = datetime.getHours() >= 12 ? "pm" : "am";
+  return `${day} ${datetime.getDate()}${ord(datetime.getDate())} ${month} - ${datetime.getHours() % 12}:${datetime.getMinutes()}${ampm}`;
+}
+function TicketItem({
+  id,
+  title,
+  pricing,
+  image,
+  date,
+  i,
+  count,
+  setActive,
+  isActive = false,
+  tickets
+}) {
+  const [classString, setClassString] = React.useState("");
+  const context = React.useContext(app);
+  const selfRef = React.useRef(null);
+  let layout = tickets[id].layout;
+  const maxSeats = layout.fullWidth * layout.rowCount - layout.hiddenSeats.length - Object.keys(tickets[id].seat_assignments).length - layout.newSeats;
+  const [quantities, setQuantities] = React.useState({
+    Adult: 0,
+    Child: 0
+  });
+
+  // Calculate how many seats are already in the cart for this performance
+  function seatsInCart() {
+    const cartEntry = context.ticketsCart[id];
+    if (!cartEntry) return 0;
+    return Object.values(cartEntry.tickets).reduce((acc, cur) => acc + int(cur), 0);
+  }
+
+  // Remaining seats available (max minus what's already in cart)
+  function remainingSeats() {
+    return maxSeats - seatsInCart();
+  }
+  function addToCart() {
+    const formCount = Object.values(quantities).reduce((acc, cur) => acc + int(cur), 0);
+    if (formCount === 0) return;
+    if (formCount > remainingSeats()) return;
+    setClassString("progress");
+    setTimeout(() => {
+      setClassString("progress added");
+      let tempCart = {
+        ...context.ticketsCart
+      };
+      if (Object.keys(tempCart).includes(id)) {
+        for (const [key, value] of Object.entries(quantities)) {
+          tempCart[id].tickets[key] = int(value) + int(tempCart[id].tickets[key]);
+        }
+      } else {
+        tempCart[id] = {
+          id: id,
+          type: "tickets",
+          tickets: {
+            ...quantities
+          }
+        };
+      }
+      context.functions.setTicketsCart(tempCart);
+      for (const key of Object.keys(quantities)) {
+        quantities[key] = 0;
+      }
+    }, 1000);
+    setTimeout(() => {
+      reset();
+    }, 3000);
+  }
+  function reset() {
+    setClassString("");
+  }
+  function quanChange(type, value) {
+    const newValue = int(value);
+    const otherTotal = Object.entries(quantities).filter(([key]) => key !== type).reduce((acc, [, val]) => acc + int(val), 0);
+    const clampedValue = Math.max(0, Math.min(newValue, remainingSeats() - otherTotal));
+    setQuantities({
+      ...quantities,
+      [type]: clampedValue
+    });
+  }
+  function TicketQuantity({
+    type
+  }) {
+    function change(change) {
+      const newValue = int(quantities[type]) + change;
+      const otherTotal = Object.entries(quantities).filter(([key]) => key !== type).reduce((acc, [, val]) => acc + int(val), 0);
+      const clampedValue = Math.max(0, Math.min(newValue, remainingSeats() - otherTotal));
+      quanChange(type, clampedValue);
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      key: type,
+      className: `quantityForm ${type}`
+    }, /*#__PURE__*/React.createElement("label", {
+      htmlFor: type
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "type"
+    }, type, ": "), /*#__PURE__*/React.createElement("div", {
+      className: "price"
+    }, "\xA3", (pricing[type] / 100).toFixed(2))), /*#__PURE__*/React.createElement(Input, {
+      id: type,
+      type: "number",
+      defaultValue: quantities[type],
+      value: quantities[type],
+      onChange: e => quanChange(type, e.target.value),
+      stateful: true
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "step"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      onClick: () => {
+        change(+1);
+      }
+    }, "stat_1"), /*#__PURE__*/React.createElement(Icon, {
+      onClick: () => {
+        change(-1);
+      }
+    }, "stat_minus_1")));
+  }
+  let formCount = Object.values(quantities).reduce((acc, cur) => acc + cur, 0);
+  function makeActive() {
+    if (!isActive) {
+      setActive(id);
+    }
+  }
+  function makeInActive() {
+    setActive("");
+  }
+  if (selfRef.current && isActive) {
+    selfRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    ref: selfRef,
+    className: `ticketItem ${isActive ? "active" : ""}`,
+    style: {
+      '--i': i,
+      '--count': count
+    },
+    onClick: makeActive
+  }, /*#__PURE__*/React.createElement("img", {
+    src: image,
+    alt: title
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "image_cover"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lowerThirdBG"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lowerThirdContent"
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 100 100",
+    preserveAspectRatio: "xMidYMid slice"
+  }, /*#__PURE__*/React.createElement("text", {
+    x: "2.5%",
+    y: "50.5%",
+    fontSize: "60%",
+    lengthAdjust: "spacingAndGlyphs",
+    textLength: "95%",
+    fontWeight: "bold",
+    dominantBaseline: "middle"
+  }, datetimeFormatter(date))))), /*#__PURE__*/React.createElement("h2", {
+    className: "title"
+  }, title, isActive ? ` - ${datetimeFormatter(date)}` : ""), /*#__PURE__*/React.createElement("h3", {
+    className: "date"
+  }, datetimeFormatter(date)), /*#__PURE__*/React.createElement("p", {
+    className: "price"
+  }, "Adult: \xA312, Child: \xA310"), /*#__PURE__*/React.createElement("div", {
+    className: "form"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "desc"
+  }, "Some description text or any extra information that might be desired. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the box at checkout."), /*#__PURE__*/React.createElement("div", {
+    className: "quantities"
+  }, Object.keys(quantities).map(type => TicketQuantity({
+    type
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "buttons"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `button addToCart ${classString} ${formCount === 0 || formCount > remainingSeats() ? "disabled" : ""}`,
+    onClick: addToCart
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "callToAction"
+  }, remainingSeats() ? `Add to Cart${formCount ? ` - ${formCount}` : ""}` : "No Seats Available"), /*#__PURE__*/React.createElement(Icon, {
+    className: "progressWheel"
+  }, "progress_activity"), /*#__PURE__*/React.createElement("div", {
+    className: "successState"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    className: "check"
+  }, "check"))), /*#__PURE__*/React.createElement("div", {
+    className: "button close",
+    onClick: makeInActive
+  }, /*#__PURE__*/React.createElement(Icon, null, "close")))));
+}
+function TicketStore({
+  ticketsActive
+}) {
+  const context = React.useContext(app);
+  // ticketsActive = context.siteJson.tickets_active === "1"
+  ticketsActive = true;
+  const [tickets, setTickets] = React.useState({});
+  const [activeTicket, setActiveTicket] = React.useState("");
+  React.useEffect(() => {
+    fetch("/tickets/stock", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }).then(response => {
+      return response.json();
+    }).then(data => {
+      setTickets(data.performances);
+    });
+  }, []);
+  let ticketsIDs = Object.keys(tickets).sort((a, b) => tickets[a].date > tickets[b].date ? 1 : -1);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "content"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "store"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "title"
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "titleText"
+  }, "Store"), countTickets(context.ticketsCart) ? /*#__PURE__*/React.createElement("h2", {
+    className: "cart"
+  }, /*#__PURE__*/React.createElement(Link, {
+    href: "/tickets/checkout"
+  }, /*#__PURE__*/React.createElement("span", null, "Cart"), /*#__PURE__*/React.createElement(Icon, null, "shopping_cart"))) : /*#__PURE__*/React.createElement(React.Fragment, null)), ticketsActive ? /*#__PURE__*/React.createElement("div", {
+    className: "tickets"
+  }, ticketsIDs.map((ticket, i) => {
+    return /*#__PURE__*/React.createElement(TicketItem, _extends({
+      key: i,
+      i: i,
+      count: ticketsIDs.length,
+      isActive: ticket === activeTicket,
+      setActive: setActiveTicket
+    }, tickets[ticket], {
+      tickets: tickets
+    }));
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null)));
+}
+function TicketImage({
+  image,
+  perfID,
+  date,
+  hue,
+  count = 0
+}) {
+  const canvasRef = React.useRef(null);
+  React.useEffect(() => {
+    if (canvasRef.current) {
+      let img = document.createElement("img");
+      img.src = image;
+      img.onload = () => {
+        // console.log(img)
+        let ctx = canvasRef.current.getContext("2d");
+        ctx.drawImage(img, 0, 0, 700, 700);
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 600, 700, 700);
+        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 50%)`;
+        ctx.fillRect(0, 600, 700, 700);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 68px Roboto";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(datetimeFormatter(date), 350, 658, 680);
+        if (count > 0) {
+          ctx.fillStyle = `black`;
+          ctx.beginPath();
+          ctx.arc(75, 75, 50, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = `hsla(${hue}, 100%, 70.2%, 50%)`;
+          ctx.beginPath();
+          ctx.arc(75, 75, 50, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.fillStyle = "white";
+          ctx.font = "bold 80px Roboto";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(count, 75, 82.5);
+
+          // 813735 82100a
+        }
+      };
+    }
+  }, [canvasRef]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ticketImage"
+  }, /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef,
+    perfID: perfID,
+    width: "700",
+    height: "700"
+  }));
+}
+function countTickets(cart) {
+  let count = 0;
+  for (const ticket of Object.values(cart)) {
+    for (const [type, quantity] of Object.entries(ticket.tickets)) {
+      if (type !== "Programmes") {
+        count += quantity;
+      }
+    }
+  }
+  return count;
+}
+function Checkout({
+  ticketsCart
+}) {
+  const context = React.useContext(app);
+  const [tickets, setTickets] = React.useState({});
+  const [localCart, setLocalCart] = React.useState({});
+  let ticketsIDs = Object.keys(tickets).sort((a, b) => tickets[a].date > tickets[b].date ? 1 : -1);
+  let images = {};
+  React.useEffect(() => {
+    fetch("/tickets/stock", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }).then(response => {
+      return response.json();
+    }).then(data => {
+      setTickets(data.performances);
+    });
+  }, []);
+  function increment(e, perfID, type, amount) {
+    e.preventDefault();
+    let tempCart = {
+      ...localCart
+    };
+    let layout = tickets[perfID].layout;
+    let maxSeats = layout.fullWidth * layout.rowCount - layout.hiddenSeats.length - Object.keys(tickets[perfID].seat_assignments).length - layout.newSeats;
+    if (tempCart[perfID].tickets[type] < maxSeats) {
+      tempCart[perfID].tickets[type] += amount;
+    } else {
+      alert("No more seats available for this show");
+    }
+    context.functions.setTicketsCart(tempCart);
+  }
+  function remove(e, perfID, type) {
+    e.preventDefault();
+    let tempCart = {
+      ...localCart
+    };
+    if (tempCart[perfID].tickets[type] > 0) {
+      tempCart[perfID].tickets[type] = 0;
+    }
+    context.functions.setTicketsCart(tempCart);
+  }
+  React.useEffect(() => {
+    setLocalCart(context.ticketsCart);
+  }, [context.ticketsCart]);
+  let total = 0;
+  let totalQuantity = 0;
+  let checkoutCart = [];
+  if (Object.keys(tickets).length !== 0) {
+    for (const ticket of Object.keys(localCart)) {
+      let performance = tickets[localCart[ticket].id];
+      let date = new Date(performance.date);
+      let subtotal = 0;
+      for (const [type, quantity] of Object.entries(localCart[ticket].tickets)) {
+        subtotal = quantity * performance.pricing[type];
+        total += subtotal;
+        totalQuantity += quantity;
+        if (quantity > 0) {
+          checkoutCart.push(/*#__PURE__*/React.createElement("div", {
+            className: "checkoutRow"
+          }, /*#__PURE__*/React.createElement(TicketImage, {
+            image: performance.image,
+            perfID: performance.id,
+            date: performance.date,
+            hue: ticketsIDs.indexOf(performance.id) / ticketsIDs.length
+          }), /*#__PURE__*/React.createElement("div", {
+            className: "checkoutRowText"
+          }, /*#__PURE__*/React.createElement("span", {
+            className: "title"
+          }, performance.title), /*#__PURE__*/React.createElement("span", null, datetimeFormatter(date)), /*#__PURE__*/React.createElement("span", null, type)), /*#__PURE__*/React.createElement("div", {
+            className: "quantity"
+          }, "x", quantity), /*#__PURE__*/React.createElement("div", {
+            className: "subtotal"
+          }, "\xA3", (subtotal / 100).toFixed(2)), /*#__PURE__*/React.createElement("div", {
+            className: "edit"
+          }, /*#__PURE__*/React.createElement("a", {
+            href: "",
+            onClick: e => {
+              increment(e, performance.id, type, 1);
+            }
+          }, "+1"), /*#__PURE__*/React.createElement("a", {
+            href: "",
+            onClick: e => {
+              increment(e, performance.id, type, -1);
+            }
+          }, "-1"), /*#__PURE__*/React.createElement("a", {
+            href: "",
+            onClick: e => {
+              remove(e, performance.id, type);
+            }
+          }, "Remove All"))));
+        }
+      }
+    }
+  }
+  if (checkoutCart.length === 0 && countTickets(context.ticketsCart) === 0) {
+    context.functions.setPath("/tickets");
+  }
+  if (Object.keys(tickets).length !== 0) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "content"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "checkout"
+    }, /*#__PURE__*/React.createElement("h1", null, "Checkout"), /*#__PURE__*/React.createElement("div", {
+      id: "checkoutCart",
+      className: "cart"
+    }, checkoutCart, /*#__PURE__*/React.createElement("div", {
+      className: "checkoutRow total"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "checkoutRowText total"
+    }, "Total:"), /*#__PURE__*/React.createElement("div", {
+      className: "quantity total"
+    }, "x", totalQuantity), /*#__PURE__*/React.createElement("div", {
+      className: "subtotal"
+    }, "\xA3", (total / 100).toFixed(2)))), /*#__PURE__*/React.createElement(StorePayment, {
+      amount: total,
+      cart: localCart
+    })));
+  } else {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "loading"
+    });
+  }
+}
+function StorePayment({
+  amount = 0,
+  cart
+}) {
+  const context = React.useContext(app);
+  const appId = context.siteJson.square.appId;
+  const locationId = context.siteJson.square.webstoreLocationId;
+  const payments = window.Square.payments(appId, locationId);
+  const cardContainerRef = React.createRef(null);
+  const [statusStyle, setStatusStyle] = React.useState({});
+  const [statusClassName, setStatusClassName] = React.useState("");
+  const [card, setCard] = React.useState(undefined);
+  const pendingRef = React.createRef(null);
+  const statusContainer = React.createRef(null);
+  const verfTokenRef = React.useRef(null);
+  const cardNonceRef = React.useRef(null);
+  const cardJsonRef = React.useRef(null);
+  const [msg, setMsg] = React.useState("");
+  React.useEffect(() => {
+    payments.card().then(c => {
+      c.attach(cardContainerRef.current);
+      setCard(c);
+    });
+  }, []);
+  //
+  // if (document.querySelector("#checkoutCart")) {
+  // 	document.querySelector("#checkoutCart").querySelectorAll("canvas").forEach((canvas) => {
+  // 		console.log(canvas.getAttribute("perfID"))
+  // 	})
+  // }
+
+  function handlePaymentButtonClick(e) {
+    function onSuccess() {
+      console.log("ON SUCCESS INNER");
+      pendingRef.current.classList.remove("pending");
+      console.log("ON SUCCESS INNER2");
+      pendingRef.current.requestSubmit();
+    }
+    function onError() {
+      pendingRef.current.classList.remove("pending");
+    }
+    pendingRef.current.classList.add("pending");
+    try {
+      card.tokenize().then(result => {
+        if (result.status === 'OK') {
+          console.log(`Payment token is ${result.token}`);
+          let cardDetails = {
+            "card_brand": result.details.card.brand,
+            "exp_month": result.details.card.expMonth,
+            "exp_year": result.details.card.expYear,
+            "last_4": result.details.card.last4,
+            "billing_address": {
+              "postal_code": result.details.billing.postalCode
+            }
+          };
+          payments.verifyBuyer(result.token, {
+            amount: (amount / 100).toFixed(2),
+            currencyCode: 'GBP',
+            billingContact: {
+              postalCode: result.details.billing.postalCode,
+              countryCode: 'GB'
+            },
+            intent: 'CHARGE'
+          }).then(verificationResult => {
+            cardJsonRef.current.value = JSON.stringify(cardDetails);
+            cardNonceRef.current.value = result.token;
+            verfTokenRef.current.value = verificationResult.token;
+
+            // statusContainer.current.innerHTML = "Payment Successful";
+            setStatusStyle({
+              visibility: "visible"
+            });
+            onSuccess();
+          }).catch(error => {
+            console.error(error.message);
+            let error_code;
+            try {
+              let body = JSON.parse(e.message);
+              error_code = body.errors[0].code;
+            } catch (e) {
+              error_code = "";
+            }
+            displayPaymentResults('FAILURE', error_code);
+            onError();
+          });
+        } else {
+          let errorMessage = `Tokenization failed with status: ${result.status}`;
+          if (result.errors) {
+            errorMessage += ` and errors: ${JSON.stringify(result.errors)}`;
+          }
+          onError();
+          throw new Error(errorMessage);
+        }
+      });
+    } catch (e) {
+      console.error(e);
+      statusContainer.current.innerHTML = "Payment Failed";
+      onError();
+    }
+  }
+  function displayPaymentResults(status, code) {
+    console.log("Payment Results: " + status);
+    let newClassList = [];
+    if (status === 'SUCCESS') {
+      newClassList.push('is-success');
+    } else {
+      console.log("Error: " + code);
+      newClassList.push('is-failure');
+      if (code) {
+        newClassList.push(code);
+      }
+    }
+    setStatusClassName(newClassList.join(" "));
+    setStatusStyle({
+      visibility: 'visible'
+    });
+    // statusContainer.current.innerHTML = code
+  }
+  function handlePaymentSubmit(e) {
+    e.preventDefault();
+    setMsg("");
+    // if (document.querySelector("#checkoutCart")) {
+    // 	document.querySelector("#checkoutCart").querySelectorAll("canvas").forEach((canvas) => {
+    // 		console.log(canvas.perfID)
+    // 	})
+    // }
+
+    let formData = new FormData(e.target);
+    fetch(e.target.action, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: "POST",
+      body: JSON.stringify({
+        items: cart,
+        form: formToJson(formData)
+      })
+    }).then(resp => {
+      return resp.json();
+    }).then(data => {
+      if (data.status === "success") {
+        displayPaymentResults('SUCCESS', data.msg);
+        context.functions.setPath(`/tickets/checkout/success?id=${data.receipt_id}&host=${data.receipt_host}`);
+      } else {
+        displayPaymentResults('FAILURE', data.msg);
+        setMsg(data.msg);
+      }
+    });
+  }
+  return /*#__PURE__*/React.createElement("form", {
+    action: "/tickets/checkout/payment",
+    onSubmit: handlePaymentSubmit,
+    ref: pendingRef,
+    className: `payment form`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "form"
+  }, /*#__PURE__*/React.createElement(Input, {
+    id: "notes",
+    type: "textarea",
+    label: "Notes - Seating Requests etc"
+  }), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement(Input, {
+    id: "name",
+    type: "text",
+    label: "Name *",
+    required: true
+  }), /*#__PURE__*/React.createElement(Input, {
+    id: "phone",
+    type: "text",
+    label: "Phone Number *",
+    required: true
+  }), /*#__PURE__*/React.createElement(Input, {
+    id: "email",
+    type: "text",
+    label: "Email *",
+    required: true
+  }), /*#__PURE__*/React.createElement("div", {
+    ref: cardContainerRef,
+    id: "card-container"
+  }), /*#__PURE__*/React.createElement("div", {
+    ref: statusContainer,
+    id: "payment-status-container",
+    style: statusStyle,
+    className: statusClassName
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "msg"
+  }, msg), /*#__PURE__*/React.createElement(Input, {
+    type: "button",
+    className: "card_pay_button",
+    id: "card-button",
+    onClick: e => {
+      handlePaymentButtonClick(e);
+    }
+  }, /*#__PURE__*/React.createElement("h3", null, "Pay with card - \xA3", (amount / 100).toFixed(2))), /*#__PURE__*/React.createElement(Input, {
+    type: "hidden",
+    inputRef: verfTokenRef,
+    id: "verf_token"
+  }), /*#__PURE__*/React.createElement(Input, {
+    type: "hidden",
+    inputRef: cardNonceRef,
+    id: "payment_token"
+  }), /*#__PURE__*/React.createElement(Input, {
+    type: "hidden",
+    inputRef: cardJsonRef,
+    id: "card_json"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "loader"
+  }));
+}
+function CheckoutSuccess({}) {
+  const [receiptId, setReceiptId] = React.useState("");
+  const context = React.useContext(app);
+  React.useEffect(() => {
+    context.functions.setTicketsCart({});
+    const urlParams = new URLSearchParams(window.location.search);
+    const receipt = urlParams.get('id');
+    if (receipt) {
+      setReceiptId(receipt);
+    }
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "content payment_success"
+  }, /*#__PURE__*/React.createElement("h1", null, "Payment Successful"), /*#__PURE__*/React.createElement("p", null, "Thank you for your order. Your receipt will be sent to your email shortly."), /*#__PURE__*/React.createElement("p", null, "Please collect your tickets at the door. Doors open 30 minutes before the show starts. No need to bring your receipt, just give your name at the desk."));
+}
 
 "use strict";
 
