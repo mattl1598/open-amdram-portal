@@ -703,7 +703,13 @@ function CheckoutSuccess({}) {
 	return (
 		<div className="content payment_success">
 			<h1>Payment Successful</h1>
-			<p>Thank you for your order. Your receipt will be sent to your email shortly.</p>
+			<p>
+				Thank you for your order.
+				Your receipt should be sent to your email within 24 hours.
+				We are experiencing some delays with our receipt processing,
+				so if you do not receive your receipt,
+				please contact us at <a href="mailto:boxoffice@silchesterplayers.org">boxoffice@silchesterplayers.org</a>.
+			</p>
 			<p>
 				Please collect your tickets at the door.
 				Doors open 30 minutes before the show starts.
