@@ -5712,7 +5712,7 @@ function App() {
     }
 
     // CONTACT FORM
-    if (RegExp("^/(about|auditions)", "i").test(pathState)) {
+    if (RegExp("^/(about|auditions|tickets)", "i").test(pathState)) {
       // console.log("CONTACT FORM")
       data.push({
         type: "raw",
