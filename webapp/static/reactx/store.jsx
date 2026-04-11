@@ -261,8 +261,9 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 			<p className={"price"}>Adult: £12, Child: £10</p>
 			<div className="form">
 				<div className="desc">
-					Some description text or any extra information that might be desired. <br/>
-					Leave any seating requests in the box at checkout.
+					Doors open 30 minutes before the show starts. <br/>
+					Tickets can be collected at the venue. <br/>
+					Leave any seating requests in the notes box at checkout.
 					{/*This performance is at the Calleva Arms, over the road from our usual venue of Silchester Village Hall. <br/>*/}
 					{/*Seating is first-come first-serve, no reservations. <br/>*/}
 					{/*In 1941, the German physicist Werner Heisenberg made a strange trip to Copenhagen to see his Danish counterpart, Niels Bohr. They were old friends that had revolutionised atomic physics in the 1920s with their work on quantum mechanics and the uncertainty principle. But now the world had changed, and the two men were on opposite sides in a world war. The meeting was fraught with danger and embarrassment, and ended in disaster. In this play Heisenberg meets Bohr and his wife Margrethe once again, to look for answers about what happened, and to work out how we can ever know why we do the things we do.*/}
