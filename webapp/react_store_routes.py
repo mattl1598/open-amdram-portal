@@ -13,27 +13,28 @@ from webapp.models import *
 from flask import current_app as app
 
 from webapp.react_permissions import check_page_permission
+from webapp.react_support_routes import discord_notif
 from webapp.tickets_routes import collect_orders, get_ticket_types, OrderInfo
 
 bp = Blueprint("react_store_routes", __name__)
 
 
 def datetime_formatter(date):
-    dt = datetime.fromisoformat(date) if isinstance(date, str) else date
+	dt = datetime.fromisoformat(date) if isinstance(date, str) else date
 
-    day = ["Mon", "Tues", "Weds", "Thurs", "Fri", "Sat", "Sun"][dt.weekday()]
-    month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][dt.month - 1]
+	day = ["Mon", "Tues", "Weds", "Thurs", "Fri", "Sat", "Sun"][dt.weekday()]
+	month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+				"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][dt.month - 1]
 
-    def ord_suffix(n):
-        if 10 < n % 100 < 21:
-            return "th"
-        return {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+	def ord_suffix(n):
+		if 10 < n % 100 < 21:
+			return "th"
+		return {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
 
-    ampm = "pm" if dt.hour >= 12 else "am"
-    hour = dt.hour % 12 or 12
+	ampm = "pm" if dt.hour >= 12 else "am"
+	hour = dt.hour % 12 or 12
 
-    return f"{day} {dt.day}{ord_suffix(dt.day)} {month} {hour}:{dt.minute}{ampm}"
+	return f"{day} {dt.day}{ord_suffix(dt.day)} {month} {hour}:{dt.minute}{ampm}"
 
 
 @bp.get("/tickets/stock")
@@ -193,6 +194,8 @@ def checkout_payment():
 			order_id=new_order_result.order.id,
 			location_id=app.envs.square_webstore_location
 		)
+
+	discord_notif("New Order", f"£{(new_order_result.order.total_money/100):.2f}")
 
 	return {
 		"code": 200,

@@ -288,6 +288,8 @@ def test_collect_orders(show_id=""):
 	location_ids = []
 	if app.envs.square_environment == "production":
 		location_ids = ["0W6A3GAFG53BH", "M1D6QJY6BHW9R"]
+		if app.envs.square_webstore_location:
+			location_ids.append(app.envs.square_webstore_location)
 	else:
 		location_ids = [app.envs.square_webstore_location]
 
