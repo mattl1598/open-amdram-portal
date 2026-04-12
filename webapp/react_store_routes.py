@@ -195,7 +195,7 @@ def checkout_payment():
 			location_id=app.envs.square_webstore_location
 		)
 
-	discord_notif("New Order", f"£{(new_order_result.order.total_money/100):.2f}")
+	# discord_notif("New Order", f"£{(new_order_result.order.total_money/100):.2f}")
 
 	return {
 		"code": 200,
