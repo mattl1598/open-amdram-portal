@@ -7571,7 +7571,7 @@ function TicketItem({
     className: "form"
   }, /*#__PURE__*/React.createElement("div", {
     className: "desc"
-  }, "Some description text or any extra information that might be desired. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the box at checkout."), /*#__PURE__*/React.createElement("div", {
+  }, "Doors open 30 minutes before the show starts. ", /*#__PURE__*/React.createElement("br", null), "Tickets can be collected at the venue. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the notes box at checkout."), /*#__PURE__*/React.createElement("div", {
     className: "quantities"
   }, Object.keys(quantities).map(type => TicketQuantity({
     type
