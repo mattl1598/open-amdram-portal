@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from io import BytesIO
 from pprint import pprint
@@ -5,11 +6,8 @@ from pprint import pprint
 import dateparser
 import requests
 
-from flask import Blueprint, redirect, render_template, request
+from flask import Blueprint, make_response, redirect, render_template, request
 from flask import current_app as app
-
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
 
 # from webapp import db
 from webapp.react_support_routes import discord_notif
@@ -154,11 +152,9 @@ def ticket_image(perf_id):
 
 @bp.get("/logo.png")
 def logo_png():
-	logo_svg = db.session.query(KeyValue).get("site_logo").value
+	logo_png = db.session.query(KeyValue).get("site_logo_png").value
 
-	logo_file = BytesIO(logo_svg.encode('utf-8'))
-	drawing = svg2rlg(logo_file)
-	output = BytesIO()
-	renderPM.drawToFile(drawing, output, fmt="PNG")
+	response = make_response(base64.b64decode(logo_png))
+	response.headers["Content-Type"] = "image/png"
 
-	return output.getvalue()
+	return response
