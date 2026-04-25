@@ -1633,7 +1633,28 @@ function ManageBookings({
   }, /*#__PURE__*/React.createElement(Tab, {
     title: "Performances",
     redrawInt: redrawInt
-  }, /*#__PURE__*/React.createElement("h2", null, "Performances: "), /*#__PURE__*/React.createElement("ul", null, performances), /*#__PURE__*/React.createElement("h3", null, "Total: ", seats_sat, "/", seats_total)), /*#__PURE__*/React.createElement(Tab, {
+  }, /*#__PURE__*/React.createElement("h2", null, "Performances: "), /*#__PURE__*/React.createElement("ul", null, performances), /*#__PURE__*/React.createElement("h3", null, "Total: ", seats_sat, "/", seats_total), /*#__PURE__*/React.createElement("details", null, /*#__PURE__*/React.createElement("summary", null, "Add Performance"), /*#__PURE__*/React.createElement("h2", null, "Add New Performance:"), /*#__PURE__*/React.createElement("form", {
+    action: "/members/api/bookings/add_new_performance",
+    onSubmit: e => handleFormSubmit(e)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "form"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "msg"
+  }), /*#__PURE__*/React.createElement(Input, {
+    id: "datetime",
+    type: "datetime-local"
+  }), /*#__PURE__*/React.createElement(Input, {
+    id: "submit",
+    type: "submit",
+    value: "Add"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "loader"
+  })))), /*#__PURE__*/React.createElement(Tab, {
+    title: "All Bookings",
+    redrawInt: redrawInt
+  }, /*#__PURE__*/React.createElement(AllBookings, {
+    show_name: "The Unexpected Guest"
+  })), /*#__PURE__*/React.createElement(Tab, {
     title: "Modify Bookings",
     redrawInt: redrawInt
   }, /*#__PURE__*/React.createElement("h2", null, "Modify Bookings: "), /*#__PURE__*/React.createElement("table", {
@@ -1702,25 +1723,6 @@ function ManageBookings({
   })), /*#__PURE__*/React.createElement("div", {
     className: "loader"
   }))), /*#__PURE__*/React.createElement(Tab, {
-    title: "Manage Performances",
-    redrawInt: redrawInt
-  }, /*#__PURE__*/React.createElement("h2", null, "Add New Performance:"), /*#__PURE__*/React.createElement("form", {
-    action: "/members/api/bookings/add_new_performance",
-    onSubmit: e => handleFormSubmit(e)
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "form"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "msg"
-  }), /*#__PURE__*/React.createElement(Input, {
-    id: "datetime",
-    type: "datetime-local"
-  }), /*#__PURE__*/React.createElement(Input, {
-    id: "submit",
-    type: "submit",
-    value: "Add"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "loader"
-  }))), /*#__PURE__*/React.createElement(Tab, {
     title: "Historic Sales",
     redrawInt: redrawInt
   }, /*#__PURE__*/React.createElement("form", {
@@ -1747,6 +1749,119 @@ function ManageBookings({
   }), /*#__PURE__*/React.createElement("div", {
     className: "data"
   }, historicSales))))));
+}
+function AllBookings({
+  show_name
+}) {
+  const [bookings, setBookings] = React.useState([]);
+  React.useEffect(() => {
+    fetch(`/members/api/orders/${show_name}`, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => response.json()).then(data => {
+      let tempBookings = [];
+      let perfs = Object.keys(data);
+      for (let i = 0; i < perfs.length; i++) {
+        let order_ids = Object.keys(data[perfs[i]]);
+        for (let j = 0; j < order_ids.length; j++) {
+          let tempBooking = {
+            ...data[perfs[i]][order_ids[j]],
+            perf_date: perfs[i]
+          };
+          tempBookings.push(tempBooking);
+        }
+      }
+      tempBookings.sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+      });
+      setBookings(tempBookings.filter(booking => booking.tickets_count).map((booking, i) => /*#__PURE__*/React.createElement(OrderListItem, {
+        key: `${i}`,
+        order: booking
+      })));
+    });
+  }, []);
+  return /*#__PURE__*/React.createElement("div", null, bookings);
+}
+function OrderListItem({
+  order
+}) {
+  // Use the existing date formatting function
+  const formattedDate = new Date(order.date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric'
+  });
+  // Format tickets display const ticketItems = Object.entries(order.tickets) .map(([type, count]) => `${type}: ${count}`) .join(', ')
+  let date_array = order.perf_date.split(" ");
+  delete date_array[2];
+  function handlePreviewReceipt(order) {
+    const width = 800;
+    const height = 600;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+    window.open(`/members/bookings/receipt/${order.show_id}/${order.ref}`, 'receiptPreview', features);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "order_card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "order_main"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "name"
+  }, order.name), /*#__PURE__*/React.createElement("div", {
+    className: "date"
+  }, "\uD83D\uDCC5 ", formattedDate), /*#__PURE__*/React.createElement("div", {
+    className: "ref"
+  }, "\uD83D\uDCDD Ref: ", order.ref)), /*#__PURE__*/React.createElement("div", {
+    className: "order_details"
+  }, /*#__PURE__*/React.createElement("ul", {
+    className: "ticket_list"
+  }, /*#__PURE__*/React.createElement("li", {
+    className: "date"
+  }, date_array.join(" ")), Object.entries(order.tickets).filter(([type, count]) => count > 0).map(([type, count]) => /*#__PURE__*/React.createElement("li", {
+    className: "tickets",
+    key: type
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ticket-type"
+  }, type), /*#__PURE__*/React.createElement("span", {
+    className: "ticket_count"
+  }, count))))), order.note && /*#__PURE__*/React.createElement("div", {
+    className: "order_note"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "label"
+  }, /*#__PURE__*/React.createElement(Icon, null, "docs"), " Note:"), /*#__PURE__*/React.createElement("span", {
+    className: "note"
+  }, order.note)), /*#__PURE__*/React.createElement("div", {
+    className: "order_actions"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "withDropDown receipt"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "label"
+  }, /*#__PURE__*/React.createElement(Icon, null, "receipt_long"), /*#__PURE__*/React.createElement("span", null, "Receipt"), /*#__PURE__*/React.createElement(Icon, null, "arrow_drop_down")), /*#__PURE__*/React.createElement("div", {
+    className: "dropdown"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => handlePreviewReceipt(order),
+    className: "btn_preview"
+  }, /*#__PURE__*/React.createElement(Icon, null, "visibility"), " Preview Receipt"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleSendReceipt(order),
+    className: "btn_send"
+  }, /*#__PURE__*/React.createElement(Icon, null, "outgoing_mail"), " Send New Receipt"))), /*#__PURE__*/React.createElement("div", {
+    className: "withDropDown mods"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "label"
+  }, /*#__PURE__*/React.createElement(Icon, null, "edit"), /*#__PURE__*/React.createElement("span", null, "Modify"), /*#__PURE__*/React.createElement(Icon, null, "arrow_drop_down")), /*#__PURE__*/React.createElement("div", {
+    className: "dropdown"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => handlePreviewReceipt(order),
+    className: "btn_preview"
+  }, /*#__PURE__*/React.createElement(Icon, null, "event_upcoming"), " Move Tickets"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleSendReceipt(order),
+    className: "btn_send"
+  }, /*#__PURE__*/React.createElement(Icon, null, "event_busy"), "Mark Refunded"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleAddModification(order),
+    className: "btn_modify"
+  }, "\u270F\uFE0F Add Modification")))));
 }
 
 "use strict";
