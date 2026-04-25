@@ -24,3 +24,181 @@ table.mods {
 		}
 	}
 }
+
+div.order_card {
+	display: grid;
+	grid-template-areas:
+		"main actions"
+		"details actions"
+		"note note"
+	;
+	grid-template-columns: 1fr max-content;
+	grid-template-rows: min-content min-content min-content;
+
+	border: 1px solid;
+	@include theme(border-color, bg2);
+	@include theme(background-color, bg3);
+	border-radius: .5rem;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	//background-color: #fff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+	div.order_main {
+		grid-area: main;
+		display: flex;
+		@include mobile {
+			flex-direction: column;
+			align-items: start;
+		}
+		@include not-mobile {
+			flex-direction: row;
+			align-items: center;
+		}
+		gap: .5rem;
+
+		div.name {
+			font-size: 150%;
+			font-weight: 650;
+		}
+	}
+	div.order_details {
+		grid-area: details;
+
+		ul.ticket_list {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+			list-style: none;
+			padding: 0;
+			//margin: 5px 0;
+
+			li.tickets:nth-child(even) {
+				@include theme-adjust(background-color, accent1, rgba, .37);
+			}
+			li.tickets:nth-child(odd) {
+				@include theme-adjust(background-color, accent2, rgba, .37);
+			}
+
+			li {
+				display: flex;
+				@include theme(color, inv_text);
+				@include theme(background-color, bg4);
+				padding: 6px 12px;
+				border-radius: 15px;
+				gap: 5px;
+
+				span.ticket_type { font-weight: 500; }
+				span.ticket_count { font-weight: 600; }
+			}
+		}
+	}
+	div.order_note {
+		grid-area: note;
+
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+
+		span.label {
+			font-weight: 600;
+			padding: .5rem;
+			border-radius: .5rem 0 0 .5rem;
+
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			gap: .25rem;
+
+			@include theme-adjust(background-color, bg4, darken, 10%);
+		}
+		span.note {
+			font-weight: 500;
+			padding: .5rem;
+			flex-grow: 100;
+			border-radius: 0 .5rem .5rem 0;
+
+			@include theme(background-color, bg4);
+		}
+
+		* {	margin-block: 0; }
+	}
+	div.order_actions {
+		grid-area: actions;
+		place-self: start end;
+
+		//display: grid;
+		//grid-template-rows: min-content;
+		//grid-template-columns: repeat(3, max-content);
+
+		display: flex;
+		gap: .25rem;
+
+		@include mobile {
+			flex-direction: column;
+		}
+		@include not-mobile {
+			flex-direction: row;
+		}
+
+		font-size: 85%;
+
+		div.receipt > div.label, div.receipt > button {
+			@include theme-adjust(background-color, accent2, rgba, .25);
+			@include theme(color, text);
+		}
+
+		div.mods > div.label, div.mods > button {
+			@include theme-adjust(background-color, accent1, rgba, .25);
+			@include theme(color, text);
+		}
+
+		div.label, button {
+			display: flex;
+			align-items: center;
+			flex-direction: row;
+
+			padding: 10px 20px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			gap: .25rem;
+			user-select: none;
+			//font-weight: 500;
+			//min-width: 120px;
+		}
+
+		div.withDropDown {
+			position: relative;
+
+			div.dropdown {
+				display: none;
+			}
+			&:hover div.dropdown {
+				position: absolute;
+				top: 100%;
+
+				z-index: 100;
+
+				display: flex;
+				flex-direction: column;
+				gap: 1px;
+			}
+		}
+	}
+}
+
+.order_header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #e0e0e0; padding-bottom: 15px; }
+.order_ref { font-weight: bold; color: #666; }
+.client_name { font-size: 18px; font-weight: 600; color: #333; }
+.date_tag { font-size: 12px; padding: 4px 12px; background-color: #f0f0ff; color: #4050c0; border-radius: 15px; font-weight: 500; }
+//.order_details { margin-bottom: 15px; gap: 10px; }
+.note_section { padding: 10px; background-color: #f9fafb; border-radius: 6px; word-break: break-word; }
+.note_section p { color: #555; margin: 0; }
+//.order_actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn_preview, .btn_send, .btn_modify { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; min-width: 120px; }
+.btn_preview { background-color: #d4d4ff; color: #4050c0; }
+.btn_send { background-color: #e8f0fe; color: #276ef1; }
+.btn_modify { background-color: #fff3cd; color: #c2403c; }
+/* Modal Styles */ .modal_overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal_content { background-color: #fff; padding: 30px; border-radius: 8px; max-width: 600px; width: 100%; }

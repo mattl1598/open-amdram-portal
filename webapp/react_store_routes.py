@@ -12,6 +12,7 @@ from sqlalchemy import case, func, or_, select, text
 from webapp.models import *
 from flask import current_app as app
 
+from webapp.react_email_routes import send_order_confirmation
 from webapp.react_permissions import check_page_permission
 from webapp.react_support_routes import discord_notif
 from webapp.tickets_routes import collect_orders, get_ticket_types, OrderInfo
@@ -111,18 +112,19 @@ def checkout_payment():
 		title = performances[perfID].get('title', '')
 		date = datetime_formatter(datetime.fromisoformat(performances[perfID].get('date', '')))
 		for item, qty in items["tickets"].items():
-			amount = performances[perfID]["pricing"][item]
-			# amount = 0
-			total += qty * amount
-			line_item = {
-				"quantity": str(qty),
-				"base_price_money": {
-					"amount": amount,
-					"currency": "GBP"
-				},
-				"name": f"{title} - {date} - {item}",
-			}
-			line_items.append(line_item)
+			if qty > 0:
+				amount = performances[perfID]["pricing"][item]
+				# amount = 0
+				total += qty * amount
+				line_item = {
+					"quantity": str(qty),
+					"base_price_money": {
+						"amount": amount,
+						"currency": "GBP"
+					},
+					"name": f"{title} - {date} - {item}",
+				}
+				line_items.append(line_item)
 
 	# line_items.append({
 	# 	"quantity": "1",
@@ -195,7 +197,19 @@ def checkout_payment():
 			location_id=app.envs.square_webstore_location
 		)
 
-	# discord_notif("New Order", f"£{(new_order_result.order.total_money/100):.2f}")
+	try:
+		discord_notif("New Order", f"£{(total / 100):.2f}")
+	except Exception as e:
+		# app.logger.error(f"Failed to send Discord notification: {e}")
+		print(f"Failed to send Discord notification: {e}")
+		pass
+
+	try:
+		send_order_confirmation(new_order_result.order)
+	except Exception as e:
+		# app.logger.error(f"Failed to send Discord notification: {e}")
+		print(f"Failed to send Email receipt: {e}")
+		pass
 
 	return {
 		"code": 200,

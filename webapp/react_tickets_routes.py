@@ -13,6 +13,7 @@ from flask import current_app as app
 
 from webapp.react_permissions import check_page_permission
 from webapp.tickets_routes import collect_orders, get_ticket_types, OrderInfo
+from webapp.react_store_routes import datetime_formatter
 
 bp = Blueprint("react_tickets_routes", __name__)
 
@@ -48,18 +49,22 @@ def bookings():
 	).filter(BookingModifications.datetime > end_of_last_show).scalar()
 
 	items = []
-	for item in (app.square.catalog.search_catalog_items(
-			body={
-				"category_ids": [
-					"LETDSKQATFDC3IAJITOXQFGT"
-				],
-				"product_types": [
-					"REGULAR"
-				],
-				"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
-			}
-	).body.get("items") or []):
-		items.append(item["item_data"]["name"])
+	# for item in (app.square.catalog.search_catalog_items(
+	# 		body={
+	# 			"category_ids": [
+	# 				"LETDSKQATFDC3IAJITOXQFGT"
+	# 			],
+	# 			"product_types": [
+	# 				"REGULAR"
+	# 			],
+	# 			"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
+	# 		}
+	# ).body.get("items") or []):
+	# 	items.append(item["item_data"]["name"])
+
+	for perf in db.session.query(Performance).filter(Performance.date > end_of_last_show).join(Show, Performance.show_id == Show.id).all():
+		items.append(f"{perf.show.title} - {datetime_formatter(perf.date)} - Adult")
+		items.append(f"{perf.show.title} - {datetime_formatter(perf.date)} - Child")
 
 	items = sorted(items, key=extract_numbers)
 
@@ -261,12 +266,13 @@ def save_seating(perf_id):
 
 
 # TODO: replace name with collect_orders in all uses
-def test_collect_orders(show_id=""):
+def test_collect_orders(show_id="", as_tree=True):
 	now = datetime.now() - timedelta(days=1)
 	square_date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 	if show_id == "":
-		end_of_last_show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first().date + timedelta(
-			days=1)
+		show = Show.query.filter(Show.date < now).order_by(Show.date.desc()).first()
+		end_of_last_show = show.date + timedelta(days=1)
+		show_id = show.id
 		date_filter = {
 			"created_at": {
 				"start_at": end_of_last_show.strftime(square_date_format)
@@ -347,35 +353,63 @@ def test_collect_orders(show_id=""):
 		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
 	).scalar()
 
+	# old movements system
+	# movements_subquery = select(
+	# 	BookingModifications.ref_num.label("ref_num"),
+	# 	func.coalesce(func.json_agg(func.json_build_object(
+	# 		"from", func.json_build_object(
+	# 			"ticket_type", BookingModifications.from_item,
+	# 			"ticket_quantity", BookingModifications.change_quantity * -1,
+	# 			"name", "",
+	# 			"note", BookingModifications.note or "",
+	# 			"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+	# 			"id", BookingModifications.id,
+	# 			"ref", BookingModifications.ref_num,
+	# 		),
+	# 		"to", func.json_build_object(
+	# 			"ticket_type", BookingModifications.to_item,
+	# 			"ticket_quantity", BookingModifications.change_quantity,
+	# 			"name", "",
+	# 			"note", BookingModifications.note or "",
+	# 			"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
+	# 			"id", BookingModifications.id,
+	# 			"ref", BookingModifications.ref_num,
+	# 		)
+	# 	)), '[]').label("mods")
+	# ).filter(
+	# 	BookingModifications.ref_num >= 0,
+	# 	BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
+	# 	BookingModifications.datetime > date_filter["created_at"].get("start_at"),
+	# 	BookingModifications.change_quantity >= 1,
+	# ).group_by(BookingModifications.ref_num).subquery()
+
+	# movements = db.session.query(
+	# 	func.coalesce(func.json_object_agg(
+	# 		movements_subquery.c.ref_num,
+	# 		movements_subquery.c.mods
+	# 	), '{}')
+	# ).scalar()
+
 	movements_subquery = select(
 		BookingModifications.ref_num.label("ref_num"),
-		func.coalesce(func.json_agg(func.json_build_object(
-			"from", func.json_build_object(
-				"ticket_type", BookingModifications.from_item,
-				"ticket_quantity", BookingModifications.change_quantity * -1,
-				"name", "",
-				"note", BookingModifications.note or "",
-				"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-				"id", BookingModifications.id,
-				"ref", BookingModifications.ref_num,
-			),
-			"to", func.json_build_object(
-				"ticket_type", BookingModifications.to_item,
-				"ticket_quantity", BookingModifications.change_quantity,
+		func.coalesce(func.json_agg(
+			func.json_build_object(
+				"from", BookingModifications.from_item,
+				"to", BookingModifications.to_item,
+				"quantity", BookingModifications.change_quantity,
 				"name", "",
 				"note", BookingModifications.note or "",
 				"date", func.to_char(BookingModifications.datetime, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
 				"id", BookingModifications.id,
 				"ref", BookingModifications.ref_num,
 			)
-		)), '[]').label("mods")
+		), '[]').label("mods")
 	).filter(
 		BookingModifications.ref_num >= 0,
 		BookingModifications.datetime < date_filter["created_at"].get("end_at", datetime.utcnow()),
 		BookingModifications.datetime > date_filter["created_at"].get("start_at"),
 		BookingModifications.change_quantity >= 1,
 	).group_by(BookingModifications.ref_num).subquery()
-
 	movements = db.session.query(
 		func.coalesce(func.json_object_agg(
 			movements_subquery.c.ref_num,
@@ -414,32 +448,60 @@ def test_collect_orders(show_id=""):
 
 	for i in range(0, len(results.body.get("orders") or [])):
 		order = results.body["orders"][i]
-		for item in order.get("line_items", []):
-			tickets_info = {
-				"ticket_type": item["name"],
-				"ticket_quantity": item["quantity"],
-				"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-				"note": order["fulfillments"][0]["pickup_details"].get("note"),
-				"date": order["created_at"],
-				"id": order["id"],
-				"ref": i
-			}
-			order_info = OrderInfo(**tickets_info)
-			items.append(order_info)
-		for move in movements.get(str(i), []):
-			order_data = {
-				"id": order["id"],
-				"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
-				"note": order["fulfillments"][0]["pickup_details"].get("note"),
-			}
-			from_info = move.get("from") | order_data
-			to_info = move.get("to") | order_data
-			to_info["note"] = " - ".join({move.get("to", {}).get("note") or "", order_data["note"] or ""}.difference({""}))
-			items.append(OrderInfo(**from_info))
-			items.append(OrderInfo(**to_info))
-		for refund in refunds:
-			if refund.get("ref") == i:
-				refund["id"] = order["id"]
+		if order.get("tenders")[0].get("type") == "CARD" and not order.get("tenders")[0].get("card_details").get("status") == "FAILED":
+			for item in order.get("line_items", []):
+				if item["quantity"]:
+					tickets_info = {
+						"ticket_type": item["name"],
+						"ticket_quantity": item["quantity"],
+						"ticket_price": item["base_price_money"]["amount"],
+						"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+						"email": order["fulfillments"][0]["pickup_details"]["recipient"]["email_address"],
+						"note": order["fulfillments"][0]["pickup_details"].get("note"),
+						"date": order["created_at"],
+						"id": order["id"],
+						"show_id": show_id,
+						"ref": i
+					}
+
+					# For old movements system
+					# order_info = OrderInfo(**tickets_info)
+					# items.append(order_info)
+
+					for move in movements.get(str(i), []):
+						if move.get("from") == tickets_info["ticket_type"]:
+							if move.get("note"):
+								tickets_info["note"] = " - ".join({move.get("note") or "", tickets_info["note"] or ""}.difference({""}))
+							if move.get("quantity") == tickets_info["ticket_quantity"]:
+								tickets_info["ticket_type"] = move.get("to")
+							else:
+								remaining = {**tickets_info}
+								remaining["ticket_quantity"] = int(remaining["ticket_quantity"]) - move.get("quantity", 0)
+								tickets_info["ticket_type"] = move.get("to")
+								tickets_info["ticket_quantity"] = move.get("quantity", 0)
+								items.append(OrderInfo(**remaining))
+							break
+
+					items.append(OrderInfo(**tickets_info))
+
+			# Old movements system
+			# for move in movements.get(str(i), []):
+			# 	order_data = {
+			# 		"id": order["id"],
+			# 		"name": order["fulfillments"][0]["pickup_details"]["recipient"]["display_name"],
+			# 		"note": order["fulfillments"][0]["pickup_details"].get("note"),
+			# 		"show_id": show_id,
+			# 	}
+			# 	from_info = move.get("from") | order_data
+			# 	to_info = move.get("to") | order_data
+			# 	to_info["note"] = " - ".join({move.get("to", {}).get("note") or "", order_data["note"] or ""}.difference({""}))
+			#
+			# 	items.append(OrderInfo(**from_info))
+			# 	items.append(OrderInfo(**to_info))
+
+			for refund in refunds:
+				if refund.get("ref") == i:
+					refund["id"] = order["id"]
 
 	items = [
 		*items,
@@ -447,22 +509,33 @@ def test_collect_orders(show_id=""):
 		*[OrderInfo(**tickets_info) for tickets_info in refunds],
 	]
 
-	# pprint(items)
-	for item in items:
-		keys = list(item.tickets.keys())[0].split(" - ", 2)
-		if len(keys) == 3:
-			item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
-			if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
-				perf_tree[keys[0]][keys[1]][item.id] = existing + item
+	if as_tree:
+		# pprint(items)
+		for item in items:
+			keys = list(item.tickets.keys())[0].split(" - ", 2)
+			if len(keys) == 3:
+				item.tickets[keys[2]] = item.tickets.pop(list(item.tickets.keys())[0])
+				if (existing := perf_tree.setdefault(keys[0], {}).setdefault(keys[1], {}).get(item.id)) is not None:
+					perf_tree[keys[0]][keys[1]][item.id] = existing + item
+				else:
+					perf_tree[keys[0]][keys[1]][item.id] = item
+		# pprint(perf_tree)
+		return perf_tree
+		# return json.dumps(perf_tree, default=OrderInfo.default)
+	else:
+		orders = {}
+		for item in items:
+			if item.ref not in orders:
+				orders[item.ref] = item
 			else:
-				perf_tree[keys[0]][keys[1]][item.id] = item
-	pprint(perf_tree)
-	return perf_tree
-	# return json.dumps(perf_tree, default=OrderInfo.default)
+				orders[item.ref] += item
+
+		return orders
 
 
+@bp.get("/members/api/orders/<show>")
 @bp.get("/members/api/orders/<show>/<perf>")
-def orders_api(show, perf):
+def orders_api(show, perf=None):
 	"""admin"""
 	if "auth" in request.args.keys():
 		if request.args.get("auth") != KeyValue.query.get("api_key").value:
@@ -481,9 +554,76 @@ def orders_api(show, perf):
 	).first().id
 
 	perf_tree = test_collect_orders(show_id=show_id)
-	if "<" in show or "<" in perf:
+	if "<" in show:
+		abort(404)
+
+	if perf is None:
+		return jsonify(json.loads(json.dumps(perf_tree.get(show.replace("`", "'"), {}), default=OrderInfo.default)))
+
+	if "<" in perf:
 		abort(404)
 	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'"), {}).get(perf) or {}).values()), default=OrderInfo.default)))
+
+
+@bp.get("/members/bookings/receipt/<show_id>/<int:ref>")
+def receipt(show_id: str, ref: int):
+	check_page_permission("bookings")
+
+	# show = db.session.query(Show.title).filter(Show.id == show_id).first()
+	orders = test_collect_orders(show_id=show_id, as_tree=False)
+
+	# pprint(orders)
+
+	order = orders.get(ref)
+
+	items = {}
+	for ticket, ticket_details in order.tickets.items():
+		if ticket_details.quantity:
+			show, date, ticket_type = ticket.split(" - ")
+			if date not in items.keys():
+				items[date] = {
+					"name": show,
+					"date": date,
+					# "perf_id": perf.id,
+					# "perf_num": perf_num,
+					# "perf_count": len(perf_ids),
+					"tickets": [],
+					"total": 2400
+				}
+			items[date]["tickets"].append({
+				"type": ticket_type,
+				"quantity": ticket_details,
+				"price": ticket_details.price,
+				"total": ticket_details.total()
+			})
+
+	total = 0
+
+	for item in items.values():
+		item["total"] = sum(ticket["total"] for ticket in item["tickets"])
+		total += item["total"]
+
+	order_details = {
+		"name": order.name,
+		"email": order.email,
+		"note": order.note,
+		"total": total,
+		"date": datetime.strptime(order.date, "%Y-%m-%dT%H:%M:%S.%fZ")
+	}
+
+	return render_template("order_email_template.html", items=items, order_details=order_details)
+
+
+# @bp.get("/members/bookings/preview_receipt/<order_id>")
+# def preview_receipt(order_id):
+# 	check_page_permission("bookings")
+# 	order = Order.query.get(order_id)
+# 	if order is None:
+# 		return {
+# 			"code": 404,
+# 			"msg": "Order not found"
+# 		}
+# 	return render_template("order_email_template.html", order=order)
 
 
 @bp.post("/members/api/bookings/historic_sales")

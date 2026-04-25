@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;" charset="UTF-8">
+	<title>Order Confirmation - Silchester Players</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+		body {
+			font-family: 'Roboto', sans-serif;
+		}
+	</style>
+</head>
+<body style="width: 100%;">
+	<div class="header" style="margin: 0 auto; width: max-content; display: flex; flex-direction: row; align-items: center; justify-content: flex-start;">
+		{# TODO: replace hard coded values #}
+		<img src="https://silchesterplayers.org/logo.png" alt="Logo" class="logo" style="height: 10ex; width: 10ex; margin-right: 2ex;"/>
+		<h1>Silchester Players</h1>
+	</div>
+	<div class="main" style="margin: 0 auto; width: max-content;">
+		<h3>To {{ order_details.name }}</h3>
+		<h4>Order Placed: {{ order_details.date.strftime('%d').lstrip("0") }}{{ "th" if not(order_details.date.day % 10 in [1, 2, 3] and order_details.date.day not in [11, 12, 13]) else ["th", "st", "nd", "rd"][order_details.date.day % 10] }} {{ order_details.date.strftime('%B %Y') }} {{ order_details.date.strftime('%I:%M%p %Z').lstrip("0") }}</h4>
+		<h1>Thank you for your purchase!</h1>
+		<p>Your tickets will be available for collection at the box office on the day of the performance.</p>
+		<div class="summary" style="margin: 0 auto; width: max-content;">
+			<h2 style="margin-block: 0.4em 0;">Order Summary</h2>
+			<hr style="margin-block: 0.4em 0; width: 100%;">
+			<table style="margin-block: 0.4em 0;">
+				{% for item in items.values() %}
+					<tr>
+						<td style="margin-left: 0.5em;">
+							<strong>{{ item.name }} - {{ item.date }}</strong>
+							<table style="padding-left: 1.5em;">
+								<tbody>
+									{% for ticket in item.tickets %}
+										<tr>
+											<td>{{ ticket.quantity }}x</td>
+											<td>{{ ticket.type }}</td>
+											<td>@ £{{ "%0.2f" | format(ticket.price / 100 | float) }}</td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</td>
+						<td class="total" style="text-align: right; padding-left: 1em; font-weight: bold;"><strong>£{{ "%0.2f" | format(item.total / 100 | float) }}</strong></td>
+					</tr>
+				{% endfor %}
+			</table>
+			<hr style="margin-block: 0.4em 0; width: 100%;">
+			<h3 style="margin-block: 0.4em 0; text-align: right;">Total: £{{ "%0.2f" | format(order_details.total / 100 | float) }}</h3>
+			<hr style="margin-block: 0.4em 0; width: 100%;">
+		</div>
+	</div>
+	<div class="footer" style="width: max-content; margin: 0 auto;">
+		<div class="contact">
+			<p>If you have any questions, please contact us at <a href="mailto:boxoffice@silchesterplayers.org">boxoffice@silchesterplayers.org</a>, <br/>
+				or simply reply to this email.</p>
+		</div>
+
+		<div class="venue">
+			<h3>Venue Details:</h3>
+			<address>
+				<strong>Silchester Village Hall</strong><br>
+				Whistlers Lane <br>
+				Silchester<br>
+				RG7 2NE
+			</address>
+			<h4>Doors open 30 minutes before the show.</h4>
+		</div>
+	</div>
+</body>
+</html>

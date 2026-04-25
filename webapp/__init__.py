@@ -247,7 +247,7 @@ def create_app():
 
 		print("Registering blueprints")
 
-		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes  #,
+		from webapp import routes, members_routes, photos_routes, analytics_routes, tickets_routes, scheduler_routes, react_email_routes  #,
 		# app.register_blueprint(routes.bp)
 		# app.register_blueprint(members_routes.bp)
 		app.register_blueprint(photos_routes.bp)
@@ -260,6 +260,7 @@ def create_app():
 		app.register_blueprint(react_permissions.bp)
 		app.register_blueprint(react_tickets_routes.bp)
 		app.register_blueprint(react_store_routes.bp)
+		app.register_blueprint(react_email_routes.bp)
 		app.register_blueprint(react_support_routes.bp)
 		app.register_blueprint(react_photos_routes.bp)
 		app.register_blueprint(react_face_detection.bp)

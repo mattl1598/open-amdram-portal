@@ -305,6 +305,21 @@ function ManageBookings({content}) {
 						{performances}
 					</ul>
 					<h3>Total: {seats_sat}/{seats_total}</h3>
+					<details>
+						<summary>Add Performance</summary>
+						<h2>Add New Performance:</h2>
+						<form action="/members/api/bookings/add_new_performance" onSubmit={(e) => handleFormSubmit(e)}>
+							<div className="form">
+								<span className="msg"></span>
+								<Input id={"datetime"} type={"datetime-local"}></Input>
+								<Input id={"submit"} type={"submit"} value={"Add"}></Input>
+							</div>
+							<div className="loader"></div>
+						</form>
+					</details>
+				</Tab>
+				<Tab title={"All Bookings"} redrawInt={redrawInt}>
+					<AllBookings show_name={"The Unexpected Guest"}></AllBookings>
 				</Tab>
 				<Tab title={"Modify Bookings"} redrawInt={redrawInt}>
 					<h2>Modify Bookings: </h2>
@@ -358,17 +373,6 @@ function ManageBookings({content}) {
 						<div className="loader"></div>
 					</form>
 				</Tab>
-				<Tab title={"Manage Performances"} redrawInt={redrawInt}>
-					<h2>Add New Performance:</h2>
-					<form action="/members/api/bookings/add_new_performance" onSubmit={(e) => handleFormSubmit(e)}>
-						<div className="form">
-							<span className="msg"></span>
-							<Input id={"datetime"} type={"datetime-local"}></Input>
-							<Input id={"submit"} type={"submit"} value={"Add"}></Input>
-						</div>
-						<div className="loader"></div>
-					</form>
-				</Tab>
 				<Tab title={"Historic Sales"} redrawInt={redrawInt}>
 					<form method="POST" onSubmit={(e)=>{getHistoricSales(e)}} name={"historic_sales"}>
 						<div className="loader"></div>
@@ -386,6 +390,139 @@ function ManageBookings({content}) {
 					</form>
 				</Tab>
 			</Tabs>
+		</div>
+	)
+}
+
+function AllBookings({show_name}) {
+	const [bookings, setBookings] = React.useState([])
+
+	React.useEffect(()=>{
+		fetch(`/members/api/orders/${show_name}`,
+			{
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}
+		).then(response => response.json()).then(data => {
+			let tempBookings = []
+			let perfs = Object.keys(data)
+			for (let i=0; i<perfs.length; i++) {
+				let order_ids = Object.keys(data[perfs[i]])
+				for (let j=0; j<order_ids.length; j++) {
+					let tempBooking = {...data[perfs[i]][order_ids[j]], perf_date: perfs[i]}
+					tempBookings.push(tempBooking)
+				}
+			}
+
+			tempBookings.sort((a,b)=>{return new Date(b.date) - new Date(a.date)})
+			setBookings(tempBookings.filter(booking => booking.tickets_count).map((booking, i) => <OrderListItem key={`${i}`} order={booking}></OrderListItem>))
+		})
+	}, [])
+
+	return (
+		<div>
+			{bookings}
+		</div>
+	)
+}
+
+function OrderListItem({ order }) { // Use the existing date formatting function
+	const formattedDate = new Date(order.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' });
+	// Format tickets display const ticketItems = Object.entries(order.tickets) .map(([type, count]) => `${type}: ${count}`) .join(', ')
+	let date_array = order.perf_date.split(" ")
+	delete date_array[2]
+
+
+	function handlePreviewReceipt(order) {
+		const width = 800;
+		const height = 600;
+		const left = (window.screen.width - width) / 2;
+		const top = (window.screen.height - height) / 2;
+		const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+		window.open(`/members/bookings/receipt/${order.show_id}/${order.ref}`, 'receiptPreview', features);
+	}
+	
+	return (
+		<div className="order_card">
+			<div className="order_main">
+				<div className="name">{order.name}</div>
+				<div className="date">📅 {formattedDate}</div>
+				<div className="ref">📝 Ref: {order.ref}</div>
+			</div>
+			<div className="order_details">
+				<ul className="ticket_list">
+					<li className={"date"}>{date_array.join(" ")}</li>
+					{Object.entries(order.tickets).filter(([type, count]) => count > 0).map(([type, count]) => (
+						<li className={"tickets"} key={type}>
+							<span className="ticket-type">{type}</span>
+							<span className="ticket_count">{count}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+
+			{order.note && (
+				<div className="order_note">
+					<span className={"label"}><Icon>docs</Icon> Note:</span>
+					<span className={"note"}>{order.note}</span>
+				</div>
+			)}
+
+			<div className="order_actions">
+				<div className="withDropDown receipt">
+					<div className="label">
+						<Icon>receipt_long</Icon><span>Receipt</span><Icon>arrow_drop_down</Icon>
+					</div>
+
+					<div className="dropdown">
+						<button
+							onClick={() => handlePreviewReceipt(order)}
+							className="btn_preview"
+						>
+							<Icon>visibility</Icon> Preview Receipt
+						</button>
+
+						<button
+							onClick={() => handleSendReceipt(order)}
+							className="btn_send"
+						>
+							<Icon>outgoing_mail</Icon> Send New Receipt
+						</button>
+					</div>
+				</div>
+
+				<div className="withDropDown mods">
+					<div className="label">
+						<Icon>edit</Icon><span>Modify</span><Icon>arrow_drop_down</Icon>
+					</div>
+
+					<div className="dropdown">
+						<button
+							onClick={() => handlePreviewReceipt(order)}
+							className="btn_preview"
+						>
+							<Icon>event_upcoming</Icon> Move Tickets
+						</button>
+
+						<button
+							onClick={() => handleSendReceipt(order)}
+							className="btn_send"
+						>
+							<Icon>event_busy</Icon>Mark Refunded
+						</button>
+
+						<button
+							onClick={() => handleAddModification(order)}
+							className="btn_modify"
+						>
+							✏️ Add Modification
+						</button>
+					</div>
+				</div>
+
+
+			</div>
 		</div>
 	)
 }

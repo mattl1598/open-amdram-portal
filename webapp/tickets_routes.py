@@ -55,31 +55,67 @@ def extract_month(string):
 		return float('inf')
 
 
+class TicketQuantity:
+	def __init__(self, ticket_type: str, quantity: int, price: int = 0):
+		self.ticket_type = ticket_type
+		self.quantity = quantity
+		self.price = price
+
+	def __int__(self):
+		return self.quantity
+
+	def default(self):
+		return self.quantity
+
+	def __dict__(self):
+		return self.quantity
+
+	def total(self):
+		return self.quantity * self.price
+
+	def __repr__(self):
+		return str(self.quantity)
+
+	def __add__(self, other):
+		if isinstance(other, int):
+			return TicketQuantity(self.ticket_type, self.quantity + other, self.price)
+		elif isinstance(other, TicketQuantity):
+			return TicketQuantity(self.ticket_type, self.quantity + other.quantity, self.price)
+		else:
+			raise TypeError("Unsupported operand type(s) for +: 'TicketQuantity' and '{}'".format(type(other).__name__))
+
+
 class OrderInfo:
-	def __init__(self, id: str, ref: int, date: str, name: str, note: str, ticket_type: str, ticket_quantity: int):
+	def __init__(self, id: str, ref: int, date: str, name: str, note: str, ticket_type: str, ticket_quantity: int, ticket_price: int = 0, email: str = "", show_id: str = ""):
 		self.id = id
+		self.show_id = show_id
 		self.ref = ref
 		self.date = date
 		self.name = name
+		self.email = email
 		self.note = note
 
 		self.tickets = {
-			ticket_type: int(ticket_quantity)
+			ticket_type: TicketQuantity(ticket_type=name, quantity=int(ticket_quantity), price=ticket_price)
 		}
 
-	def __dict__(self):
+	def get_dict(self):
 		return {
 			"ref": self.ref,
 			"name": self.name,
 			"note": self.note,
 			"date": self.date,
 			"order_id": self.id,
+			"show_id": self.show_id,
 			"tickets": self.tickets,
 			"tickets_count": self.tickets_total()
 		}
 
+	def __dict__(self):
+		return self.get_dict()
+
 	def __repr__(self):
-		return str(self.__dict__())
+		return str(self.get_dict())
 
 	def __str__(self):
 		return str(self.__repr__())
@@ -106,7 +142,7 @@ class OrderInfo:
 			raise ValueError
 
 	def tickets_total(self) -> int:
-		return sum(self.tickets.values())
+		return sum([int(x) for x in self.tickets.values()])
 
 
 @bp.route("/test")
