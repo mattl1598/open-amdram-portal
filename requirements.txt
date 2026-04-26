@@ -1,6 +1,6 @@
 corha
 dateparser
-deepface
+# deepface
 distinctipy
 dotmap
 dukpy
@@ -30,6 +30,6 @@ sqlalchemy
 squareup
 squareup_legacy
 tld
-tf_keras==2.19.0
+# tf_keras==2.19.0
 urllib3
 xlsxwriter
