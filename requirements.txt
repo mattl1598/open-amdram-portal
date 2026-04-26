@@ -1,4 +1,5 @@
 corha
+dateparser
 deepface
 distinctipy
 dotmap

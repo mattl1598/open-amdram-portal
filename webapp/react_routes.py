@@ -581,7 +581,7 @@ def prize_draw_api():
 @bp.app_errorhandler(401)
 @bp.get("/members")
 def react_members(error=None):
-	print(error)
+	# print(error)
 	if current_user.is_authenticated:
 		data = {
 			"type": "redirect",

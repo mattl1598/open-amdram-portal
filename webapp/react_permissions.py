@@ -2,8 +2,8 @@ from flask_login import current_user
 from sqlalchemy import func
 from flask import abort, Blueprint, current_app as app, jsonify, render_template, request
 
-from webapp.models import AccessPermissions, db, Member, MemberShowLink as MSL
-
+from webapp.models import AccessPermissions, db, ErrorLog, Member, MemberShowLink as MSL
+from webapp.react_support_routes import request_to_json
 
 bp = Blueprint("react_permissions", __name__)
 
@@ -19,7 +19,20 @@ def react_error(e):
 		"title": f"{e.code} {e.name}",
 		"content": e.description
 	}
-	print(data)
+	if e.code == 500:
+		try:
+			stack_trace = e.get_traceback()
+			new_error = ErrorLog(
+				id=ErrorLog.get_new_id(),
+				path=request.path,
+				request=request_to_json(request),
+				stacktrace=stack_trace
+			)
+			db.session.add(new_error)
+			db.session.commit()
+		except Exception as e:
+			pass
+	# print(data)
 	if "react" in request.args.keys():
 		return jsonify(data)
 	else:

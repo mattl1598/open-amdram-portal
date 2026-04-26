@@ -83,13 +83,13 @@ def send_email(body, subject, to, email_from, bcc=[]):
 def send_order_confirmation(order):
 	items = {}
 
-	for item in order.get("order", {}).get("line_items", []):
-		if int(item.get("quantity", 0)) > 0:
+	for item in order.order.line_items:
+		if int(item.quantity) > 0:
 			perf = db.session.query(
 				Performance.id,
 				Performance.show_id
 			).filter(
-				Performance.date == dateparser.parse(item.get("name").split(" - ")[1])
+				Performance.date == dateparser.parse(item.name.split(" - ")[1])
 			).first()
 
 			show_perfs = db.session.query(
@@ -105,30 +105,31 @@ def send_order_confirmation(order):
 
 			if perf.id not in items.keys():
 				items[perf.id] = {
-					"name": item.get("name").split(" - ")[0],
-					"date": item.get("name").split(" - ")[1],
+					"name": item.name.split(" - ")[0],
+					"date": item.name.split(" - ")[1],
 					"perf_id": perf.id,
 					"perf_num": perf_num,
 					"perf_count": len(perf_ids),
 					"tickets": [],
-					"total": int(item.get("total_money", {}).get("amount", 0))
+					"total": int(item.total_money.amount)
 				}
 
 			items[perf.id]["tickets"].append({
-				"type": item.get("name").split(" - ")[2],
-				"quantity": int(item.get("quantity", 0)),
-				"price": int(item.get("base_price_money", {}).get("amount", 0)),
-				"total": int(item.get("total_money", {}).get("amount", 0))
+				"type": item.name.split(" - ")[2],
+				"quantity": int(item.quantity),
+				"price": int(item.base_price_money.amount),
+				"total": int(item.total_money.amount)
 			})
 
-	fulfillment = order.get("order", {}).get("fulfillments", [])[0]
+	fulfillment = order.order.fulfillments[0]
+	recipient = fulfillment.pickup_details.recipient
 
 	order_details = {
-		"name": fulfillment.get("pickup_details", {}).get("recipient", "").get("display_name", ""),
-		"email": fulfillment.get("pickup_details", {}).get("recipient", "").get("email_address", ""),
-		"note": fulfillment.get("note"),
-		"total": order.get("order", {}).get("total_money", {}).get("amount", 0),
-		"date": datetime.strptime(order.get("order", {}).get("created_at"), "%Y-%m-%dT%H:%M:%S.%fZ")
+		"name": recipient.display_name,
+		"email": recipient.email_address,
+		"note": fulfillment.pickup_details.note,
+		"total": order.order.total_money.amount,
+		"date": datetime.strptime(order.order.created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
 	}
 
 	body = render_template("order_email_template.html", items=items, order_details=order_details)
