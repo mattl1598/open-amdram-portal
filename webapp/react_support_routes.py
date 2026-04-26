@@ -16,6 +16,7 @@ from flask import current_app as app
 from webapp.models import *
 from webapp.models import MemberShowLink as MSL
 from webapp.react_permissions import default_role_permissions, get_allowed_pages
+from webapp.helpers import request_to_json
 
 bp = Blueprint("react_support_routes", __name__)
 
@@ -119,21 +120,6 @@ def accessibility():
 	session.modified = True
 
 	return redirect(request.referrer)
-
-
-def request_to_json(req: Request):
-	data = {
-		"method": req.method,
-		"path": req.path,
-		"json": req.json,
-		"form": req.form.to_dict(),
-		"args": req.args.to_dict(),
-		"content_type": req.content_type,
-		"endpoint": req.endpoint,
-		"origin": req.referrer,
-	}
-
-	return data
 
 
 def discord_notif(title, msg, colour=0x00ffff):

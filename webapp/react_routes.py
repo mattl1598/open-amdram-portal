@@ -19,7 +19,8 @@ from flask import current_app as app
 from webapp.models import *
 from webapp.models import MemberShowLink as MSL
 from webapp.react_permissions import default_role_permissions, get_allowed_pages
-from webapp.react_support_routes import discord_notif, request_to_json
+from webapp.react_support_routes import discord_notif
+from webapp.helpers import request_to_json
 
 bp = Blueprint("react_routes", __name__)
 

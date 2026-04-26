@@ -3,7 +3,7 @@ from sqlalchemy import func
 from flask import abort, Blueprint, current_app as app, jsonify, render_template, request
 
 from webapp.models import AccessPermissions, db, ErrorLog, Member, MemberShowLink as MSL
-from webapp.react_support_routes import request_to_json
+from webapp.helpers import request_to_json
 
 bp = Blueprint("react_permissions", __name__)
 
