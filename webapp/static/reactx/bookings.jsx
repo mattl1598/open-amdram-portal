@@ -442,6 +442,38 @@ function OrderListItem({ order }) { // Use the existing date formatting function
 		const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
 		window.open(`/members/bookings/receipt/${order.show_id}/${order.ref}`, 'receiptPreview', features);
 	}
+
+	function handleSendReceipt(order) {
+		let email = prompt("Enter email address to send receipt to: ")
+		if (email === null) return
+		if (email.length === 0) return
+		if (!email.includes("@")) {
+			displayAlerts([{title: "Error", content: "Invalid email address"}])
+			return
+		}
+		if (!confirm(`Are you sure you want to send the receipt to ${email}?`)) {
+			displayAlerts([{title: "Cancelled", content: "Receipt not sent"}])
+			return
+		}
+
+		fetch(`/members/api/bookings/send_new_receipt`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				email: email,
+				show_id: order.show_id,
+				ref: order.ref,
+			}),
+		}).then(response => response.json()).then(data => {
+			if (data.code === 200) {
+				displayAlerts([{title: "Success", content: "Receipt sent successfully"}])
+			} else {
+				displayAlerts([{title: `Error: ${data.code}`, content: data.msg}])
+			}
+		})
+	}
 	
 	return (
 		<div className="order_card">

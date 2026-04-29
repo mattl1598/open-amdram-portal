@@ -11,6 +11,7 @@ from sqlalchemy import case, func, or_, select, text
 from webapp.models import *
 from flask import current_app as app
 
+from webapp.react_email_routes import send_email
 from webapp.react_permissions import check_page_permission
 from webapp.tickets_routes import collect_orders, get_ticket_types, OrderInfo
 from webapp.react_store_routes import datetime_formatter
@@ -49,18 +50,6 @@ def bookings():
 	).filter(BookingModifications.datetime > end_of_last_show).scalar()
 
 	items = []
-	# for item in (app.square.catalog.search_catalog_items(
-	# 		body={
-	# 			"category_ids": [
-	# 				"LETDSKQATFDC3IAJITOXQFGT"
-	# 			],
-	# 			"product_types": [
-	# 				"REGULAR"
-	# 			],
-	# 			"archived_state": "ARCHIVED_STATE_NOT_ARCHIVED"
-	# 		}
-	# ).body.get("items") or []):
-	# 	items.append(item["item_data"]["name"])
 
 	for perf in db.session.query(Performance).filter(Performance.date > end_of_last_show).join(Show, Performance.show_id == Show.id).all():
 		items.append(f"{perf.show.title} - {datetime_formatter(perf.date)} - Adult")
@@ -120,6 +109,43 @@ def bookings():
 			"react_template.html",
 			data=data
 		)
+
+
+@bp.post("/members/api/bookings/send_new_receipt")
+def send_new_receipt():
+	email = request.json.get("email")
+	show_id = request.json.get("show_id")
+	ref = request.json.get("ref")
+	if not email:
+		return {
+			"code": 400,
+			"msg": "Email is required."
+		}
+	elif not show_id:
+		return {
+			"code": 400,
+			"msg": "Show ID is required."
+		}
+	elif not ref:
+		return {
+			"code": 400,
+			"msg": "Reference is required."
+		}
+
+	body = receipt(show_id, ref)
+
+	send_email(
+		body,
+		subject="Order Confirmation - Silchester Players",
+		to=email,
+		email_from=app.envs.box_office_email,
+		bcc=[app.envs.box_office_email]
+	)
+
+	return {
+		"code": 200,
+		"msg": "Email sent successfully."
+	}
 
 
 @bp.post("/members/api/bookings/add_new_performance")

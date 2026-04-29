@@ -134,7 +134,13 @@ def send_order_confirmation(order):
 
 	body = render_template("order_email_template.html", items=items, order_details=order_details)
 
-	send_email(body, subject="Order Confirmation - Silchester Players", to=order_details["email"], bcc=app.envs.bcc, email_from=app.envs.box_office_email)
+	send_email(
+		body,
+		subject="Order Confirmation - Silchester Players",
+		to=order_details["email"],
+		bcc=app.envs.bcc,
+		email_from=app.envs.box_office_email
+	)
 
 	return body
 
