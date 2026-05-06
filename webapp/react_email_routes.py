@@ -83,7 +83,7 @@ def send_email(body, subject, to, email_from, bcc=[]):
 def send_order_confirmation(order):
 	items = {}
 
-	for item in order.order.line_items:
+	for item in order.line_items:
 		if int(item.quantity) > 0:
 			perf = db.session.query(
 				Performance.id,
@@ -121,15 +121,15 @@ def send_order_confirmation(order):
 				"total": int(item.total_money.amount)
 			})
 
-	fulfillment = order.order.fulfillments[0]
+	fulfillment = order.fulfillments[0]
 	recipient = fulfillment.pickup_details.recipient
 
 	order_details = {
 		"name": recipient.display_name,
 		"email": recipient.email_address,
 		"note": fulfillment.pickup_details.note,
-		"total": order.order.total_money.amount,
-		"date": datetime.strptime(order.order.created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
+		"total": order.total_money.amount,
+		"date": datetime.strptime(order.created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
 	}
 
 	body = render_template("order_email_template.html", items=items, order_details=order_details)
