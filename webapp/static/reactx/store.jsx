@@ -184,6 +184,9 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 		}, 1000)
 		setTimeout(()=>{
 			reset()
+			if ("contacts" in navigator || "audioSession" in navigator) {
+				context.functions.setPath('/tickets/checkout')
+			}
 		}, 3000)
 	}
 
@@ -228,7 +231,7 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 	let formCount = Object.values(quantities).reduce((acc, cur) => acc + cur, 0)
 
 	function makeActive() {
-		if (!isActive) {
+		if (!isActive && maxSeats > 0) {
 			setActive(id)
 		}
 	}
@@ -258,7 +261,7 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 
 			<h2 className={"title"}>{title}{isActive ? ` - ${datetimeFormatter(date)}` : "" }</h2>
 			<h3 className={"date"}>{datetimeFormatter(date)}</h3>
-			<p className={"price"}>Adult: £12, Child: £10</p>
+			<p className={"price"}>{maxSeats ? "Adult: £12, Child: £10" : "SOLD OUT"}</p>
 			<div className="form">
 				<div className="desc">
 					Doors open 30 minutes before the show starts. <br/>
@@ -329,7 +332,9 @@ function TicketStore({ticketsActive}) {
 					ticketsActive ?
 					<div className="tickets">
 						{ticketsIDs.map((ticket, i) => {
-							return <TicketItem key={i} i={i} count={ticketsIDs.length} isActive={ticket === activeTicket} setActive={setActiveTicket} {...tickets[ticket]} tickets={tickets}></TicketItem>
+							if (Date.parse(tickets[ticket].date) > Date.now()) {
+								return <TicketItem key={i} i={i} count={ticketsIDs.length} isActive={ticket === activeTicket} setActive={setActiveTicket} {...tickets[ticket]} tickets={tickets}></TicketItem>
+							}
 						})}
 					</div> : <React.Fragment></React.Fragment>
 				}
@@ -703,19 +708,21 @@ function CheckoutSuccess({}) {
 
 	return (
 		<div className="content payment_success">
-			<h1>Payment Successful</h1>
-			<p>
-				Thank you for your order.
-				Your receipt should be sent to your email within 24 hours.
-				We are experiencing some delays with our receipt processing,
-				so if you do not receive your receipt,
-				please contact us at <a href="mailto:boxoffice@silchesterplayers.org">boxoffice@silchesterplayers.org</a>.
-			</p>
-			<p>
-				Please collect your tickets at the door.
-				Doors open 30 minutes before the show starts.
-				No need to bring your receipt, just give your name at the desk.
-			</p>
+			<div>
+				<h1>Payment Successful</h1>
+				<p>
+					Thank you for your order.<br/>
+					You will receive your receipt via email shortly. <br/>
+					If you have any questions, simply reply to that receipt email <br/>
+					or contact us at <a
+					href="mailto:boxoffice@silchesterplayers.org">boxoffice@silchesterplayers.org</a>.
+				</p>
+				<p>
+					Please collect your tickets at the door.<br/>
+					Doors open 30 minutes before the show starts.<br/>
+					No need to bring your receipt, just give your name at the desk.
+				</p>
+			</div>
 		</div>
 	)
 }

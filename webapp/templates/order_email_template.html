@@ -48,6 +48,8 @@
 			<hr style="margin-block: 0.4em 0; width: 100%;">
 			<h3 style="margin-block: 0.4em 0; text-align: right;">Total: £{{ "%0.2f" | format(order_details.total / 100 | float) }}</h3>
 			<hr style="margin-block: 0.4em 0; width: 100%;">
+			<h3 style="margin-block: 0.4em 0; text-align: right;">Order Note: {{ order_details.note }}</h3>
+			<hr style="margin-block: 0.4em 0; width: 100%;">
 		</div>
 	</div>
 	<div class="footer" style="width: max-content; margin: 0 auto;">
@@ -64,7 +66,7 @@
 				Silchester<br>
 				RG7 2NE
 			</address>
-			<h4>Doors open 30 minutes before the show.</h4>
+			<h4>Doors (and bar) open 30 minutes before the show.</h4>
 		</div>
 	</div>
 </body>
