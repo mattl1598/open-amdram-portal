@@ -350,6 +350,13 @@ div.seat {
 		margin: 0 !important;
 	}
 
+	div.controls, div.seats-container {
+		padding-left: 2rem;
+		padding-top: 2rem;
+	}
+	div.controls {
+	}
+
 	div.tickets {
 		//padding: 0 !important;
 		//width: 297mm !important;
@@ -362,7 +369,8 @@ div.tickets {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: auto;
-	gap: 12mm 16mm;
+	//gap: 12mm 16mm;
+	gap: 8mm 12mm;
 	//padding: 1rem calc(sqrt(2)*1rem);
 	padding: 8mm;
 

@@ -643,3 +643,14 @@ div.checkout {
 		}
 	}
 }
+
+div.payment_success {
+	position: sticky;
+	top: 3rem;
+	z-index: 200;
+	* {
+		position: sticky;
+		top: 3rem;
+		z-index: 200;
+	}
+}
