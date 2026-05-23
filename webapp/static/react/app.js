@@ -7624,6 +7624,9 @@ function TicketItem({
     }, 1000);
     setTimeout(() => {
       reset();
+      if ("contacts" in navigator || "audioSession" in navigator) {
+        context.functions.setPath('/tickets/checkout');
+      }
     }, 3000);
   }
   function reset() {
@@ -7677,7 +7680,7 @@ function TicketItem({
   }
   let formCount = Object.values(quantities).reduce((acc, cur) => acc + cur, 0);
   function makeActive() {
-    if (!isActive) {
+    if (!isActive && maxSeats > 0) {
       setActive(id);
     }
   }
@@ -7724,7 +7727,7 @@ function TicketItem({
     className: "date"
   }, datetimeFormatter(date)), /*#__PURE__*/React.createElement("p", {
     className: "price"
-  }, "Adult: \xA312, Child: \xA310"), /*#__PURE__*/React.createElement("div", {
+  }, maxSeats ? "Adult: £12, Child: £10" : "SOLD OUT"), /*#__PURE__*/React.createElement("div", {
     className: "form"
   }, /*#__PURE__*/React.createElement("div", {
     className: "desc"
@@ -7786,15 +7789,17 @@ function TicketStore({
   }, /*#__PURE__*/React.createElement("span", null, "Cart"), /*#__PURE__*/React.createElement(Icon, null, "shopping_cart"))) : /*#__PURE__*/React.createElement(React.Fragment, null)), ticketsActive ? /*#__PURE__*/React.createElement("div", {
     className: "tickets"
   }, ticketsIDs.map((ticket, i) => {
-    return /*#__PURE__*/React.createElement(TicketItem, _extends({
-      key: i,
-      i: i,
-      count: ticketsIDs.length,
-      isActive: ticket === activeTicket,
-      setActive: setActiveTicket
-    }, tickets[ticket], {
-      tickets: tickets
-    }));
+    if (Date.parse(tickets[ticket].date) > Date.now()) {
+      return /*#__PURE__*/React.createElement(TicketItem, _extends({
+        key: i,
+        i: i,
+        count: ticketsIDs.length,
+        isActive: ticket === activeTicket,
+        setActive: setActiveTicket
+      }, tickets[ticket], {
+        tickets: tickets
+      }));
+    }
   })) : /*#__PURE__*/React.createElement(React.Fragment, null)));
 }
 function TicketImage({
@@ -8209,9 +8214,9 @@ function CheckoutSuccess({}) {
   }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "content payment_success"
-  }, /*#__PURE__*/React.createElement("h1", null, "Payment Successful"), /*#__PURE__*/React.createElement("p", null, "Thank you for your order. Your receipt should be sent to your email within 24 hours. We are experiencing some delays with our receipt processing, so if you do not receive your receipt, please contact us at ", /*#__PURE__*/React.createElement("a", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Payment Successful"), /*#__PURE__*/React.createElement("p", null, "Thank you for your order.", /*#__PURE__*/React.createElement("br", null), "You will receive your receipt via email shortly. ", /*#__PURE__*/React.createElement("br", null), "If you have any questions, simply reply to that receipt email ", /*#__PURE__*/React.createElement("br", null), "or contact us at ", /*#__PURE__*/React.createElement("a", {
     href: "mailto:boxoffice@silchesterplayers.org"
-  }, "boxoffice@silchesterplayers.org"), "."), /*#__PURE__*/React.createElement("p", null, "Please collect your tickets at the door. Doors open 30 minutes before the show starts. No need to bring your receipt, just give your name at the desk."));
+  }, "boxoffice@silchesterplayers.org"), "."), /*#__PURE__*/React.createElement("p", null, "Please collect your tickets at the door.", /*#__PURE__*/React.createElement("br", null), "Doors open 30 minutes before the show starts.", /*#__PURE__*/React.createElement("br", null), "No need to bring your receipt, just give your name at the desk.")));
 }
 
 "use strict";
