@@ -329,7 +329,7 @@ function SeatingPlan({defaultRowCount, initialAssignment, initialHiddenSeats, in
 		></Ticket>
 		let bucket_lookup = order.name.toLowerCase().split(" ").slice(-1)[0].charCodeAt(0) - 96
 		if (!(1 <= bucket_lookup && bucket_lookup <= 26)) {
-			bucket_lookup = 0
+			bucket_lookup = 1
 		}
 		// console.log(order.name, bucket_lookup)
 		if (order.seats) {

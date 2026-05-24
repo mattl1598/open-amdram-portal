@@ -261,9 +261,21 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 
 			<h2 className={"title"}>{title}{isActive ? ` - ${datetimeFormatter(date)}` : "" }</h2>
 			<h3 className={"date"}>{datetimeFormatter(date)}</h3>
-			<p className={"price"}>{maxSeats ? "Adult: £12, Child: £10" : "SOLD OUT"}</p>
+			<p className={"price"}>{maxSeats > 0 ? "Adult: £12, Child: £10" : "SOLD OUT"}</p>
+			{
+				maxSeats < 10 && maxSeats > 0 ?
+					<h4 className={"remaining"}>Only {maxSeats} seat{maxSeats>1?"s":""} remaining!</h4>
+				:
+					<React.Fragment></React.Fragment>
+			}
 			<div className="form">
 				<div className="desc">
+					{
+						maxSeats < 10 && maxSeats > 0 ?
+							<h3 className={"price"}>Only {maxSeats} seat{maxSeats>1?"s":""} remaining!</h3>
+						:
+							<React.Fragment></React.Fragment>
+					}
 					Doors open 30 minutes before the show starts. <br/>
 					Tickets can be collected at the venue. <br/>
 					Leave any seating requests in the notes box at checkout.

@@ -237,6 +237,7 @@ div.store {
 				h2.title { grid-area: heading; }
 				h3.date { display: none; }
 				p.price { display: none; }
+				h4.remaining { display: none; }
 
 				div.form {
 					grid-area: form;
@@ -411,14 +412,28 @@ div.store {
 
 			&:not(.active) {
 				display: grid;
-				grid-template-areas:
-					"image"
-					"title"
-					"date"
-					"price"
-				;
 				grid-template-columns: 1fr;
-				grid-template-rows: auto auto auto auto;
+
+				&:not(:has(h4.remaining)) {
+					grid-template-areas:
+						"image"
+						"title"
+						"date"
+						"price"
+					;
+					grid-template-rows: auto auto auto auto;
+				}
+
+				&:has(h4.remaining) {
+					grid-template-areas:
+						"image"
+						"title"
+						"date"
+						"price"
+						"remaining"
+					;
+					grid-template-rows: auto auto auto auto auto;
+				}
 			}
 
 			cursor: pointer;
@@ -480,6 +495,7 @@ div.store {
 			h2 { grid-area: title; font-size: 150%; margin-block-start: 0.2rem }
 			h3 { grid-area: date; font-size: 125%; }
 			p { grid-area: price; font-size: 110%; }
+			h4.remaining { grid-area: remaining; font-size: 125%; }
 
 			&:hover:not(.active) {
 				//@include theme-adjust(background-color, accent1, rgba, .37);
