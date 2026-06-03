@@ -547,7 +547,7 @@ def test_collect_orders(show_id="", as_tree=True):
 					perf_tree[keys[0]][keys[1]][item.id] = item
 		# pprint(perf_tree)
 		return perf_tree
-		# return json.dumps(perf_tree, default=OrderInfo.default)
+		# return json.loads(json.dumps(perf_tree, default=OrderInfo.default))
 	else:
 		orders = {}
 		for item in items:
@@ -681,7 +681,8 @@ def historic_sales_api():
 		body={
 			"location_ids": [
 				"0W6A3GAFG53BH",
-				"M1D6QJY6BHW9R"
+				"M1D6QJY6BHW9R",
+				app.envs.square_webstore_location
 			],
 			"query": {
 				"sort": {
@@ -891,17 +892,44 @@ def historic_sales_api():
 						if tender.get("status") == "COMPLETED":
 							foh_totals["cash"] += int(tender["amount_money"]["amount"])
 
+	non_square_cash_total = 0
+
 	for ref, mod_list in mods.items():
 		for mod in mod_list:
 			if ref < 0:
+				include_mod = False
+				# cash paid at door without square order
+				cost = 0
+				if mod.get("mark_as_paid") == "CASH":
+					include_mod = True
+					item_name = mod.get("to_item")
+
+					year = show.date.year
+					_, day_raw, month_raw, time_raw = item_name.split(" - ")[1].split(" ")
+					months = {
+						"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9,
+						"Oct": 10, "Nov": 11, "Dec": 12
+					}
+					perf_date = datetime(year=year, month=months[month_raw], day=int(day_raw[:-2]),
+					                     hour=int(time_raw.split(":")[0]) + 12 * int(time_raw[-2:] == "pm"),
+					                     minute=int(time_raw.split(":")[1].split("pm")[0]))
+					performance = db.session.query(Performance).filter(Performance.date == perf_date).first()
+					cost = performance.ticket_pricing.get(item_name.split(" - ")[-1], 0)
+
+					# print(mod.get("ref_num"), cost, mod.get("change_quantity"), cost * mod.get("change_quantity"))
+					# print(mod.get("ref_num"), len(mod_list))
+					non_square_cash_total += cost * mod.get("change_quantity")
+
 				# free ticket(s) with no existing Square order
-				if not mod.get("mark_as_paid"):
+				elif not mod.get("mark_as_paid"):
+					include_mod = True
 					item_name = " - ".join([*mod.get("to_item").split(" - ", 2)[:-1], "Free"])
 
+				if include_mod:
 					for k, v in {"amount": mod.get("change_quantity"), "discounts": 0}.items():
 						sums[item_name] = sums.get(item_name, {})
-						sums[item_name][0] = sums[item_name].get(0, {})
-						sums[item_name].get(0, {})[k] = v + sums.get(item_name, {}).get(0, {}).get(k, 0)
+						sums[item_name][cost] = sums[item_name].get(cost, {})
+						sums[item_name].get(cost, {})[k] = v + sums.get(item_name, {}).get(cost, {}).get(k, 0)
 
 	# data = None
 	# totals = None
@@ -909,7 +937,7 @@ def historic_sales_api():
 
 	errors = 0
 	payments = []
-	for location in ["0W6A3GAFG53BH", "M1D6QJY6BHW9R"]:
+	for location in ["0W6A3GAFG53BH", "M1D6QJY6BHW9R", app.envs.square_webstore_location]:
 		flag = True
 		cursor = ""
 		while flag:
@@ -937,7 +965,7 @@ def historic_sales_api():
 
 	totals = {
 		"paid": 0,
-		"cash": 0,
+		"cash": non_square_cash_total,
 		"fees": 0,
 		"expected_refunds": expected_refunds,
 		"actual_refunds": 0,

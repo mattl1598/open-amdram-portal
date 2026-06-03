@@ -311,6 +311,7 @@ class Performance(db.Model, NewIdGetter):
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 	layout = db.Column(db.JSON)
 	seat_assignments = db.Column(db.JSON)
+	ticket_pricing = db.Column(db.JSON)
 
 	def get_date_string(self):
 		perf_day = int(self.date.strftime("%d"))
