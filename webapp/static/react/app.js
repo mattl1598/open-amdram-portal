@@ -6724,7 +6724,7 @@ function SeatingPlan({
     });
     let bucket_lookup = order.name.toLowerCase().split(" ").slice(-1)[0].charCodeAt(0) - 96;
     if (!(1 <= bucket_lookup && bucket_lookup <= 26)) {
-      bucket_lookup = 0;
+      bucket_lookup = 1;
     }
     // console.log(order.name, bucket_lookup)
     if (order.seats) {
@@ -7727,11 +7727,15 @@ function TicketItem({
     className: "date"
   }, datetimeFormatter(date)), /*#__PURE__*/React.createElement("p", {
     className: "price"
-  }, maxSeats ? "Adult: £12, Child: £10" : "SOLD OUT"), /*#__PURE__*/React.createElement("div", {
+  }, maxSeats > 0 ? "Adult: £12, Child: £10" : "SOLD OUT"), maxSeats < 10 && maxSeats > 0 ? /*#__PURE__*/React.createElement("h4", {
+    className: "remaining"
+  }, "Only ", maxSeats, " seat", maxSeats > 1 ? "s" : "", " remaining!") : /*#__PURE__*/React.createElement(React.Fragment, null), /*#__PURE__*/React.createElement("div", {
     className: "form"
   }, /*#__PURE__*/React.createElement("div", {
     className: "desc"
-  }, "Doors open 30 minutes before the show starts. ", /*#__PURE__*/React.createElement("br", null), "Tickets can be collected at the venue. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the notes box at checkout."), /*#__PURE__*/React.createElement("div", {
+  }, maxSeats < 10 && maxSeats > 0 ? /*#__PURE__*/React.createElement("h3", {
+    className: "price"
+  }, "Only ", maxSeats, " seat", maxSeats > 1 ? "s" : "", " remaining!") : /*#__PURE__*/React.createElement(React.Fragment, null), "Doors open 30 minutes before the show starts. ", /*#__PURE__*/React.createElement("br", null), "Tickets can be collected at the venue. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the notes box at checkout."), /*#__PURE__*/React.createElement("div", {
     className: "quantities"
   }, Object.keys(quantities).map(type => TicketQuantity({
     type
