@@ -628,6 +628,7 @@ function EditShow({
   const [castList, setCastList] = React.useState([]);
   const [crewRefs, setCrewRefs] = React.useState([]);
   const [crewList, setCrewList] = React.useState([]);
+  const [newestForm, setNewestForm] = React.useState("");
   const [toBeAdded, setToBeAdded] = React.useState([]);
   function refreshMemberOptions() {
     fetch("/members/api/get_members", {
@@ -676,6 +677,17 @@ function EditShow({
     setCrewRefs(tempCrewRefs);
     setCrewList(tempCrewRoles);
   }, []);
+  React.useEffect(() => {
+    if (newestForm !== "") {
+      let form = document.querySelector(newestForm.startsWith("cast") ? `#${newestForm}` : `#${newestForm}_input`);
+      form.focus();
+      form.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center"
+      });
+    }
+  }, [newestForm]);
   function addRowBelow(cast_or_crew, position) {
     setToBeAdded([{
       cast_or_crew: cast_or_crew,
@@ -708,11 +720,11 @@ function EditShow({
       tempList = insert(tempList, position, newForm);
       // setCastRefs(tempRefs)
       setCastList(tempList);
+      setNewestForm(newForm.id);
     } else {
       // tempRefs = [...crewRefs]
       tempList = [...crewList];
       let newRef = React.createRef();
-      // TODO: add role options and tomselect for crew roles
       let newForm = {
         key: Date.now(),
         ref: newRef,
@@ -723,8 +735,8 @@ function EditShow({
       tempList.splice(position, 0, newForm);
       // setCrewRefs(tempRefs)
       setCrewList(tempList);
+      setNewestForm(newForm.id);
     }
-    // TODO: set focus on newest role field
   }
   function getRoles(e = undefined) {
     if (e !== undefined) {
@@ -846,7 +858,7 @@ function EditShow({
     onClick: e => {
       addRoleSubForm(e, "cast", 0);
     }
-  }, "+")), /*#__PURE__*/React.createElement("div", null, castList.map(x => {
+  }, "+")), /*#__PURE__*/React.createElement("div", null, castList.map((x, index) => {
     return /*#__PURE__*/React.createElement(RoleSubForm, {
       key: x.key,
       ref: x.ref,
@@ -857,7 +869,8 @@ function EditShow({
       showID: content.showDetails.id,
       addRowBelow: addRowBelow,
       memberOptions: memberOptions,
-      setMemberOptions: setMemberOptions
+      setMemberOptions: setMemberOptions,
+      index: index
     });
   }))), /*#__PURE__*/React.createElement("div", {
     className: "crew"
@@ -866,7 +879,7 @@ function EditShow({
     onClick: e => {
       addRoleSubForm(e, "crew", 0);
     }
-  }, "+")), /*#__PURE__*/React.createElement("div", null, crewList.map(x => {
+  }, "+")), /*#__PURE__*/React.createElement("div", null, crewList.map((x, index) => {
     return /*#__PURE__*/React.createElement(RoleSubForm, {
       key: x.key,
       ref: x.ref,
@@ -877,7 +890,8 @@ function EditShow({
       showID: content.showDetails.id,
       addRowBelow: addRowBelow,
       memberOptions: memberOptions,
-      setMemberOptions: setMemberOptions
+      setMemberOptions: setMemberOptions,
+      index: index
     });
   }))), /*#__PURE__*/React.createElement("a", {
     href: "#",
@@ -899,11 +913,25 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
   memberOptions = [],
   setMemberOptions,
   cast_or_crew,
-  addRowBelow
+  addRowBelow,
+  index
 }, ref) {
   const [role, setRole] = React.useState(defaultRoleName);
   const [members, setMembers] = React.useState(defaultMembers);
   const subFormRef = React.createRef();
+  const [crewOptions, setCrewOptions] = React.useState([]);
+  React.useEffect(() => {
+    if (cast_or_crew === "crew") {
+      let url = '/members/api/crew_options';
+      if (showID !== null && showID !== undefined && showID !== "") {
+        url += `?show_id=${showID}`;
+      }
+      fetch(url).then(response => response.json()).then(data => {
+        console.log(data);
+        setCrewOptions(data.options || []);
+      }).catch(error => console.error('Error fetching crew options:', error));
+    }
+  }, []);
   React.useImperativeHandle(ref, () => ({
     getMSLJson() {
       return getMSLJson();
@@ -960,7 +988,8 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
     return null; // Return null if the operation was unsuccessful
   }
   function addRow() {
-    let pos = getIndex() + 1;
+    // let index = getIndex()
+    let pos = index + 1;
     addRowBelow(cast_or_crew, pos);
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -970,7 +999,7 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
     onClick: () => {
       console.log(getIndex());
     }
-  }, "drag_indicator"), /*#__PURE__*/React.createElement(Input, {
+  }, "drag_indicator"), cast_or_crew === "cast" ? /*#__PURE__*/React.createElement(Input, {
     id: id,
     form: "MSL",
     type: "text",
@@ -980,12 +1009,23 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
     onChange: e => {
       setRole(e.target.value);
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "role"
+  }, /*#__PURE__*/React.createElement("label", {
+    htmlFor: id,
+    className: "membersLabel"
+  }, "ROLE"), /*#__PURE__*/React.createElement(SingleSelect, {
+    id: id,
+    selected: role,
+    setSelected: setRole,
+    options: crewOptions,
+    create: true
+  })), /*#__PURE__*/React.createElement("div", {
     className: "members"
   }, /*#__PURE__*/React.createElement("label", {
     htmlFor: `member${id}`,
     className: "membersLabel"
-  }, "Members"), /*#__PURE__*/React.createElement(Select, {
+  }, "Members"), /*#__PURE__*/React.createElement(MultiSelect, {
     id: `member${id}`,
     selected: members,
     setSelected: setMembers,
@@ -2941,29 +2981,31 @@ function Select({
   options = [],
   optgroups = [],
   create = true,
-  maxItems = 200
+  maxItems = 200,
+  selectOnTab = false,
+  closeAfterSelect = false
 }) {
-  const ref = React.createRef();
-  let currentSelection = [...selected];
-  function onInit() {
-    setTimeout(() => {
-      document.getElementById(id).tomselect.blur();
-      document.getElementById(id).tomselect.close();
-    }, 100);
-  }
+  const ref = React.useRef(null);
+  const currentSelection = React.useRef(selected ? [...selected] : []);
   React.useEffect(() => {
-    new TomSelect(`#${id}`, {
+    let tomSelectOptions = {
       maxItems: maxItems,
       allowEmptyOption: true,
       hidePlaceholder: true,
       openOnFocus: false,
       hideSelected: true,
-      closeAfterSelect: maxItems === 1,
+      closeAfterSelect: closeAfterSelect,
       items: currentSelection,
       options: options,
       optgroups: optgroups,
       optgroupField: "group",
       create: create,
+      selectOnTab: selectOnTab,
+      sortField: [{
+        field: '$order'
+      }, {
+        field: '$score'
+      }],
       onItemAdd: function () {
         this.setTextboxValue('');
         this.refreshOptions();
@@ -2972,30 +3014,43 @@ function Select({
           this.close();
         }
       },
-      onChange: handleChange,
-      onInitialize: onInit
-    });
+      plugins: ['change_listener'],
+      // onInitialize: onInit,
+      onChange: handleChange
+    };
+    // if (sortField !== null) {
+    // 	tomSelectOptions.sortField = [...sortField]
+    // }
+
+    new TomSelect(`#${id}`, tomSelectOptions);
   }, []);
   React.useEffect(() => {
-    let tempSelected = [...currentSelection];
+    let temp = [...selected];
     ref.current.tomselect.clearOptions();
     ref.current.tomselect.addOptions(options);
     ref.current.tomselect.refreshOptions();
     ref.current.tomselect.refreshItems();
-    setSelected([...tempSelected]);
+    ref.current.value = selected;
+    let newEvent = document.createEvent('HTMLEvents');
+    newEvent.initEvent('change', false, true);
+    ref.current.dispatchEvent(newEvent);
+    ref.current.tomselect.setValue(temp, true);
+    setSelected(temp);
   }, [options]);
-  React.useEffect(() => {
-    if (currentSelection !== selected) {
-      ref.current.tomselect.setValue(selected, true);
-      currentSelection = selected;
-    }
-  }, [selected]);
-  function handleChange(e) {
-    if (e !== currentSelection) {
-      currentSelection = [...e];
-      setSelected([...e]);
+  function handleChange(value) {
+    if (value !== currentSelection) {
+      // currentSelection = value
+      setSelected(value);
     }
   }
+  React.useEffect(() => {
+    if (!(selected.length === currentSelection.length && JSON.stringify(selected) === JSON.stringify(currentSelection))) {
+      ref.current.value = selected;
+      let newEvent = document.createEvent('HTMLEvents');
+      newEvent.initEvent('change', false, true);
+      ref.current.dispatchEvent(newEvent);
+    }
+  }, [selected]);
   return /*#__PURE__*/React.createElement("select", {
     name: "",
     id: id,
@@ -3060,6 +3115,323 @@ function Range({
     max: max,
     value: higherVal
   }))));
+}
+
+// function SingleSelect({id, children, placeholder, selected, setSelected, options=[], optgroups=[], create=true, selectOnTab=false}) {
+// 	const ref = React.useRef(null)
+//
+// 	React.useEffect(()=>{
+// 		let tomSelectOptions ={
+// 			maxItems: 1,
+// 			allowEmptyOption: true,
+// 			hidePlaceholder: true,
+// 			openOnFocus: false,
+// 			hideSelected: true,
+// 			closeAfterSelect: true,
+// 			items: selected,
+// 			options: options,
+// 			optgroups: optgroups,
+// 			optgroupField: "group",
+// 			create: create,
+// 			selectOnTab: selectOnTab,
+// 			sortField: [{field:'$order'},{field:'$score'}],
+// 			plugins: ['change_listener'],
+// 			onChange: handleChange
+// 		}
+//
+// 		const tomSelect = new TomSelect(`#${id}`, tomSelectOptions)
+//
+// 		return () => {
+// 			tomSelect.destroy()
+// 		}
+// 	}, [])
+//
+// 	React.useEffect(()=>{
+// 		if (!ref.current || !ref.current.tomselect) {
+// 			return
+// 		}
+//
+// 		ref.current.tomselect.clearOptions()
+// 		ref.current.tomselect.addOptions(options)
+// 		ref.current.tomselect.refreshOptions()
+// 		ref.current.tomselect.refreshItems()
+// 		ref.current.tomselect.setValue(selected, true)
+// 	}, [options])
+//
+// 	function handleChange(value) {
+// 		if (value !== selected && value !== "") {
+// 			setSelected(value)
+// 		}
+// 	}
+//
+// 	return (
+// 		<select name="" id={id} ref={ref}
+// 	        placeholder={placeholder}
+// 		>
+// 			{children}
+// 		</select>
+// 	)
+// }
+
+function MultiSelect({
+  id,
+  className,
+  selected,
+  setSelected,
+  options = [],
+  optgroups = [],
+  create = true
+}) {
+  const [optionLookup, setOptionLookup] = React.useState({});
+  const [search, setSearch] = React.useState("");
+  const [displayOptions, setDisplayOptions] = React.useState([]);
+  const [optionSelect, setOptionSelect] = React.useState(0);
+  React.useEffect(() => {
+    let tempOptionsLookup = {};
+    for (let x = 0; x < options.length; x++) {
+      tempOptionsLookup[options[x].value] = options[x].text;
+    }
+    setOptionLookup(tempOptionsLookup);
+  }, [options]);
+  React.useEffect(() => {
+    // console.log(selected)
+  }, [selected]);
+  function addOption(e) {
+    setSelected([...selected, e.target.dataset.value]);
+  }
+  function handleKeyDown(e) {
+    if (e.key === "Backspace" && e.target.value === "") {
+      e.preventDefault();
+      if (selected.length > 0) {
+        setSelected(selected.slice(0, -1));
+      }
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOptionSelect(prev => Math.min(prev + 1, displayOptions.length - 1));
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOptionSelect(prev => Math.max(prev - 1, 0));
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (displayOptions.length > 0 && displayOptions[optionSelect]) {
+        if (displayOptions[optionSelect].create) {
+          if (typeof create === "function") {
+            let newID = create(search).value;
+            if (newID !== null) {
+              setSelected([...selected, newID]);
+              setSearch("");
+              setOptionSelect(0);
+            }
+          } else if (create === true) {
+            setSelected([...selected, search]);
+            setSearch("");
+            setOptionSelect(0);
+          }
+        } else {
+          setSelected([...selected, displayOptions[optionSelect].value]);
+          setSearch("");
+          setOptionSelect(0);
+        }
+      }
+    }
+    if (e.key === "Tab") {
+      if (search === "") {
+        // Allow default tab behavior to next input
+        return;
+      }
+      if (displayOptions.length > 0 && displayOptions[optionSelect]) {
+        if (!displayOptions[optionSelect].create) {
+          e.preventDefault();
+          setSelected([...selected, displayOptions[optionSelect].value]);
+          setSearch("");
+          setOptionSelect(0);
+        }
+      }
+    }
+  }
+  React.useEffect(() => {
+    let temp = [...options.filter(option => {
+      let returnFlag = true;
+      if (selected.includes(option.value)) returnFlag = false;
+      if (search.length > 0) if (!option.text.toLowerCase().includes(search.toLowerCase())) returnFlag = false;
+      if (returnFlag) return option;
+    })];
+    if (search.length > 0 && (typeof create === "function" || create === true)) {
+      temp.push({
+        create: true,
+        text: "Add " + search
+      });
+    }
+    setDisplayOptions(temp);
+  }, [search]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: `multi select ${className || ""}`
+  }, /*#__PURE__*/React.createElement("select", {
+    name: id,
+    id: id,
+    tabIndex: -1
+  }), /*#__PURE__*/React.createElement("label", {
+    htmlFor: `${id}_input`,
+    className: "input"
+  }, selected.map((option, index) => /*#__PURE__*/React.createElement("div", {
+    className: "selected",
+    key: index
+  }, optionLookup[option])), /*#__PURE__*/React.createElement("input", {
+    id: `${id}_input`,
+    type: "text",
+    onKeyDown: handleKeyDown,
+    value: search,
+    onChange: e => {
+      setSearch(e.target.value);
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "dropdown"
+  }, displayOptions.map((option, index) => {
+    if (index === optionSelect) {
+      className = "option hover";
+    } else {
+      className = "option";
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      className: className,
+      key: index,
+      "data-value": option.value,
+      onMouseDown: addOption
+    }, option.text);
+  })));
+}
+function SingleSelect({
+  id,
+  className,
+  selected,
+  setSelected,
+  options = [],
+  optgroups = [],
+  create = true
+}) {
+  const [optionLookup, setOptionLookup] = React.useState({});
+  const [search, setSearch] = React.useState("");
+  const [displayOptions, setDisplayOptions] = React.useState([]);
+  const [optionSelect, setOptionSelect] = React.useState(0);
+  React.useEffect(() => {
+    let tempOptionsLookup = {};
+    for (let x = 0; x < options.length; x++) {
+      tempOptionsLookup[options[x].value] = options[x].text;
+    }
+    setOptionLookup(tempOptionsLookup);
+  }, [options]);
+  React.useEffect(() => {
+    // console.log(selected)
+  }, [selected]);
+  function addOption(e) {
+    setSelected([...selected, e.target.dataset.value]);
+  }
+  function handleKeyDown(e) {
+    if (e.key === "Backspace" && e.target.value === "") {
+      e.preventDefault();
+      if (selected.length > 0) {
+        setSelected("");
+      }
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOptionSelect(prev => Math.min(prev + 1, displayOptions.length - 1));
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOptionSelect(prev => Math.max(prev - 1, 0));
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (displayOptions.length > 0 && displayOptions[optionSelect]) {
+        if (displayOptions[optionSelect].create) {
+          if (typeof create === "function") {
+            let newID = create(search).value;
+            if (newID !== null) {
+              setSelected(newID);
+              setSearch("");
+              setOptionSelect(0);
+            }
+          } else if (create === true) {
+            setSelected(search);
+            setSearch("");
+            setOptionSelect(0);
+          }
+        } else {
+          setSelected(displayOptions[optionSelect].value);
+          setSearch("");
+          setOptionSelect(0);
+        }
+      }
+    }
+    if (e.key === "Tab") {
+      if (search === "") {
+        // Allow default tab behavior to next input
+        return;
+      }
+      if (displayOptions.length > 0 && displayOptions[optionSelect]) {
+        if (!displayOptions[optionSelect].create) {
+          e.preventDefault();
+          setSelected(displayOptions[optionSelect].value);
+          setSearch("");
+          setOptionSelect(0);
+        }
+      }
+    }
+  }
+  React.useEffect(() => {
+    let temp = [...options.filter(option => {
+      let returnFlag = true;
+      if (selected.includes(option.value)) returnFlag = false;
+      if (search.length > 0) if (!option.text.toLowerCase().includes(search.toLowerCase())) returnFlag = false;
+      if (returnFlag) return option;
+    })];
+    if (search.length > 0 && (typeof create === "function" || create === true)) {
+      temp.push({
+        create: true,
+        text: "Add " + search
+      });
+    }
+    setDisplayOptions(temp);
+  }, [search, options]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: `multi select ${className || ""}`
+  }, /*#__PURE__*/React.createElement("select", {
+    name: id,
+    id: id,
+    tabIndex: -1
+  }), /*#__PURE__*/React.createElement("label", {
+    htmlFor: `${id}_input`,
+    className: "input"
+  }, selected ? /*#__PURE__*/React.createElement("div", {
+    className: "selected",
+    key: -1
+  }, optionLookup[selected]) : "", /*#__PURE__*/React.createElement("input", {
+    id: `${id}_input`,
+    type: "text",
+    onKeyDown: handleKeyDown,
+    value: search,
+    onChange: e => {
+      if (!selected) setSearch(e.target.value);
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "dropdown"
+  }, !selected ? displayOptions.map((option, index) => {
+    if (index === optionSelect) {
+      className = "option hover";
+    } else {
+      className = "option";
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      className: className,
+      key: index,
+      "data-value": option.value,
+      onMouseDown: addOption
+    }, option.text);
+  }) : ""));
 }
 
 "use strict";
@@ -5357,13 +5729,14 @@ function Frontpage({
   nextShow,
   children
 }) {
+  const context = React.useContext(app);
   return /*#__PURE__*/React.createElement("div", {
     className: "content",
     key: `content_${nextShow.title}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "next_show",
     key: `next_show_${nextShow.title}`
-  }, nextShow.banner ? ReactDOM.createPortal([/*#__PURE__*/React.createElement(Link, {
+  }, nextShow.banner && context.siteJson.ticketsActive === "1" ? ReactDOM.createPortal([/*#__PURE__*/React.createElement(Link, {
     key: "tickets_banner",
     href: "/tickets"
   }, /*#__PURE__*/React.createElement(Image, {
