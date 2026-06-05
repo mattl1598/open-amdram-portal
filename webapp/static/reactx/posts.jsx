@@ -47,11 +47,12 @@ function ErrorComponent({content}) {
 }
 
 function Frontpage({nextShow, children}) {
+	const context = React.useContext(app)
 	return (
 		<div className={"content"} key={`content_${nextShow.title}`}>
 			<div className="next_show" key={`next_show_${nextShow.title}`}>
 				{
-					nextShow.banner ?
+					nextShow.banner && context.siteJson.ticketsActive === "1" ?
 					ReactDOM.createPortal(
 					    [<Link key={"tickets_banner"} href="/tickets"><Image key={"banner1"} i={"banner"} src={nextShow.banner}></Image></Link>],
 					    document.querySelector("#banner")

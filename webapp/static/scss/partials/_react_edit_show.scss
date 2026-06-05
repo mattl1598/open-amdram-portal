@@ -1,5 +1,9 @@
 @import "variables";
 
+div.content:has(div.show_form) {
+	margin-bottom: 50dvh;
+}
+
 div.show_form {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -11,6 +15,7 @@ div.show_form {
 		"cast crew"
 	;
 	gap: .5rem;
+	padding-bottom: 5rem;
 
 	div.details {
 		grid-area: details;
@@ -93,8 +98,14 @@ div.cast div, div.crew div {
 			grid-column: 2/3;
 		}
 
+		div.role {
+			grid-column: 2/3;
+		}
+
 		div.members {
 			grid-column: 4/5;
+		}
+		div.role, div.members {
 			width: 100%;
 			display: grid;
 			grid-template-columns: 1fr;
@@ -107,7 +118,7 @@ div.cast div, div.crew div {
 				text-transform: uppercase;
 			}
 
-			select, div.ts-wrapper {
+			select, div.ts-wrapper, div.select {
 				width: 100%;
 				grid-column: 1/2;
 				grid-row: 2/3;

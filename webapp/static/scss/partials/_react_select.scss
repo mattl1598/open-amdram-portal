@@ -1,0 +1,54 @@
+div.select {
+	select {
+		display: none;
+	}
+
+	label.input {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+
+		gap: 0.1rem 0.2rem;
+		padding: 0.5rem 0.5rem;
+		border-radius: .4375rem;
+
+		background-color: white;
+		color: black;
+
+		cursor: text;
+		text-transform: unset !important;
+
+		div.selected {
+			padding: 0.15rem 0.3rem;
+			border-radius: .25rem;
+			background-color: lightgray;
+		}
+
+		input {
+			all: unset;
+			width: min-content;
+			field-sizing: content;
+		}
+	}
+	label.input:has(input:focus) + div.dropdown:has(div.option) {
+		display: block;
+		background-color: white;
+		color: black;
+		z-index: 1000 !important;
+		position: absolute;
+
+		max-height: 20rem;
+		overflow-y: auto;
+
+		div.option:hover, div.option.hover {
+			z-index: 1001 !important;
+			background-color: royalblue;
+			color: white;
+		}
+	}
+
+	div.dropdown {
+		display: none;
+		width: auto;
+	}
+}

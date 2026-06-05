@@ -117,6 +117,8 @@ function EditShow({content, refresh}) {
 	const [crewRefs, setCrewRefs] = React.useState([])
 	const [crewList, setCrewList] = React.useState([])
 
+	const [newestForm, setNewestForm] = React.useState("")
+
 	const [toBeAdded, setToBeAdded] = React.useState([])
 
 	function refreshMemberOptions() {
@@ -166,6 +168,14 @@ function EditShow({content, refresh}) {
 		setCrewList(tempCrewRoles)
 	}, [])
 
+	React.useEffect(() => {
+		if (newestForm !== "") {
+			let form = document.querySelector(newestForm.startsWith("cast") ? `#${newestForm}` : `#${newestForm}_input`)
+			form.focus()
+			form.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
+		}
+	}, [newestForm])
+
 	function addRowBelow(cast_or_crew, position) {
 		setToBeAdded([{cast_or_crew: cast_or_crew, position: position}])
 	}
@@ -176,7 +186,6 @@ function EditShow({content, refresh}) {
 			setToBeAdded([])
 		}
 	}, [toBeAdded])
-
 
 	function addRoleSubForm(e, cast_or_crew, position) {
 		if (e !== undefined) {
@@ -191,22 +200,22 @@ function EditShow({content, refresh}) {
 			let newForm = {
 				key: Date.now(), ref: newRef,
 				id: `${cast_or_crew}${tempList.length + 1}`,
-				cast_or_crew: cast_or_crew
+				cast_or_crew: cast_or_crew,
 			}
 			// tempRefs = insert(tempRefs, position, newRef)
 			tempList = insert(tempList, position, newForm)
 			// setCastRefs(tempRefs)
 			setCastList(tempList)
+			setNewestForm(newForm.id)
 		} else {
 			// tempRefs = [...crewRefs]
 			tempList = [...crewList]
 
 			let newRef = React.createRef()
-			// TODO: add role options and tomselect for crew roles
 			let newForm = {
 				key: Date.now(), ref: newRef,
 				id: `${cast_or_crew}${tempList.length + 1}`,
-				cast_or_crew: cast_or_crew
+				cast_or_crew: cast_or_crew,
 			}
 			// tempRefs.splice(position, 0, newRef)
 			tempList.splice(
@@ -214,8 +223,8 @@ function EditShow({content, refresh}) {
 			)
 			// setCrewRefs(tempRefs)
 			setCrewList(tempList)
+			setNewestForm(newForm.id)
 		}
-		// TODO: set focus on newest role field
 	}
 
 	function getRoles(e=undefined) {
@@ -270,12 +279,12 @@ function EditShow({content, refresh}) {
 						<h2>Cast <a href="#" onClick={(e) => {addRoleSubForm(e, "cast", 0)}}>+</a></h2>
 						<div>
 							{
-								castList.map((x)=>{
+								castList.map((x, index)=>{
 									return <RoleSubForm
 										key={x.key} ref={x.ref} id={x.id}
 										defaultMembers={x.defaultMembers} defaultRoleName={x.defaultRoleName}
 										cast_or_crew={x.cast_or_crew} showID={content.showDetails.id} addRowBelow={addRowBelow}
-										memberOptions={memberOptions} setMemberOptions={setMemberOptions}
+										memberOptions={memberOptions} setMemberOptions={setMemberOptions} index={index}
 									></RoleSubForm>
 								})
 							}
@@ -285,12 +294,12 @@ function EditShow({content, refresh}) {
 						<h2>Crew <a href="#" onClick={(e) => {addRoleSubForm(e, "crew", 0)}}>+</a></h2>
 						<div>
 							{
-								crewList.map((x)=>{
+								crewList.map((x, index)=>{
 									return <RoleSubForm
 										key={x.key} ref={x.ref} id={x.id}
 										defaultMembers={x.defaultMembers} defaultRoleName={x.defaultRoleName}
 										cast_or_crew={x.cast_or_crew} showID={content.showDetails.id} addRowBelow={addRowBelow}
-										memberOptions={memberOptions} setMemberOptions={setMemberOptions}
+										memberOptions={memberOptions} setMemberOptions={setMemberOptions} index={index}
 									></RoleSubForm>
 								})
 							}
@@ -312,11 +321,30 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
 										memberOptions = [],
 										setMemberOptions,
 										cast_or_crew,
-										addRowBelow
+										addRowBelow,
+										index,
                                       }, ref) {
 	const [role, setRole] = React.useState(defaultRoleName)
 	const [members, setMembers] = React.useState(defaultMembers)
 	const subFormRef = React.createRef()
+
+	const [crewOptions, setCrewOptions] = React.useState([])
+
+	React.useEffect(() => {
+		if (cast_or_crew === "crew") {
+			let url = '/members/api/crew_options'
+			if (showID !== null && showID !== undefined && showID !== "") {
+				url += `?show_id=${showID}`
+			}
+			fetch(url)
+				.then(response => response.json())
+				.then(data => {
+					console.log(data)
+					setCrewOptions(data.options || [])
+				})
+				.catch(error => console.error('Error fetching crew options:', error));
+		}
+	}, [])
 
 	React.useImperativeHandle(ref, () => ({
 	    getMSLJson() {
@@ -372,17 +400,30 @@ const RoleSubForm = React.forwardRef(function RoleSubForm({
 	}
 
 	function addRow() {
-		let pos = getIndex() + 1
+		// let index = getIndex()
+		let pos = index + 1
 		addRowBelow(cast_or_crew, pos)
 	}
 
 	return (
 		<div className={"role_sub_form"} ref={subFormRef}>
 			<Icon onClick={()=>{console.log(getIndex())}}>drag_indicator</Icon>
-			<Input id={id} form={"MSL"} type={"text"} label={"Role"} value={role} stateful={true} onChange={(e)=>{setRole(e.target.value)}}></Input>
+			{ cast_or_crew === "cast" ?
+				<Input id={id} form={"MSL"} type={"text"} label={"Role"} value={role} stateful={true} onChange={(e)=>{setRole(e.target.value)}}></Input>
+					:
+				<div className="role">
+					<label htmlFor={id} className={"membersLabel"}>ROLE</label>
+					<SingleSelect id={id} selected={role} setSelected={setRole} options={crewOptions} create={true}></SingleSelect>
+				</div>
+			}
+
 			<div className="members">
 				<label htmlFor={`member${id}`} className={"membersLabel"}>Members</label>
-				<Select id={`member${id}`} selected={members} setSelected={setMembers} options={memberOptions} create={addNewMember}></Select>
+				<MultiSelect
+					id={`member${id}`}
+					selected={members} setSelected={setMembers}
+					options={memberOptions} create={addNewMember}
+				></MultiSelect>
 			</div>
 			<div className="hover_right"></div>
 			<Icon onClick={addRow} tabIndex={0}>splitscreen_add</Icon>

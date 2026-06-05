@@ -547,18 +547,50 @@ def edit_show():
 @bp.get("/members/api/get_members")
 def get_members():
 	check_page_permission("admin")
+
+	member_scores = db.session.query(
+		MSL.member_id.label("member_id"),
+		func.max(Show.date).label("latest_show_date"),
+		func.count(func.distinct(MSL.show_id)).label("show_count"),
+	).join(
+		Show, MSL.show_id == Show.id
+	).group_by(
+		MSL.member_id
+	).subquery()
+
+	members_ranked = db.session.query(
+		Member.id.label("id"),
+		Member.firstname.label("firstname"),
+		Member.lastname.label("lastname"),
+		func.row_number().over(
+			order_by=[
+				member_scores.c.latest_show_date.desc().nullslast(),
+				member_scores.c.show_count.desc().nullslast(),
+				Member.lastname.asc(),
+				Member.firstname.asc()
+			]
+		).label("member_order")
+	).select_from(
+		Member
+	).join(
+		member_scores,
+		Member.id == member_scores.c.member_id,
+		isouter=True
+	).subquery()
+
 	return db.session.query(
 		func.json_agg(
 			aggregate_order_by(
 				func.json_build_object(
-					"value", Member.id,
-					"text", Member.firstname + " " + Member.lastname,
+					"value", members_ranked.c.id,
+					"text", members_ranked.c.firstname + " " + members_ranked.c.lastname,
+					"order", members_ranked.c.member_order,
 				),
-				Member.lastname.asc(), Member.firstname.asc()
+				members_ranked.c.member_order.asc()
 			)
 		)
 	).select_from(
-		Member
+		members_ranked
 	).scalar()
 
 
@@ -587,6 +619,77 @@ def add_member():
 		"code": 200,
 		"newMember": {"id": new_member.id, "name": new_member.firstname + " " + new_member.lastname},
 		"members": get_members()
+	}
+
+
+@bp.get("/members/api/crew_options")
+def get_crew_options():
+	check_page_permission("admin")
+	show_id = request.args.get("show_id")
+
+	# Build the base query for roles with count > 5
+	options_subquery = db.session.query(
+		MSL.role_name.label("role"),
+		func.count(func.distinct(MSL.show_id)).label("count"),
+	).filter(MSL.cast_or_crew == "crew").group_by(MSL.role_name).having(
+		func.count(func.distinct(MSL.show_id)) > 5).subquery()
+
+	# If show_id is provided, get additional roles from that show
+	if show_id:
+		show_roles_subquery = db.session.query(
+			MSL.role_name.label("role"),
+			func.count(func.distinct(MSL.show_id)).label("count"),
+		).filter(
+			MSL.cast_or_crew == "crew",
+			MSL.show_id == show_id
+		).group_by(MSL.role_name).subquery()
+
+		roles_union = db.session.query(
+			options_subquery.c.role.label("role"),
+			options_subquery.c.count.label("count")
+		).union_all(
+			db.session.query(
+				show_roles_subquery.c.role.label("role"),
+				show_roles_subquery.c.count.label("count")
+			)
+		).subquery()
+
+		combined_subquery = db.session.query(
+			roles_union.c.role.label("role"),
+			func.max(roles_union.c.count).label("count")
+		).group_by(
+			roles_union.c.role
+		).subquery()
+
+		options = db.session.query(
+			func.json_agg(
+				aggregate_order_by(
+					func.json_build_object(
+						"text", combined_subquery.c.role,
+						"value", combined_subquery.c.role,
+						"count", combined_subquery.c.count
+					),
+					combined_subquery.c.count.desc()
+				)
+			)
+		).select_from(combined_subquery).scalar()
+	else:
+		options = db.session.query(
+			func.json_agg(
+				aggregate_order_by(
+					func.json_build_object(
+						"text", options_subquery.c.role,
+						"value", options_subquery.c.role,
+						"count", options_subquery.c.count
+					),
+					options_subquery.c.count.desc()
+				)
+			)
+		).select_from(options_subquery).scalar()
+
+	return {
+		"code": 200,
+		"options": options
 	}
 
 
