@@ -300,12 +300,48 @@ function MultiSelect({id, className, selected, setSelected, options=[], optgroup
 		}
 	}
 
+	function matchesSearchTerms(text, search) {
+		const words = text.toLowerCase().split(/\s+/);
+		const terms = search.toLowerCase().trim().split(/\s+/);
+
+		let wordIndex = 0;
+
+		for (const term of terms) {
+			let found = false;
+
+			while (wordIndex < words.length) {
+				if (words[wordIndex].startsWith(term)) {
+					found = true;
+					wordIndex++;
+					break;
+				}
+
+				wordIndex++;
+			}
+
+			if (!found) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	React.useEffect(()=>{
 		let temp = [
 			...options.filter((option) => {
 				let returnFlag = true
 				if (selected.includes(option.value)) returnFlag = false
-				if (search.length > 0) if (!option.text.toLowerCase().includes(search.toLowerCase())) returnFlag = false
+				if (search.length > 0) {
+					if (option.text.toLowerCase().includes(search.toLowerCase())) {
+
+					} else if (matchesSearchTerms(option.text, search)) {
+
+					} else {
+						returnFlag = false
+					}
+
+				}
 				if (returnFlag) return (option)
 			})
 		]
