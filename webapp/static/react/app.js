@@ -2225,9 +2225,6 @@ function FaceDetection({
 "use strict";
 
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-// import { Icon } from "./icon"
-
-// const dims = [...imageDims]
 const lazyLoadDistance = 5;
 const gallery = document.getElementById('gallery');
 if (gallery) {
@@ -2554,7 +2551,7 @@ function Image({
     markersRef.current = markersRef.current.slice(0, faces.length);
   }, [faces]);
   React.useEffect(() => {
-    if (faces.length > 0) {
+    if (faces.length > 0 && showFaces) {
       let markers = [];
       for (let i = 0; i < faces.length; i++) {
         markers.push(/*#__PURE__*/React.createElement("div", {
@@ -2684,12 +2681,12 @@ function Image({
         height: height,
         alt: alt,
         key: i
-      }), /*#__PURE__*/React.createElement("div", {
+      }), showFaces ? /*#__PURE__*/React.createElement("div", {
         className: "face_markers",
         style: {
           aspectRatio: width / height
         }
-      }, faceMarkers))
+      }, faceMarkers) : "")
       // </div>
     );
   } else {
