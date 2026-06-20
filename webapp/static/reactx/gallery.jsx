@@ -1,6 +1,4 @@
-// import { Icon } from "./icon"
 
-// const dims = [...imageDims]
 const lazyLoadDistance = 5
 const gallery = document.getElementById('gallery')
 
@@ -211,7 +209,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 						{ !!(faces && Object.keys(faces).length) && <div className="arrow faces" onClick={toggleFaces}><Icon>{showFaces ? "face_retouching_off" : "face"}</Icon></div> }
 						<div className="arrow" key={"gallery-arrow1"} onClick={() => incrImage(-1)}>{"<"}</div>
 						<div className="counter" key={"gallery-counter"}><span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
-						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>{">"}</div>
 						<div className="arrow faces" key={"gallery-grid"} onClick={toggleGrid}>
 							<Icon iconStyle={"sharp"} className={"filled"}>{["grid_on", "image"][showGrid * 1]}</Icon>
 						</div>
@@ -241,7 +239,7 @@ function Gallery({imageLinks, faces={}, type="images"}) {
 						<div className="arrow" key={"gallery-arrow1"} onClick={() => incrImage(-1)}>{"<"}</div>
 						<div className="counter" key={"gallery-counter"}>
 							<span>{imgNum + 1}</span><span>/{imageTags.length}</span></div>
-						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>></div>
+						<div className="arrow" key={"gallery-arrow2"} onClick={() => incrImage(1)}>{">"}</div>
 						<div className="arrow fullscreen" key={"gallery-fullscreen"} onClick={toggleFullscreen}>
 							<Icon icon={["fullscreen", "fullscreen_exit"][fullscreen * 1]}></Icon>
 						</div>
@@ -267,7 +265,7 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
     }, [faces]);
 
 	React.useEffect(() => {
-		if(faces.length > 0){
+		if( faces.length > 0 && showFaces ){
 			let markers = []
 			for (let i = 0; i < faces.length; i++) {
 				markers.push(
@@ -404,7 +402,10 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
 			// style={{aspectRatio: width/height}}            vvv
 			<div key={"div" + i} className={`img ${className}`} >
 				<img src={elemSrc} width={width} height={height} alt={alt} key={i}></img>
-				<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
+				{ showFaces ?
+					<div className="face_markers" style={{aspectRatio: width/height}}>{faceMarkers}</div>
+					: ""
+				}
 			</div>
 			// </div>
 		)
@@ -415,7 +416,6 @@ function Image({src, alt, className, i, load=true, shown=true, showFaces=false, 
 			</img>
 		)
 	}
-
 }
 
 function Video({src, className, i, alt="", inGallery=false}) {

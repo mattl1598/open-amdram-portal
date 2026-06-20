@@ -6,7 +6,7 @@ from flask_squeeze import Squeeze
 from rjsmin import jsmin
 
 import markdown as markdown
-import requests
+# import requests
 from flask import Flask, redirect, render_template, request, session, abort  # , url_for, session
 from flask_qrcode import QRcode
 

@@ -3,8 +3,9 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/win-venv/Lib/site-packages/pip/_vendor" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.10 (OADP)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (OADP2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">
