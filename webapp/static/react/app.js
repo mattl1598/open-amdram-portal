@@ -6396,11 +6396,14 @@ function App() {
       // 	// TODO: NEW TICKETS GO HERE
       // 	getPostJson(pathState + `?react`)
     } else if (path === "/tickets") {
-      setPostJson({
-        type: "ticket_store",
-        title: "Tickets Store"
-      });
-      // getPostJson(pathState + `?react`)
+      if (siteJson.tickets_link.startsWith("https://")) {
+        getPostJson(pathState + `?react`);
+      } else {
+        setPostJson({
+          type: "ticket_store",
+          title: "Tickets Store"
+        });
+      }
     } else if (path === "/tickets/cart") {
       setPostJson({
         type: "ticket_cart",
