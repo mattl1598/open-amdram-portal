@@ -6396,7 +6396,7 @@ function App() {
       // 	// TODO: NEW TICKETS GO HERE
       // 	getPostJson(pathState + `?react`)
     } else if (path === "/tickets") {
-      if (siteJson.tickets_link.startsWith("https://")) {
+      if (`${siteJson.tickets_link}`.startsWith("https://")) {
         getPostJson(pathState + `?react`);
       } else {
         setPostJson({
