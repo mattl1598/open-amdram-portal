@@ -33,5 +33,5 @@ urllib3
 xlsxwriter
 
 
-deepface
- tf_keras==2.19.0
+#deepface
+#tf_keras==2.19.0
