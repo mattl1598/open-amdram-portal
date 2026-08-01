@@ -185,6 +185,15 @@ function AdminSettings({
   }, /*#__PURE__*/React.createElement("option", {
     value: ""
   }, "None Selected..."), show_options), /*#__PURE__*/React.createElement(Input, {
+    type: "select",
+    id: "blog_active",
+    label: "Enable Blog",
+    value: content.settings.blogActive
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "0"
+  }, "Off"), /*#__PURE__*/React.createElement("option", {
+    value: "1"
+  }, "On")), /*#__PURE__*/React.createElement(Input, {
     type: "datetime-local",
     id: "auditions_date",
     label: "Auditions Date",
@@ -8132,7 +8141,7 @@ function TicketItem({
     className: "desc"
   }, maxSeats < 10 && maxSeats > 0 ? /*#__PURE__*/React.createElement("h3", {
     className: "price"
-  }, "Only ", maxSeats, " seat", maxSeats > 1 ? "s" : "", " remaining!") : /*#__PURE__*/React.createElement(React.Fragment, null), "Doors open 30 minutes before the show starts. ", /*#__PURE__*/React.createElement("br", null), "Tickets can be collected at the venue. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the notes box at checkout."), /*#__PURE__*/React.createElement("div", {
+  }, "Only ", maxSeats, " seat", maxSeats > 1 ? "s" : "", " remaining!") : /*#__PURE__*/React.createElement(React.Fragment, null), "Content Warning: Mild Language used throughout. Best suited for audiences 14+ ", /*#__PURE__*/React.createElement("br", null), "Doors open 30 minutes before the show starts. ", /*#__PURE__*/React.createElement("br", null), "Tickets can be collected at the venue. ", /*#__PURE__*/React.createElement("br", null), "Leave any seating requests in the notes box at checkout."), /*#__PURE__*/React.createElement("div", {
     className: "quantities"
   }, Object.keys(quantities).map(type => TicketQuantity({
     type
