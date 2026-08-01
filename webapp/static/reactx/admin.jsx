@@ -68,6 +68,10 @@ function AdminSettings({content, refresh}) {
 							<option value="">None Selected...</option>
 							{show_options}
 						</Input>
+						<Input type={"select"} id={"blog_active"} label="Enable Blog" value={content.settings.blogActive}>
+							<option value="0">Off</option>
+							<option value="1">On</option>
+						</Input>
 						<Input type={"datetime-local"} id={"auditions_date"} label={"Auditions Date"} value={content.settings.auditions_date}></Input>
 						<Input type={"text"} id={"tickets-link"} label={"Tickets URL"} value={content.settings.ticketsLink}></Input>
 						<Input type={"text"} id={"tickets-hero-photo"} label={"Tickets Hero Photo"} value={content.settings.ticketsHeroPhoto}></Input>

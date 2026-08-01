@@ -276,6 +276,7 @@ function TicketItem({id, title, pricing, image, date, i, count, setActive, isAct
 						:
 							<React.Fragment></React.Fragment>
 					}
+					Content Warning: Mild Language used throughout. Best suited for audiences 14+ <br/>
 					Doors open 30 minutes before the show starts. <br/>
 					Tickets can be collected at the venue. <br/>
 					Leave any seating requests in the notes box at checkout.
