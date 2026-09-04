@@ -1464,6 +1464,8 @@ function ManageBookings({
   let show_options = [];
   const [historicSales, setHistoricSales] = React.useState(/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Please select a show...")));
   const [redrawInt, setRedrawInt] = React.useState(0);
+  const [beginDate, setBeginDate] = React.useState("");
+  const [endDate, setEndDate] = React.useState();
   for (let i = 0; i < content.performances.length; i++) {
     let perf = content.performances[i];
     let sat = Object.values(perf.seat_assignments).length;
@@ -1797,7 +1799,26 @@ function ManageBookings({
     value: "Submit"
   }), /*#__PURE__*/React.createElement("div", {
     className: "data"
-  }, historicSales))))));
+  }, historicSales)))), /*#__PURE__*/React.createElement(Tab, {
+    title: "Payouts"
+  }, /*#__PURE__*/React.createElement(Input, {
+    type: "date",
+    name: "begin",
+    value: beginDate,
+    onChange: e => {
+      setBeginDate(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement(Input, {
+    type: "date",
+    name: "end",
+    value: endDate,
+    onChange: e => {
+      setEndDate(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement("a", {
+    href: `/members/payouts?begin=${beginDate}T00:00:00.000Z&end=${endDate}T23:59:59.999Z`,
+    target: "_blank"
+  }, "Get Payouts"))));
 }
 function AllBookings({
   show_name
@@ -3199,9 +3220,6 @@ function MultiSelect({
     }
     setOptionLookup(tempOptionsLookup);
   }, [options]);
-  React.useEffect(() => {
-    // console.log(selected)
-  }, [selected]);
   function addOption(e) {
     setSelected([...selected, e.target.dataset.value]);
   }
@@ -3353,9 +3371,6 @@ function SingleSelect({
     }
     setOptionLookup(tempOptionsLookup);
   }, [options]);
-  React.useEffect(() => {
-    // console.log(selected)
-  }, [selected]);
   function addOption(e) {
     setSelected([...selected, e.target.dataset.value]);
   }
@@ -6096,7 +6111,7 @@ function PrizeDraw({}) {
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "content"
-  }, /*#__PURE__*/React.createElement("h1", null, "Prize Draw"), /*#__PURE__*/React.createElement("p", null, "Enter your details for a change to win 2 tickets to see our next show, ", /*#__PURE__*/React.createElement("b", null, "Death by Design"), ", a comedy murder mystery."), /*#__PURE__*/React.createElement("p", null, "By entering the draw, you agree to join our audience email newsletter for about upcoming shows."), /*#__PURE__*/React.createElement("form", {
+  }, /*#__PURE__*/React.createElement("h1", null, "Prize Draw"), /*#__PURE__*/React.createElement("p", null, "Enter your details for a change to win 2 tickets to see our next show, ", /*#__PURE__*/React.createElement("b", null, "Sex and Curry"), ", a hilarious comedy romp."), /*#__PURE__*/React.createElement("p", null, "By entering the draw, you agree to join our audience email newsletter for about upcoming shows."), /*#__PURE__*/React.createElement("form", {
     action: "/api/prizeDraw",
     onSubmit: handleFormSubmit
   }, /*#__PURE__*/React.createElement("h2", {
@@ -8636,13 +8651,9 @@ function Tabs({
   children
 }) {
   const [currentTabTitle, setCurrentTabTitle] = React.useState(children[0].props.title);
-  const [currentTabContent, setCurrentTabContent] = React.useState(children[0]);
-  const [currentOtherTabsContent, setCurrentOtherTabsContent] = React.useState([]);
   const [tab_titles, setTabTitles] = React.useState([]);
-  const [tabs, setTabs] = React.useState({});
   React.useEffect(() => {
     let temp_tab_titles = [];
-    let temp_tabs = {};
     for (let i = 0; i < children.length; i++) {
       let child = children[i];
       if (child.props !== undefined && child.props.title !== undefined) {
@@ -8657,24 +8668,19 @@ function Tabs({
           },
           className: classname
         }, /*#__PURE__*/React.createElement("h2", null, child.props.title)));
-        temp_tabs[child.props.title] = child;
       }
     }
     setTabTitles(temp_tab_titles);
-    setTabs(temp_tabs);
   }, [children, currentTabTitle, redrawInt]);
   function handleTabClick(newTitle) {
     setCurrentTabTitle(newTitle);
-    setCurrentTabContent(tabs[newTitle]);
-    let tempOtherTabs = [];
-    for (let i = 0; i < tab_titles.length; i++) {
-      let tab_title = tab_titles[i];
-      if (tab_title !== newTitle) {
-        tempOtherTabs.push(tabs[tab_title]);
-      }
-    }
-    setCurrentOtherTabsContent(tempOtherTabs);
   }
+
+  // Derive current tab content directly from children — never stale
+  const currentTabContent = children.find(child => child.props && child.props.title === currentTabTitle);
+
+  // Derive other tabs content directly from children
+  const currentOtherTabsContent = children.filter(child => child.props && child.props.title !== currentTabTitle);
   if (children.length) {
     return /*#__PURE__*/React.createElement("div", {
       className: "tabs_container",
