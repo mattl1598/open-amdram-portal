@@ -24,6 +24,9 @@ function ManageBookings({content}) {
 	const [historicSales, setHistoricSales] = React.useState(<div><h3>Please select a show...</h3></div>)
 	const [redrawInt, setRedrawInt] = React.useState(0)
 
+	const [beginDate, setBeginDate] = React.useState("")
+	const [endDate, setEndDate] = React.useState()
+
 	for (let i=0; i<content.performances.length; i++) {
 		let perf = content.performances[i]
 		let sat = Object.values(perf.seat_assignments).length
@@ -388,6 +391,11 @@ function ManageBookings({content}) {
 							</div>
 						</div>
 					</form>
+				</Tab>
+				<Tab title={"Payouts"}>
+					<Input type={"date"} name={"begin"} value={beginDate} onChange={(e)=>{setBeginDate(e.target.value)}}></Input>
+					<Input type={"date"} name={"end"} value={endDate} onChange={(e)=>{setEndDate(e.target.value)}}></Input>
+					<a href={`/members/payouts?begin=${beginDate}T00:00:00.000Z&end=${endDate}T23:59:59.999Z`} target={"_blank"}>Get Payouts</a>
 				</Tab>
 			</Tabs>
 		</div>

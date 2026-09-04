@@ -853,6 +853,8 @@ def update_subs():
 			# pprint(order)
 			if order.get("id") not in existing_orders:
 				for item in order.get("line_items", []):
+					if not item.get("name").startswith("Membership - "):
+						break
 					details = {}
 					for modifier in item.get("modifiers", []):
 						regex = r"^>(.*) \(([ABCDE])\): (.*)$"
@@ -882,9 +884,9 @@ def update_subs():
 							datetime=order.get("created_at"),
 							name=details.get("A"),
 							email=details.get("C"),
-							phone_number=details.get("B").replace(" ", ""),
-							e_con_name=details.get("D"),
-							e_con_phone=details.get("E").replace(" ", ""),
+							phone_number=(details.get("B") or "").replace(" ", ""),
+							e_con_name=details.get("D") or "",
+							e_con_phone=(details.get("E") or "").replace(" ", ""),
 							order_id=order.get("id"),
 							payment_id=order.get("tenders")[0].get("payment_id"),
 							source="square",

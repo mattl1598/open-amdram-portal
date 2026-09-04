@@ -327,7 +327,7 @@ function PrizeDraw({}) {
 	return (
 		<div className="content">
 			<h1>Prize Draw</h1>
-			<p>Enter your details for a change to win 2 tickets to see our next show, <b>Death by Design</b>, a comedy murder mystery.</p>
+			<p>Enter your details for a change to win 2 tickets to see our next show, <b>Sex and Curry</b>, a hilarious comedy romp.</p>
 			<p>By entering the draw, you agree to join our audience email newsletter for about upcoming shows.</p>
 			<form action="/api/prizeDraw" onSubmit={handleFormSubmit}>
 				<h2 style={{textAlign: "center"}}><span className="msg"></span></h2>

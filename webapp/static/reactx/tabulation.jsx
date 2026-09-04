@@ -1,14 +1,9 @@
 function Tabs({redrawInt=0, children}) {
 	const [currentTabTitle, setCurrentTabTitle] = React.useState(children[0].props.title)
-	const [currentTabContent, setCurrentTabContent] = React.useState(children[0])
-	const [currentOtherTabsContent, setCurrentOtherTabsContent] = React.useState([])
-
 	const [tab_titles, setTabTitles] = React.useState([])
-	const [tabs, setTabs] = React.useState({})
 
 	React.useEffect(()=>{
 		let temp_tab_titles = []
-		let temp_tabs = {}
 		for (let i = 0; i < children.length; i++) {
 			let child = children[i]
 			if (child.props !== undefined && child.props.title !== undefined){
@@ -21,26 +16,25 @@ function Tabs({redrawInt=0, children}) {
 						<h2>{child.props.title}</h2>
 					</div>
 				)
-				temp_tabs[child.props.title] = child
 			}
 		}
 		setTabTitles(temp_tab_titles)
-		setTabs(temp_tabs)
 	}, [children, currentTabTitle, redrawInt])
 
 
 	function handleTabClick(newTitle) {
 		setCurrentTabTitle(newTitle)
-		setCurrentTabContent(tabs[newTitle])
-		let tempOtherTabs = []
-		for (let i = 0; i < tab_titles.length; i++) {
-			let tab_title = tab_titles[i]
-			if (tab_title !== newTitle) {
-				tempOtherTabs.push(tabs[tab_title])
-			}
-		}
-		setCurrentOtherTabsContent(tempOtherTabs)
 	}
+
+	// Derive current tab content directly from children — never stale
+	const currentTabContent = children.find(
+		child => child.props && child.props.title === currentTabTitle
+	)
+
+	// Derive other tabs content directly from children
+	const currentOtherTabsContent = children.filter(
+		child => child.props && child.props.title !== currentTabTitle
+	)
 
 	if (children.length) {
 		return (

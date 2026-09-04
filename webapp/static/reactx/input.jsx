@@ -238,10 +238,6 @@ function MultiSelect({id, className, selected, setSelected, options=[], optgroup
 		setOptionLookup(tempOptionsLookup)
 	}, [options])
 
-	React.useEffect(()=>{
-		// console.log(selected)
-	}, [selected])
-
 	function addOption(e) {
 		setSelected([...selected, e.target.dataset.value])
 	}
@@ -390,10 +386,6 @@ function SingleSelect({id, className, selected, setSelected, options=[], optgrou
 		}
 		setOptionLookup(tempOptionsLookup)
 	}, [options])
-
-	React.useEffect(()=>{
-		// console.log(selected)
-	}, [selected])
 
 	function addOption(e) {
 		setSelected([...selected, e.target.dataset.value])

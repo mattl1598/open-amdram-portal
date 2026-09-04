@@ -1058,3 +1058,55 @@ def historic_sales_api():
 			"foh_totals": foh_totals,
 		}
 	}
+
+
+@bp.get("/members/payouts")
+def payouts():
+	check_page_permission("bookings")
+	results = []
+	for location in [
+		{"id": "FNM565VJRFTRD", "name": "Box Office",},
+		{"id": "BCDSH89GJ3PJB", "name": "Membership",},
+		{"id": "0W6A3GAFG53BH",	"name": "Online",},
+		{"id": "M1D6QJY6BHW9R", "name": "Players", },
+		{"id": "LKMBSB8V7F9VG", "name": "SP Website",},
+		{"id": "XSQN38EEYZMJQ", "name": "Treasurer",}
+	]:
+		result = {**location}
+		batch = app.square_new.payouts.list(
+			begin_time=request.args.get("begin"),
+			end_time=request.args.get("end"),
+			sort_order="ASC",
+			location_id=location["id"]
+		)
+		if batch.items is not None:
+			payouts = [payout for payout in batch.items]
+			payouts_results = []
+			for payout in payouts:
+				raw = app.square_new.payouts.list_entries(payout_id=payout.id, sort_order="ASC")
+				payments = []
+				for item in raw.items:
+					payments.append(deep_to_dict(dict(item)))
+				payout_dict = deep_to_dict(dict(payout))
+				payout_dict["entries"] = payments
+				payouts_results.append(payout_dict)
+			result["payouts"] = payouts_results
+			results.append(result)
+	return results
+
+
+def deep_to_dict(obj: dict):
+	keys_to_delete = []
+	for key, value in obj.items():
+		if type(value) not in [str, int, float, bool, type(None)]:
+			obj[key] = deep_to_dict(dict(value))
+		else:
+			if not isinstance(value, type(None)):
+				obj[key] = value
+			else:
+				keys_to_delete.append(key)
+
+	for key in keys_to_delete:
+		del obj[key]
+
+	return obj
