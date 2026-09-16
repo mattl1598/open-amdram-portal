@@ -665,7 +665,7 @@ def site_data():
 	}
 	if (db_next_show := Show.query.filter(Show.date > datetime.now()).order_by(
 			Show.date.asc()).first()) is not None:
-		output["next_show"] = {"title": db_next_show.title, "subtitle": db_next_show.subtitle, "banner": db_next_show.banner}
+		output["next_show"] = {"id": db_next_show.id, "title": db_next_show.title, "subtitle": db_next_show.subtitle, "banner": db_next_show.banner}
 	if (db_latest_blog := Post.query.filter_by(type="blog").filter(Post.date < datetime.now()).order_by(
 			Post.date.desc()).first()) is not None:
 		output["latest_blog"] = {"date": db_latest_blog.date.strftime("%b %Y"), "title": db_latest_blog.title, "link": f"/blog/{db_latest_blog.id}"}

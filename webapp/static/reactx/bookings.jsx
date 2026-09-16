@@ -322,7 +322,7 @@ function ManageBookings({content}) {
 					</details>
 				</Tab>
 				<Tab title={"All Bookings"} redrawInt={redrawInt}>
-					<AllBookings show_name={"The Unexpected Guest"}></AllBookings>
+					<AllBookings show_id={context.siteJson.next_show.id}></AllBookings>
 				</Tab>
 				<Tab title={"Modify Bookings"} redrawInt={redrawInt}>
 					<h2>Modify Bookings: </h2>
@@ -402,11 +402,11 @@ function ManageBookings({content}) {
 	)
 }
 
-function AllBookings({show_name}) {
+function AllBookings({show_id}) {
 	const [bookings, setBookings] = React.useState([])
 
 	React.useEffect(()=>{
-		fetch(`/members/api/orders/${show_name}`,
+		fetch(`/members/api/orders/show_id/${show_id}`, //`/members/api/orders/${show_name}`
 			{
 				headers: {
 					'Content-Type': 'application/json',

@@ -591,6 +591,30 @@ def orders_api(show, perf=None):
 	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'"), {}).get(perf) or {}).values()), default=OrderInfo.default)))
 
 
+@bp.get("/members/api/orders/show_id/<show_id>")
+@bp.get("/members/api/orders/show_id/<show_id>/<perf>")
+def orders_by_show_id(show_id, perf=None):
+	"""admin"""
+	if "auth" in request.args.keys():
+		if request.args.get("auth") != KeyValue.query.get("api_key").value:
+			abort(401)
+	else:
+		check_page_permission("bookings")
+
+	if "<" in show_id:
+		abort(404)
+
+	show = db.session.query(Show).filter(Show.id == show_id).first().title
+	perf_tree = test_collect_orders(show_id=show_id)
+
+	if perf is None:
+		return jsonify(json.loads(json.dumps(perf_tree.get(show.replace("`", "'"), {}), default=OrderInfo.default)))
+
+	if "<" in perf:
+		abort(404)
+	return jsonify(json.loads(json.dumps(list((perf_tree.get(show.replace("`", "'"), {}).get(perf) or {}).values()), default=OrderInfo.default)))
+
+
 @bp.get("/members/bookings/receipt/<show_id>/<int:ref>")
 def receipt(show_id: str, ref: int):
 	check_page_permission("bookings")
