@@ -1704,7 +1704,7 @@ function ManageBookings({
     title: "All Bookings",
     redrawInt: redrawInt
   }, /*#__PURE__*/React.createElement(AllBookings, {
-    show_name: "The Unexpected Guest"
+    show_id: context.siteJson.next_show.id
   })), /*#__PURE__*/React.createElement(Tab, {
     title: "Modify Bookings",
     redrawInt: redrawInt
@@ -1821,11 +1821,13 @@ function ManageBookings({
   }, "Get Payouts"))));
 }
 function AllBookings({
-  show_name
+  show_id
 }) {
   const [bookings, setBookings] = React.useState([]);
   React.useEffect(() => {
-    fetch(`/members/api/orders/${show_name}`, {
+    fetch(`/members/api/orders/show_id/${show_id}`,
+    //`/members/api/orders/${show_name}`
+    {
       headers: {
         'Content-Type': 'application/json'
       }
