@@ -650,11 +650,6 @@ function StorePayment({amount = 0, cart}) {
 	function handlePaymentSubmit(e) {
 		e.preventDefault()
 		setMsg("")
-		// if (document.querySelector("#checkoutCart")) {
-		// 	document.querySelector("#checkoutCart").querySelectorAll("canvas").forEach((canvas) => {
-		// 		console.log(canvas.perfID)
-		// 	})
-		// }
 
 		let formData = new FormData(e.target)
 		fetch(e.target.action, {
@@ -671,7 +666,11 @@ function StorePayment({amount = 0, cart}) {
 		}).then((data)=>{
 			if (data.status === "success") {
 				displayPaymentResults('SUCCESS', data.msg)
-				context.functions.setPath(`/tickets/checkout/success?id=${data.receipt_id}&host=${data.receipt_host}`)
+				let queryObject = context.functions.loadQueryParams()
+
+				let ticketCount = countTickets(cart)
+				let queryString = Object.keys(queryObject).length > 0 ? '&' + Object.entries(queryObject).map(([key, value]) => `${key}=${value}`).join('&') : ''
+				context.functions.setPath(`/tickets/checkout/success?id=${data.receipt_id}&show_id=${context.siteJson.next_show.id}&value=${amount}&count=${ticketCount}${queryString}`)
 			} else {
 				displayPaymentResults('FAILURE', data.msg)
 				setMsg(data.msg)
@@ -713,6 +712,7 @@ function CheckoutSuccess({}) {
 	React.useEffect(() => {
 		context.functions.setTicketsCart({})
 		const urlParams = new URLSearchParams(window.location.search)
+		fetch(`/tickets/checkout/success${window.location.search}`)
 		const receipt = urlParams.get('id')
 		if (receipt) {
 			setReceiptId(receipt)

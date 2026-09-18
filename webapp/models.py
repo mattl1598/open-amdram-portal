@@ -320,6 +320,22 @@ class Performance(db.Model, NewIdGetter):
 		return perf_date
 
 
+class OrderLog(db.Model):
+	transaction_id = db.Column(db.String(32), primary_key=True)
+	session_id = db.Column(db.String(16), nullable=False)
+	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+	show_id = db.Column(db.String(16), db.ForeignKey('show.id'))
+	payment_amount = db.Column(db.Integer)
+	ticket_count = db.Column(db.Integer)
+	env = db.Column(db.String(16))
+	source = db.Column(db.String(32))
+	campaign = db.Column(db.String(64))
+	medium = db.Column(db.String(64))
+	term = db.Column(db.String(64))
+	content = db.Column(db.String(64))
+	other = db.Column(db.Text())
+
+
 class StaticMedia(db.Model, NewIdGetter):
 	id = db.Column(db.String(16), primary_key=True)
 	date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

@@ -22,6 +22,7 @@ function App() {
 
 	const CART_TTL = 24 * 60 * 60 * 1000 // 24 hours
 	// const CART_TTL = 1 * 1 * 60 * 1000 // 1 minute
+	const QUERY_PARAMS_TTL = 48 * 60 * 60 * 1000 // 48 hours
 
 	function loadCart() {
 		try {
@@ -39,6 +40,53 @@ function App() {
 			return parsed.cart
 		} catch {
 			return {}
+		}
+	}
+
+	function loadQueryParams() {
+		try {
+			const raw = localStorage.getItem("queryParams")
+			if (!raw) return {}
+
+			const parsed = JSON.parse(raw)
+			if (!parsed.savedAt || !parsed.params) return {}
+
+			if (Date.now() - parsed.savedAt > QUERY_PARAMS_TTL) {
+				localStorage.removeItem("queryParams")
+				return {}
+			}
+
+			return parsed.params
+		} catch {
+			return {}
+		}
+	}
+
+	function saveQueryParams() {
+		try {
+			const urlParams = new URLSearchParams(window.location.search)
+			console.log("urlParams", urlParams)
+			const currentParams = {}
+
+			for (const [key, value] of urlParams.entries()) {
+				currentParams[key] = value
+			}
+
+			const existingParams = loadQueryParams()
+			const mergedParams = {...existingParams, ...currentParams}
+			const strippedParams = Object.fromEntries(
+				Object.entries(mergedParams).filter(([key, value]) => ["id", "show_id", "value", "count"].includes(key) === false)
+			)
+
+			localStorage.setItem(
+				"queryParams",
+				JSON.stringify({
+					savedAt: Date.now(),
+					params: strippedParams
+				})
+			)
+		} catch (error) {
+			console.error("Failed to save query params:", error)
 		}
 	}
 
@@ -72,17 +120,18 @@ function App() {
 
 	React.useEffect(() => {
 		if (!window.history.state) {
-			window.history.replaceState("", "", pathState)
+			window.history.replaceState("", "", pathState + window.location.search)
 		}
 		getSiteJson()
 	}, [])
 
 	React.useEffect(() => {
-		if (pathState !== pathHistory[-1]) {
+		if (pathState !== pathHistory[pathHistory.length - 1]) {
 			let tempHistory = [...pathHistory]
 			tempHistory.push(pathState)
 			setPathHistory(tempHistory)
 		}
+		saveQueryParams()
 		let data = []
 		// TICKETS
 		if (siteJson.tickets_active === "1") {
@@ -226,6 +275,7 @@ function App() {
 			if (`${siteJson.tickets_link}`.startsWith("https://")) {
 				getPostJson(pathState + `?react`)
 			} else {
+				
 				setPostJson({
 					type: "ticket_store",
 					title: "Tickets Store",
@@ -383,7 +433,7 @@ function App() {
 	})
 
 	return (
-		<app.Provider value={{siteJson, ticketsCart, functions: {setPath, refresh, setTicketsCart}}}>
+		<app.Provider value={{siteJson, ticketsCart, functions: {setPath, refresh, setTicketsCart, loadQueryParams}}}>
 			<AlertsContainer></AlertsContainer>
 			<Nav navItems={navItems} memberNavItemsToShow={memberNavItemsToShow} siteName={siteJson.site_name} logoSVG={siteJson.logoSVG}>
 				<div className={"main-section"}>

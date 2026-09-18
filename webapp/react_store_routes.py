@@ -221,6 +221,60 @@ def checkout_payment():
 
 @bp.get("/tickets/checkout/success")
 def ticket_checkout_success():
+	source = None
+	campaign = None
+	medium = None
+	term = None
+	content = None
+
+	try:
+		source_keys = ["utm_source", "source", "src"]
+		campaign_keys = ["utm_campaign", "campaign", "c"]
+		medium_keys = ["utm_medium", "medium", "m"]
+		term_keys = ["utm_term", "term", "t"]
+		content_keys = ["utm_content", "content", "ct"]
+		if (source := next((request.args.get(k) for k in source_keys if k in request.args), None)) is None:
+			if "qrp" in request.args.keys():
+				medium = "QR Code"
+				source = "poster"
+			elif "qrb" in request.args.keys():
+				medium = "QR Code"
+				source = "banner"
+			elif "f" in request.args.keys():
+				medium = "social"
+				source = "facebook"
+			elif "i" in request.args.keys():
+				medium = "social"
+				source = "instagram"
+		else:
+			campaign = next((request.args.get(k) for k in campaign_keys if k in request.args), None)
+			medium = next((request.args.get(k) for k in medium_keys if k in request.args), None)
+			term = next((request.args.get(k) for k in term_keys if k in request.args), None)
+			content = next((request.args.get(k) for k in content_keys if k in request.args), None)
+
+		other = json.dumps({k: v for k, v in request.args.items() if k not in source_keys + campaign_keys + medium_keys + term_keys + content_keys})
+
+		if not db.session.query(OrderLog).filter_by(transaction_id=request.args.get("id")).first():
+			new_order_log = OrderLog(
+				session_id=request.args.get("session_id"),
+				transaction_id=request.args.get("id"),
+				show_id=request.args.get("show_id"),
+				payment_amount=request.args.get("value"),
+				ticket_count=request.args.get("count"),
+				env=app.envs.square_environment,
+				source=source,
+				campaign=campaign,
+				medium=medium,
+				term=term,
+				content=content,
+				other=other
+			)
+
+			db.session.add(new_order_log)
+			db.session.commit()
+	except Exception as e:
+		pass
+
 	data = {
 		'type': 'ticket_success'
 	}
