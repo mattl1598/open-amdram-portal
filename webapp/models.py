@@ -333,6 +333,7 @@ class OrderLog(db.Model):
 	medium = db.Column(db.String(64))
 	term = db.Column(db.String(64))
 	content = db.Column(db.String(64))
+	referrer = db.Column(db.String(512))
 	other = db.Column(db.Text())
 
 

@@ -72,8 +72,15 @@ function App() {
 				currentParams[key] = value
 			}
 
+
 			const existingParams = loadQueryParams()
-			const mergedParams = {...existingParams, ...currentParams}
+			let mergedParams = {}
+			let referrer = {}
+			if (document.referrer && !document.referrer.startsWith(window.location.origin)) {
+				referrer = {referrer: document.referrer}
+			}
+
+			mergedParams = {...referrer, ...existingParams, ...currentParams}
 			const strippedParams = Object.fromEntries(
 				Object.entries(mergedParams).filter(([key, value]) => ["id", "show_id", "value", "count"].includes(key) === false)
 			)
