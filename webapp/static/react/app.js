@@ -6189,6 +6189,7 @@ function App() {
   const [popstateEvents, setPopstateEvents] = React.useState([]);
   const CART_TTL = 24 * 60 * 60 * 1000; // 24 hours
   // const CART_TTL = 1 * 1 * 60 * 1000 // 1 minute
+  const QUERY_PARAMS_TTL = 48 * 60 * 60 * 1000; // 48 hours
 
   function loadCart() {
     try {
@@ -6203,6 +6204,43 @@ function App() {
       return parsed.cart;
     } catch {
       return {};
+    }
+  }
+  function loadQueryParams() {
+    try {
+      const raw = localStorage.getItem("queryParams");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (!parsed.savedAt || !parsed.params) return {};
+      if (Date.now() - parsed.savedAt > QUERY_PARAMS_TTL) {
+        localStorage.removeItem("queryParams");
+        return {};
+      }
+      return parsed.params;
+    } catch {
+      return {};
+    }
+  }
+  function saveQueryParams() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      console.log("urlParams", urlParams);
+      const currentParams = {};
+      for (const [key, value] of urlParams.entries()) {
+        currentParams[key] = value;
+      }
+      const existingParams = loadQueryParams();
+      const mergedParams = {
+        ...existingParams,
+        ...currentParams
+      };
+      const strippedParams = Object.fromEntries(Object.entries(mergedParams).filter(([key, value]) => ["id", "show_id", "value", "count"].includes(key) === false));
+      localStorage.setItem("queryParams", JSON.stringify({
+        savedAt: Date.now(),
+        params: strippedParams
+      }));
+    } catch (error) {
+      console.error("Failed to save query params:", error);
     }
   }
   const [ticketsCart, setTicketsCart] = React.useState(loadCart);
@@ -6226,16 +6264,17 @@ function App() {
   }, [popstateEvents]);
   React.useEffect(() => {
     if (!window.history.state) {
-      window.history.replaceState("", "", pathState);
+      window.history.replaceState("", "", pathState + window.location.search);
     }
     getSiteJson();
   }, []);
   React.useEffect(() => {
-    if (pathState !== pathHistory[-1]) {
+    if (pathState !== pathHistory[pathHistory.length - 1]) {
       let tempHistory = [...pathHistory];
       tempHistory.push(pathState);
       setPathHistory(tempHistory);
     }
+    saveQueryParams();
     let data = [];
     // TICKETS
     if (siteJson.tickets_active === "1") {
@@ -6679,7 +6718,8 @@ function App() {
       functions: {
         setPath,
         refresh,
-        setTicketsCart
+        setTicketsCart,
+        loadQueryParams
       }
     }
   }, /*#__PURE__*/React.createElement(AlertsContainer, null), /*#__PURE__*/React.createElement(Nav, {
@@ -8541,12 +8581,6 @@ function StorePayment({
   function handlePaymentSubmit(e) {
     e.preventDefault();
     setMsg("");
-    // if (document.querySelector("#checkoutCart")) {
-    // 	document.querySelector("#checkoutCart").querySelectorAll("canvas").forEach((canvas) => {
-    // 		console.log(canvas.perfID)
-    // 	})
-    // }
-
     let formData = new FormData(e.target);
     fetch(e.target.action, {
       headers: {
@@ -8562,7 +8596,10 @@ function StorePayment({
     }).then(data => {
       if (data.status === "success") {
         displayPaymentResults('SUCCESS', data.msg);
-        context.functions.setPath(`/tickets/checkout/success?id=${data.receipt_id}&host=${data.receipt_host}`);
+        let queryObject = context.functions.loadQueryParams();
+        let ticketCount = countTickets(cart);
+        let queryString = Object.keys(queryObject).length > 0 ? '&' + Object.entries(queryObject).map(([key, value]) => `${key}=${value}`).join('&') : '';
+        context.functions.setPath(`/tickets/checkout/success?id=${data.receipt_id}&show_id=${context.siteJson.next_show.id}&value=${amount}&count=${ticketCount}${queryString}`);
       } else {
         displayPaymentResults('FAILURE', data.msg);
         setMsg(data.msg);
@@ -8634,6 +8671,7 @@ function CheckoutSuccess({}) {
   React.useEffect(() => {
     context.functions.setTicketsCart({});
     const urlParams = new URLSearchParams(window.location.search);
+    fetch(`/tickets/checkout/success${window.location.search}`);
     const receipt = urlParams.get('id');
     if (receipt) {
       setReceiptId(receipt);
