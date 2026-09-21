@@ -6230,7 +6230,15 @@ function App() {
         currentParams[key] = value;
       }
       const existingParams = loadQueryParams();
-      const mergedParams = {
+      let mergedParams = {};
+      let referrer = {};
+      if (document.referrer && !document.referrer.startsWith(window.location.origin)) {
+        referrer = {
+          referrer: document.referrer
+        };
+      }
+      mergedParams = {
+        ...referrer,
         ...existingParams,
         ...currentParams
       };
