@@ -247,7 +247,12 @@ def ticket_checkout_success():
 				medium = "social"
 				source = "instagram"
 		else:
-			campaign = next((request.args.get(k) for k in campaign_keys if k in request.args), None)
+			if source == "sqmktg_email":
+				if "a" in request.args.keys():
+					medium = "email"
+				campaign = next((request.args.get(k) for k in ["m", "a"] if k in request.args), None)
+			else:
+				campaign = next((request.args.get(k) for k in campaign_keys if k in request.args), None)
 			medium = next((request.args.get(k) for k in medium_keys if k in request.args), None)
 			term = next((request.args.get(k) for k in term_keys if k in request.args), None)
 			content = next((request.args.get(k) for k in content_keys if k in request.args), None)
@@ -267,6 +272,7 @@ def ticket_checkout_success():
 				medium=medium,
 				term=term,
 				content=content,
+				referrer=request.args.get("referrer"),
 				other=other
 			)
 
